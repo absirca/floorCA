@@ -61,7 +61,10 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--acc)}
 .login label{display:block;margin:12px 0 5px;font-size:13px;color:var(--muted)}
 .login input,.login select{width:100%}
 .dot{width:10px;height:10px;border-radius:50%;background:#44506b;display:inline-block}
-.dot.ok{background:var(--ok)}.dot.bad{background:var(--bad)}
+.dot.ok{background:var(--ok)}
+.dot.bad{background:var(--bad)}
+.dot.syncing{background:var(--warn);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
 #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#22304d;border:1px solid var(--line);padding:10px 18px;border-radius:10px;opacity:0;pointer-events:none;transition:.25s;z-index:999;max-width:90vw;text-align:center}
 #toast.show{opacity:1}
 .roomtabs{display:flex;gap:6px;margin-bottom:12px}
@@ -80,10 +83,12 @@ hr{border:none;border-top:1px solid var(--line);margin:14px 0}
 
 <script>
 /* =========================================================
-   FLOOR MANAGEMENT SYSTEM  —  single-file app
+   FLOOR MANAGEMENT SYSTEM — auto-sync edition
+   GAS backend: https://script.google.com/macros/s/AKfycbxDrzuq8tLkwojEkE5eg7djiaHjW0lG27VxlPuANP3qjPPHE75ErywgfWpOFGqQ5gnr/exec
    ========================================================= */
 
-/* ---------- constants ---------- */
+/* ---------- CONFIG ---------- */
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbxDrzuq8tLkwojEkE5eg7djiaHjW0lG27VxlPuANP3qjPPHE75ErywgfWpOFGqQ5gnr/exec';
 const LS = 'fms_v1';
 const ROOMS = ['301','302','303'];
 const PRAYERS = [['fajr','Fajr'],['dhuhr','Dhuhr'],['asr','Asr'],['maghrib','Maghrib'],['isha','Isha']];
@@ -125,7 +130,7 @@ const TABS = {
           ['reports','Reports'],['admin','Admin']]
 };
 
-/* ---------- tiny utils ---------- */
+/* ---------- utils ---------- */
 const $ = s => document.querySelector(s);
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function todayStr(){return fmtDate(new Date());}
@@ -166,12 +171,12 @@ function defaultState(){
       fcom:{name:'Floor Commander',pin:'6001',studentId:''},
       rc:{'301':'3011','302':'3022','303':'3033'}
     },
-    settings:{sheetUrl:'',autoSync:true,rotationStart:mondayOf(new Date())},
+    settings:{sheetUrl:GAS_URL,autoSync:true,rotationStart:mondayOf(new Date())},
     meta:{lastSync:null}
   };
 }
-function load(){try{const raw=localStorage.getItem(LS);if(raw){const p=JSON.parse(raw);if(p&&p.rooms)return p;}}catch(e){}return defaultState();}
-function save(){try{localStorage.setItem(LS,JSON.stringify(S));}catch(e){}}
+function load(){try{const raw=localStorage.getItem(LS);if(raw){const p=JSON.parse(raw);if(p&&p.rooms){p.settings.sheetUrl=GAS_URL;return p;}}}catch(e){}return defaultState();}
+function saveLocal(){try{localStorage.setItem(LS,JSON.stringify(S));}catch(e){}}
 
 /* ---------- day / room data ---------- */
 function lastRoomDayBefore(date,room){
@@ -193,7 +198,6 @@ function newRoomDay(date,room){
   const cleaning={washroomCleaned:false,washroomBy:'',roomCleaned:false,roomBy:'',
                   harpic:false,handwash:false,toothpaste:false,odonil:false};
   if(prev&&prev.cleaning){
-    /* consumables + "by whom" carry over from the last saved day (default values previously assigned) */
     for(const k of ['harpic','handwash','toothpaste','odonil']) cleaning[k]=!!prev.cleaning[k];
     cleaning.washroomBy=prev.cleaning.washroomBy||'';
     cleaning.roomBy=prev.cleaning.roomBy||'';
@@ -209,7 +213,7 @@ function newRoomDay(date,room){
   };
 }
 function getDay(date){
-  if(!S.days[date]) S.days[date]={rooms:{},floor:{}};
+  if(!S.days[date]) S.days[date]={rooms:{},floor:null};
   const d=S.days[date];
   if(!d.rooms) d.rooms={};
   if(!d.floor) d.floor=newFloorDay(date);
@@ -240,8 +244,8 @@ function equityFor(date,room,sid){
   if(S.users.fc.studentId===sid) roles.push('FC');
   if(S.users.fcom.studentId===sid) roles.push('FCom');
   const base=10;
-  const raw=base+10*roles.length;               // 10/day + 10 per captaincy role
-  const roleEquity=Math.min(10,raw);            // 20 -> 10, 30 -> 10
+  const raw=base+10*roles.length;
+  const roleEquity=Math.min(10,raw);
   const neg=Number(m.neg)||0;
   const bonus=Number(m.bonus)||0;
   return {base,roles,raw,roleEquity,neg,bonus,final:roleEquity+bonus-neg,
@@ -253,14 +257,14 @@ function isCaptainToday(date,room,sid){
 }
 
 /* ---------- permissions ---------- */
-function ageOf(date){return diffDays(date,todayStr());} // 0 = today, 1 = yesterday ...
+function ageOf(date){return diffDays(date,todayStr());}
 function canEditRoom(room){
   const age=ageOf(currentDate);
   if(age<0) return false;
   if(session.role==='admin') return true;
-  if(session.role==='rc')   return session.room===room && age<=1;   // up to next day
-  if(session.role==='fcom') return age<=2;                          // 2 days
-  return false;                                                     // FC never edits
+  if(session.role==='rc')   return session.room===room && age<=1;
+  if(session.role==='fcom') return age<=2;
+  return false;
 }
 function canEditMarks(room){
   if(session.role==='admin') return true;
@@ -278,13 +282,131 @@ function audit(room,msg){
 }
 
 /* =========================================================
+   AUTO-SYNC ENGINE
+   ========================================================= */
+let _syncTimer = null;
+let _syncInFlight = false;
+let _syncAgain = false;
+
+function setSyncDot(state){
+  const d=document.getElementById('syncDot');
+  if(!d) return;
+  d.className='dot '+(state||'');
+}
+
+/* called from save() — debounce 1.2 s after last edit */
+function scheduleAutoSync(){
+  if(!S.settings.autoSync) return;
+  clearTimeout(_syncTimer);
+  setSyncDot('syncing');
+  _syncTimer = setTimeout(pushDay, 1200);
+}
+
+/* push only the currently-viewed date */
+function pushDay(){
+  if(_syncInFlight){ _syncAgain = true; return; }
+  const day = S.days[currentDate];
+  if(!day) return;
+
+  const payload = {
+    action:'saveDay',
+    date:currentDate,
+    by: session ? (session.role + (session.room ? ' '+session.room : '')) : 'anon',
+    rooms:{},
+    floor: day.floor || null
+  };
+  ROOMS.forEach(r => { if(day.rooms && day.rooms[r]) payload.rooms[r] = day.rooms[r]; });
+  if(!Object.keys(payload.rooms).length && !payload.floor) return;
+
+  _syncInFlight = true;
+  setSyncDot('syncing');
+
+  fetch(GAS_URL, {
+    method:'POST', mode:'no-cors',
+    headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body:JSON.stringify(payload)
+  }).then(()=>{
+    _syncInFlight = false;
+    setSyncDot('ok');
+    S.meta.lastSync = nowStamp();
+    saveLocal();
+    if(_syncAgain){ _syncAgain = false; pushDay(); }
+  }).catch(err=>{
+    _syncInFlight = false;
+    setSyncDot('bad');
+    console.warn('Sync failed', err);
+  });
+}
+
+/* push a whole date range (used by the manual button) */
+function pushRange(from,to){
+  const dates=[]; let d=from, g=0;
+  while(d<=to && g++<400){ dates.push(d); d=addDays(d,1); }
+  if(!dates.length) return;
+  setSyncDot('syncing');
+  const payload = {
+    action:'saveDay',
+    date:dates[dates.length-1],            // last day wins for the "date" field
+    rangeStart:dates[0],
+    rangeEnd:dates[dates.length-1],
+    by: session ? session.role : 'anon',
+    rooms:{}, floor:null,
+    multi:{}
+  };
+  dates.forEach(dt=>{
+    const day=S.days[dt];
+    if(!day) return;
+    payload.multi[dt] = { rooms: day.rooms||{}, floor: day.floor||null };
+  });
+  fetch(GAS_URL, {
+    method:'POST', mode:'no-cors',
+    headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body:JSON.stringify(payload)
+  }).then(()=>{ setSyncDot('ok'); S.meta.lastSync=nowStamp(); saveLocal(); toast('Range pushed','ok'); })
+   .catch(()=>{ setSyncDot('bad'); toast('Range push failed','bad'); });
+}
+
+/* pull everything from the sheet and merge into local state */
+async function initialLoad(){
+  if(!GAS_URL){ render(); return; }
+  setSyncDot('syncing');
+  try{
+    const res = await fetch(GAS_URL + '?action=load&days=30');
+    const data = await res.json();
+    if(data && data.ok && data.days){
+      for(const date in data.days){
+        const srv = data.days[date];
+        if(!S.days[date]) S.days[date] = { rooms:{}, floor:null };
+        const loc = S.days[date];
+        if(!loc.rooms) loc.rooms = {};
+        if(srv.rooms) Object.assign(loc.rooms, srv.rooms);
+        if(srv.floor) loc.floor = srv.floor;
+      }
+      saveLocal();
+      setSyncDot('ok');
+    } else {
+      setSyncDot('');
+    }
+  }catch(err){
+    console.warn('Initial load failed', err);
+    setSyncDot('bad');
+  }
+  render();
+}
+
+/* ---------- master save() — every mutation calls this ---------- */
+function save(){
+  saveLocal();
+  scheduleAutoSync();
+}
+
+/* =========================================================
    RENDER
    ========================================================= */
 function render(){
   const app=$('#app');
   if(!session){ app.innerHTML=loginHTML(); return; }
   app.innerHTML = headerHTML()+navHTML()+`<div class="wrap" style="padding-bottom:40px">${viewHTML()}</div>`;
-  save();
 }
 function setView(v){view=v;render();}
 function setDate(d){currentDate=d;render();}
@@ -349,7 +471,7 @@ function headerHTML(){
     <span class="chip ${cls}">${roleName}</span>
     <input type="date" value="${currentDate}" onchange="setDate(this.value)">
     <button class="ghost" onclick="goToday()">Today</button>
-    <span class="dot" id="syncDot" title="Sheet sync status"></span>
+    <span class="dot" id="syncDot" title="Auto-sync status"></span>
     <button class="ghost" onclick="logout()">Logout</button>
   </div></div>`;
 }
@@ -478,7 +600,6 @@ function roomEntryHTML(room){
   }
   h+=`</div>`;
 
-  /* --- captain / substitution --- */
   if(session.role==='rc'||session.role==='admin'||session.role==='fcom'){
     const opts=st.students.map(s=>({v:s.id,l:s.name+' ('+s.id+')',short:s.name+' ('+s.id+')'}));
     h+=`<div class="card"><h3>Captaincy for this date</h3>
@@ -493,7 +614,6 @@ function roomEntryHTML(room){
     </div>`;
   }
 
-  /* --- salah + activity table --- */
   h+=`<div class="card scrollx"><h3>Salah &amp; Activity</h3>
     <table class="tbl">
       <thead><tr><th>#</th><th>ID</th><th>Name</th>${
@@ -517,7 +637,6 @@ function roomEntryHTML(room){
   });
   h+=`</tbody></table></div>`;
 
-  /* --- cleaning --- */
   const c=rd.cleaning;
   const byOpts=[{v:'',l:'— nobody —',short:'— nobody —'}].concat(st.students.map(s=>({v:s.id,l:s.name+' ('+s.id+')',short:s.name})));
   h+=`<div class="grid2">
@@ -536,10 +655,8 @@ function roomEntryHTML(room){
     </div>
   </div>`;
 
-  /* --- marks --- */
   h+=marksCard(room);
 
-  /* --- opinions & audit --- */
   const canOpine = session.role==='fc'||session.role==='fcom'||session.role==='admin';
   h+=`<div class="grid2">
     <div class="card"><h3>Sign-off</h3>
@@ -666,7 +783,6 @@ function submitRoom(room){
   rd.status.fcomVerified=false;
   audit(room,'Room Captain submitted full-day data');
   save(); render(); toast('Submitted to Floor Captain','ok');
-  if(S.settings.autoSync) syncNow(true);
 }
 function saveOpinion(room,which){
   const rd=getRoomDay(currentDate,room);
@@ -685,7 +801,6 @@ function fcConfirmRoom(room){
   rd.status.fcConfirmed=true; rd.status.fcAt=nowStamp();
   audit(room,'Floor Captain confirmed');
   save(); render(); toast('Confirmed','ok');
-  if(S.settings.autoSync) syncNow(true);
 }
 function fcomVerifyRoom(room){
   const rd=getRoomDay(currentDate,room);
@@ -693,7 +808,6 @@ function fcomVerifyRoom(room){
   rd.status.fcomVerified=true; rd.status.fcomAt=nowStamp();
   audit(room,'Floor Commander verified');
   save(); render(); toast('Verified','ok');
-  if(S.settings.autoSync) syncNow(true);
 }
 function fcConfirmFloor(){
   const allSub=ROOMS.every(r=>{const rd=rdSafe(currentDate,r);return rd&&rd.status.rcSubmitted;});
@@ -701,7 +815,6 @@ function fcConfirmFloor(){
   const fd=getDay(currentDate).floor;
   fd.fcConfirmed=true; fd.fcAt=nowStamp(); fd.fcBy=session.role;
   save(); render(); toast('Full day confirmed','ok');
-  if(S.settings.autoSync) syncNow(true);
 }
 function fcomVerifyFloor(){
   const fd=getDay(currentDate).floor;
@@ -709,7 +822,6 @@ function fcomVerifyFloor(){
   fd.fcomVerified=true; fd.fcomAt=nowStamp();
   fd.fcomNote=(document.getElementById('fcomFloorNote')||{}).value||fd.fcomNote||'';
   save(); render(); toast('Full day verified','ok');
-  if(S.settings.autoSync) syncNow(true);
 }
 function setGoods(key,val){
   const fd=getDay(currentDate).floor;
@@ -749,7 +861,6 @@ function confirmView(){
   }
   h+=`</tbody></table></div>`;
 
-  /* floor level */
   h+=`<div class="card"><h3>Floor-level full-day sign-off</h3>
     <div class="row">
       <span class="chip ${allSub?'ok':'bad'}">${allSub?'All 3 rooms submitted':'Awaiting rooms'}</span>
@@ -872,7 +983,7 @@ function reportsView(){
         <span class="small muted">From</span><input type="date" value="${repFrom}" onchange="repFrom=this.value;render()">
         <span class="small muted">To</span><input type="date" value="${repTo}" onchange="repTo=this.value;render()">
         <div class="spacer"></div>
-        <button class="ghost" onclick="syncNow()">Push to Google Sheet</button>
+        <button class="ghost" onclick="pushRange(repFrom,repTo)">Push range to Sheet</button>
       </div>
     </div>`;
 
@@ -914,7 +1025,6 @@ function adminView(){
 
   let h=`<h2>Administration</h2>`;
 
-  /* staff & pins */
   h+=`<div class="card"><h3>Staff, roles &amp; passcodes</h3>
     <div class="grid2">
       <div>
@@ -944,7 +1054,6 @@ function adminView(){
     <div class="muted small" style="margin-top:10px">Setting the FC / FCom student ID makes that student automatically earn the extra captaincy marks on every day they serve.</div>
   </div>`;
 
-  /* rotation */
   h+=`<div class="card"><h3>Weekly captaincy rotation</h3>
     <div class="row">
       <span class="small muted">Rotation start (Monday)</span>
@@ -960,22 +1069,19 @@ function adminView(){
     </div>
   </div>`;
 
-  /* sheet */
   h+=`<div class="card"><h3>Google Sheet sync</h3>
     <div class="row">
-      <input style="flex:1;min-width:280px" placeholder="https://script.google.com/macros/s/.../exec"
-        value="${esc(S.settings.sheetUrl)}" onchange="S.settings.sheetUrl=this.value.trim();save();toast('URL saved')">
+      <input style="flex:1;min-width:280px" value="${esc(GAS_URL)}" readonly>
+      <button class="ghost" onclick="pingGAS()">Ping</button>
     </div>
-    <label class="chk"><input type="checkbox" ${S.settings.autoSync?'checked':''} onchange="S.settings.autoSync=this.checked;save()"> Auto-push to the sheet after every submission / confirmation</label>
+    <label class="chk"><input type="checkbox" ${S.settings.autoSync?'checked':''} onchange="S.settings.autoSync=this.checked;save()"> Auto-push to the sheet after every edit</label>
     <div class="row" style="margin-top:10px">
-      <button class="ghost" onclick="pingSheet()">Ping</button>
-      <button class="primary" onclick="syncNow()">Push last 14 days now</button>
+      <button class="primary" onclick="pushRange(addDays(todayStr(),-14),todayStr())">Push last 14 days now</button>
       <span class="muted small">Last sync: ${esc(S.meta.lastSync||'never')}</span>
     </div>
-    <div class="muted small" style="margin-top:10px">Paste the Apps Script Web-App URL here (see the setup notes). Each push sends every student, salah status, activity, cleaning check and mark for the last 14 days.</div>
+    <div class="muted small" style="margin-top:10px">The URL is fixed in the app. Every change saves locally and is pushed to the <b>State</b> sheet automatically. On reload, the app pulls the last 30 days from the sheet and merges.</div>
   </div>`;
 
-  /* backup */
   h+=`<div class="card"><h3>Backup &amp; restore</h3>
     <div class="row">
       <button class="ghost" onclick="exportJSON()">Download JSON backup</button>
@@ -1007,7 +1113,7 @@ function importJSON(input){
       const data=JSON.parse(fr.result);
       if(!data.rooms) throw 0;
       if(!confirm('Replace all current data with this backup?')) return;
-      S=data; save(); render(); toast('Backup restored','ok');
+      S=data; saveLocal(); save(); render(); toast('Backup restored','ok');
     }catch(e){ toast('Invalid backup file','bad'); }
   };
   fr.readAsText(f);
@@ -1015,77 +1121,24 @@ function importJSON(input){
 function wipeAll(){
   if(!confirm('Erase ALL data (students, days, marks)? This cannot be undone.')) return;
   if(!confirm('Really erase everything?')) return;
-  S=defaultState(); save(); render(); toast('All data erased','bad');
+  S=defaultState(); saveLocal(); render(); toast('All data erased','bad');
 }
 
-/* =========================================================
-   GOOGLE SHEET SYNC
-   ========================================================= */
-function setSyncDot(state){
-  const d=document.getElementById('syncDot');
-  if(!d) return;
-  d.className='dot '+(state||'');
-}
-function buildPayload(){
-  const days=[];
-  const dates=Object.keys(S.days).sort().slice(-14);
-  for(const dt of dates){
-    const day=S.days[dt];
-    const rooms={};
-    for(const room of ROOMS){
-      const rd=day.rooms?day.rooms[room]:null;
-      if(!rd) continue;
-      const students=S.rooms[room].students.map(s=>{
-        const e=equityFor(dt,room,s.id);
-        return {
-          id:s.id, name:s.name,
-          salah:rd.salah[s.id]||{},
-          activity:rd.activity[s.id]||'',
-          note:rd.notes[s.id]||'',
-          marks:{neg:e.neg,bonus:e.bonus,roles:e.roles,raw:e.raw,equity:e.roleEquity,final:e.final,
-                 negReason:e.negReason,bonusReason:e.bonusReason}
-        };
-      });
-      rooms[room]={captainId:rd.captainId,acting:rd.acting,students,cleaning:rd.cleaning,status:rd.status};
-    }
-    days.push({date:dt,rooms,floor:day.floor||{}});
-  }
-  return {
-    action:'bulkSync',
-    generatedAt:new Date().toISOString(),
-    by:session?session.role:'system',
-    rooms:ROOMS,
-    users:S.users,
-    days
-  };
-}
-function postToSheet(payload,silent){
-  if(!S.settings.sheetUrl){ if(!silent) toast('No Google Sheet URL set — see Admin tab','bad'); return; }
-  fetch(S.settings.sheetUrl,{
-    method:'POST', mode:'no-cors',
+/* ---------- manual ping ---------- */
+function pingGAS(){
+  setSyncDot('syncing');
+  fetch(GAS_URL, { method:'POST', mode:'no-cors',
     headers:{'Content-Type':'text/plain;charset=utf-8'},
-    body:JSON.stringify(payload)
-  }).then(()=>{
-    setSyncDot('ok');
-    S.meta.lastSync=nowStamp(); save();
-    if(!silent) toast('Pushed to Google Sheet','ok');
-    if(view==='admin'||view==='reports') render();
-  }).catch(()=>{
-    setSyncDot('bad');
-    if(!silent) toast('Sync failed — check the URL','bad');
-  });
-}
-function syncNow(silent){ postToSheet(buildPayload(),silent); }
-function pingSheet(){
-  if(!S.settings.sheetUrl) return toast('No Google Sheet URL set','bad');
-  postToSheet({action:'ping',at:new Date().toISOString()},false);
+    body:JSON.stringify({action:'ping', by: session?session.role:'anon'})
+  }).then(()=>{ setSyncDot('ok'); toast('Ping sent — check the Sync Log tab','ok'); })
+   .catch(()=>{ setSyncDot('bad'); toast('Ping failed','bad'); });
 }
 
 /* =========================================================
    BOOT
    ========================================================= */
-S=load();
-render();
+S = load();
+initialLoad();
 </script>
 </body>
 </html>
