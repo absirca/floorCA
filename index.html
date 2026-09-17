@@ -7,12 +7,14 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏠</text></svg>">
 <style>
 :root{--bg:#0e1320;--card:#1b2438;--line:#2b3752;--txt:#e8eefb;--muted:#8b9ab5;--acc:#5b8cff;--ok:#2ecc8f;--warn:#ffb020;--bad:#ff5c6c;}
-*{box-sizing:border-box}html,body{margin:0;padding:0}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
 body{background:var(--bg);color:var(--txt);font:14px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-text-size-adjust:100%}
 .wrap{max-width:1400px;margin:0 auto;padding:0 14px}
 .topbar{background:linear-gradient(180deg,#182136,#131a29);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:50}
 .topbar .wrap{display:flex;align-items:center;gap:10px;padding:10px 14px;flex-wrap:wrap}
-.brand{font-weight:700;font-size:15px}.spacer{flex:1}
+.brand{font-weight:700;font-size:15px}
+.spacer{flex:1}
 .chip{display:inline-block;padding:3px 10px;border-radius:999px;background:#22304d;border:1px solid var(--line);font-size:12px}
 .chip.ok{background:rgba(46,204,143,.15);border-color:var(--ok);color:var(--ok)}
 .chip.warn{background:rgba(255,176,32,.15);border-color:var(--warn);color:var(--warn)}
@@ -21,11 +23,15 @@ body{background:var(--bg);color:var(--txt);font:14px/1.5 system-ui,-apple-system
 .tabs button{background:transparent;border:1px solid transparent;color:var(--muted)}
 .tabs button.active{background:#22304d;border-color:var(--line);color:var(--txt);font-weight:600}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:16px}
-h2{margin:18px 0 12px;font-size:20px}h3{font-size:15px}.card h3{margin:0 0 10px}
+h2{margin:18px 0 12px;font-size:20px}
+h3{font-size:15px}
+.card h3{margin:0 0 10px}
 .grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
 .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px}
 .row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.muted{color:var(--muted)}.small{font-size:12px}.mono{font-family:ui-monospace,Menlo,Consolas,monospace}
+.muted{color:var(--muted)}
+.small{font-size:12px}
+.mono{font-family:ui-monospace,Menlo,Consolas,monospace}
 table.tbl{width:100%;border-collapse:collapse;font-size:13px}
 table.tbl th,table.tbl td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;white-space:nowrap}
 table.tbl th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.04em}
@@ -35,7 +41,8 @@ button:hover{filter:brightness(1.15)}
 button.primary{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:600}
 button.ok{background:var(--ok);border-color:var(--ok);color:#04281a;font-weight:600}
 button.bad{background:var(--bad);border-color:var(--bad);color:#fff}
-button.ghost{background:transparent}button:disabled{opacity:.4;cursor:not-allowed}
+button.ghost{background:transparent}
+button:disabled{opacity:.4;cursor:not-allowed}
 input,select,textarea{background:#0f1626;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:7px 9px;font:inherit}
 label.chk{display:flex;align-items:center;gap:8px;margin:8px 0;cursor:pointer}
 input[type=checkbox]{width:16px;height:16px;accent-color:var(--acc)}
@@ -47,7 +54,8 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--acc)}
 .login label{display:block;margin:12px 0 5px;font-size:13px;color:var(--muted)}
 .login input,.login select{width:100%}
 .dot{width:10px;height:10px;border-radius:50%;background:#44506b;display:inline-block}
-.dot.ok{background:var(--ok)}.dot.bad{background:var(--bad)}
+.dot.ok{background:var(--ok)}
+.dot.bad{background:var(--bad)}
 .dot.syncing{background:var(--warn);animation:pulse 1s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
 #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#22304d;border:1px solid var(--line);padding:10px 18px;border-radius:10px;opacity:0;pointer-events:none;transition:.25s;z-index:999;max-width:90vw;text-align:center}
@@ -60,11 +68,19 @@ hr{border:none;border-top:1px solid var(--line);margin:14px 0}
 /* Entry UI */
 .room-banner{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:14px}
 .room-banner h2{margin:0;font-size:22px}
-.entry-card{background:#1b2438;border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:12px}
-.entry-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--line);gap:10px;flex-wrap:wrap}
+.entry-card{background:#1b2438;border:1px solid var(--line);border-radius:12px;margin-bottom:10px;overflow:hidden}
+.entry-header{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 12px;cursor:pointer;user-select:none;background:#1b2438;transition:.15s}
+.entry-header:hover{background:#202a41}
+.entry-card.open .entry-header{background:#202a41;border-bottom:1px solid var(--line)}
 .entry-name{font-weight:600;font-size:15px}
-.entry-id{color:var(--muted);font-size:12px;font-family:ui-monospace,monospace}
-.entry-score{font-size:18px;font-weight:700;color:var(--acc)}
+.entry-id{color:var(--muted);font-size:12px;font-family:ui-monospace,monospace;margin-top:2px}
+.entry-score{font-size:18px;font-weight:700;color:var(--acc);margin-left:6px}
+.entry-summary{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.entry-summary .chip{font-size:11px;padding:2px 8px}
+.caret{color:var(--muted);font-size:14px;transition:.15s;display:inline-block}
+.entry-card.open .caret{transform:rotate(90deg)}
+.entry-body{padding:12px;display:none}
+.entry-card.open .entry-body{display:block}
 .entry-row{display:flex;gap:8px;align-items:flex-start;margin-bottom:7px}
 .entry-label{flex:0 0 100px;font-size:11px;color:var(--muted);padding-top:7px;text-transform:uppercase;letter-spacing:.06em;font-weight:600}
 .btn-group{display:flex;flex-wrap:wrap;gap:4px;flex:1}
@@ -77,6 +93,8 @@ hr{border:none;border-top:1px solid var(--line);margin:14px 0}
 .btn-opt.active[data-tone="info"]{background:var(--acc);color:#fff}
 .btn-opt.active[data-tone="muted"]{background:#44506b;color:#e8eefb}
 .entry-note{flex:1;padding:6px 9px;font-size:12px;min-width:120px}
+.section-head{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin:12px 0 6px;padding-top:10px;border-top:1px dashed var(--line)}
+.section-head:first-child{margin-top:0;padding-top:0;border-top:none}
 @media(max-width:640px){
   .entry-row{flex-direction:column;gap:4px}
   .entry-label{flex:0 0 auto;padding-top:0}
@@ -84,7 +102,6 @@ hr{border:none;border-top:1px solid var(--line);margin:14px 0}
 }
 .big-edit{padding:12px 18px;font-size:14px;font-weight:600;border-radius:11px;background:var(--acc);border-color:var(--acc);color:#fff}
 .quickbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;background:#131c2e;border:1px solid var(--line);padding:10px 12px;border-radius:12px}
-.section-head{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin:14px 0 6px;padding-top:10px;border-top:1px dashed var(--line)}
 </style>
 </head>
 <body>
@@ -93,17 +110,18 @@ hr{border:none;border-top:1px solid var(--line);margin:14px 0}
 
 <script>
 /* =========================================================
-   FLOOR MANAGEMENT SYSTEM — v5
-   GAS: https://script.google.com/macros/s/AKfycbxDrzuq8tLkwojEkE5eg7djiaHjW0lG27VxlPuANP3qjPPHE75ErywgfWpOFGqQ5gnr/exec
+   FLOOR MANAGEMENT SYSTEM — v6
+   • 3 meals (breakfast / lunch / dinner)
+   • Collapsible student cards
    ========================================================= */
 const GAS_URL='https://script.google.com/macros/s/AKfycbxDrzuq8tLkwojEkE5eg7djiaHjW0lG27VxlPuANP3qjPPHE75ErywgfWpOFGqQ5gnr/exec';
 const LS='fms_v1';
-const VERSION='v5';
+const LS_OPEN='fms_openCards';
+const VERSION='v6';
 const ROOMS=['301','302','303'];
 const CLASSES=['9','10','11','12'];
 const PRAYERS=[['fajr','Fajr'],['dhuhr','Dhuhr'],['asr','Asr'],['maghrib','Maghrib'],['isha','Isha']];
 
-/* 7 study-time slots */
 const STUDY_TIMES=[
   {k:'quran',    l:'Quran'},
   {k:'pre_bf',   l:'Pre-bf'},
@@ -112,6 +130,12 @@ const STUDY_TIMES=[
   {k:'afternoon',l:'Afternoon'},
   {k:'evening',  l:'Evening'},
   {k:'night',    l:'Night'}
+];
+
+const MEALS=[
+  {k:'breakfast',l:'Breakfast'},
+  {k:'lunch',    l:'Lunch'},
+  {k:'dinner',   l:'Dinner'}
 ];
 
 const SALAH_STATUS=[
@@ -125,7 +149,6 @@ const SALAH_STATUS=[
   {v:'na',l:'N/A (leave / sick)',short:'N/A',tone:'muted'}
 ];
 
-/* Compact icon-only study location buttons */
 const STUDY_LOC=[
   {v:'',l:'Not marked',short:'—',tone:'muted'},
   {v:'reading_room',l:'Reading room',short:'📖',tone:'ok'},
@@ -175,6 +198,22 @@ function mondayOf(d){const x=new Date(d);const k=(x.getDay()+6)%7;x.setDate(x.ge
 function nowStamp(){return new Date().toLocaleString();}
 function toast(msg,kind){const t=$('#toast');t.textContent=msg;t.style.borderColor=kind==='bad'?'var(--bad)':kind==='ok'?'var(--ok)':'var(--line)';t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2600);}
 
+/* ---------- collapse state ---------- */
+let openCards = {};
+try{ openCards = JSON.parse(localStorage.getItem(LS_OPEN)||'{}'); }catch(e){ openCards = {}; }
+function saveOpenCards(){try{localStorage.setItem(LS_OPEN,JSON.stringify(openCards));}catch(e){}}
+function cardKey(room,sid){ return room+'||'+sid; }
+function isCardOpen(room,sid){ return !!openCards[cardKey(room,sid)]; }
+function toggleCard(room,sid){ const k=cardKey(room,sid); openCards[k]=!openCards[k]; saveOpenCards(); render(); }
+function openAllCards(room){
+  for(const s of S.rooms[room].students) openCards[cardKey(room,s.id)]=true;
+  saveOpenCards(); render();
+}
+function closeAllCards(room){
+  for(const s of S.rooms[room].students) delete openCards[cardKey(room,s.id)];
+  saveOpenCards(); render();
+}
+
 /* ---------- state ---------- */
 let S=null,session=null,currentDate=todayStr(),view='overview',activeRoom='301';
 let repFrom=addDays(todayStr(),-6),repTo=todayStr();
@@ -206,12 +245,7 @@ function defaultState(){
 }
 function migrateConfig(){
   if(!S.meta) S.meta={};
-  if(S.meta.version !== VERSION){
-    /* First run of v5 — reset passcodes only if coming from older version.
-       But preserve whatever users already had if they upgraded from v4. */
-    if(!S.users) S.users = defaultUsers();
-    S.meta.version = VERSION;
-  }
+  if(S.meta.version !== VERSION) S.meta.version = VERSION;
   for(const r in S.rooms){
     (S.rooms[r].students||[]).forEach(s=>{
       if(!s.class) s.class='9';
@@ -287,13 +321,25 @@ function getRoomDay(date,room){
   const day=getDay(date);
   if(!day.rooms[room])day.rooms[room]=newRoomDay(date,room);
   const rd=day.rooms[room];
-  /* ensure all v5 maps exist and study is object-per-time */
   if(!rd.study) rd.study={};
   if(!rd.food) rd.food={};
   if(!rd.foodNote) rd.foodNote={};
+  /* migrate v5 single-string food → 3-meal object */
+  for(const sid in rd.food){
+    if(typeof rd.food[sid] === 'string'){
+      const old = rd.food[sid];
+      rd.food[sid] = { breakfast: old||'eaten', lunch: old||'eaten', dinner: old||'eaten' };
+    }
+  }
+  for(const sid in rd.foodNote){
+    if(typeof rd.foodNote[sid] === 'string'){
+      const old = rd.foodNote[sid];
+      rd.foodNote[sid] = { breakfast: old, lunch: '', dinner: '' };
+    }
+  }
+  /* migrate v4 single-string study → object */
   for(const sid in rd.study){
     if(typeof rd.study[sid] === 'string'){
-      /* migrate old single-string format → new per-time object */
       const old = rd.study[sid];
       rd.study[sid] = {};
       if(old) rd.study[sid].quran = old;
@@ -345,7 +391,7 @@ function audit(room,msg){
 }
 
 /* =========================================================
-   AUTO-SYNC
+   SYNC
    ========================================================= */
 let _syncTimer=null,_syncInFlight=false,_syncAgain=false;
 let _configTimer=null,_configInFlight=false,_configAgain=false;
@@ -473,7 +519,7 @@ function loginHTML(){
     <input type="password" id="lgPin" autocomplete="off" onkeydown="if(event.key==='Enter')doLogin()">
     <button class="primary" style="width:100%;margin-top:14px" onclick="doLogin()">Enter</button>
     <div id="lgErr" class="err"></div>
-    <div class="muted small" style="margin-top:14px">Default passcode for everyone: <b class="mono">1122</b>. Change it in Admin → Roles & passcodes.</div>
+    <div class="muted small" style="margin-top:14px">Default passcode: <b class="mono">1122</b></div>
   </div></div>`;
 }
 function lgRoleChange(){ $('#lgRoomWrap').style.display=$('#lgRole').value==='rc'?'':'none'; }
@@ -546,7 +592,7 @@ function overviewView(){
     const total=st.students.length;
     const marked=st.students.filter(s=>{const sl=rd.salah[s.id]||{};return PRAYERS.every(p=>sl[p[0]]);}).length;
     const studyMarked=st.students.filter(s=>rd.study[s.id]&&Object.keys(rd.study[s.id]).length).length;
-    const foodMarked=st.students.filter(s=>rd.food[s.id]).length;
+    const foodMarked=st.students.filter(s=>rd.food[s.id]&&Object.keys(rd.food[s.id]).length).length;
     const clean=rd.cleaning;
     const equipCount=EQUIP.filter(([k])=>clean[k]).length;
     h+=`<div class="card">
@@ -578,7 +624,7 @@ function overviewView(){
 function editRoom(room){activeRoom=room;view='entry';render();}
 
 /* =========================================================
-   DAILY ENTRY — button UI
+   DAILY ENTRY
    ========================================================= */
 function entryView(){
   const rooms=session.role==='rc'?[session.room]:ROOMS;
@@ -601,12 +647,16 @@ function roomEntryHTML(room){
     <span class="chip">${prettyDate(currentDate)}</span>
     ${statusChip(rd)}
     <div class="spacer"></div>
-    ${canEdit?`<button class="primary" onclick="submitRoom('${room}')">${rd.status.rcSubmitted?'Re-submit':'Submit to Floor Captain'}</button>`:''}
+    ${canEdit?`<button class="primary" onclick="submitRoom('${room}')">${rd.status.rcSubmitted?'Re-submit':'Submit to FC'}</button>`:''}
     <button class="ghost" onclick="openCaptainPicker('${room}')">Change captain</button>
   </div>`;
 
-  h+=`<div class="card" style="padding:12px">
-    <div class="muted small">Captain on duty: <b>${cap?esc(cap.name):'—'}</b> ${cap?classPill(cap.class):''} (${rd.captainId||'—'}) ${rd.acting?'<span class="chip warn">Acting</span>':''}</div>
+  h+=`<div class="quickbar">
+    <span class="small muted" style="align-self:center">Cards:</span>
+    <button class="ghost" onclick="openAllCards('${room}')">▾ Open all</button>
+    <button class="ghost" onclick="closeAllCards('${room}')">▸ Close all</button>
+    <div class="spacer"></div>
+    <span class="muted small">Captain: <b>${cap?esc(cap.name):'—'}</b> ${cap?classPill(cap.class):''} (${rd.captainId||'—'}) ${rd.acting?'<span class="chip warn">Acting</span>':''}</span>
   </div>`;
 
   if(!canEdit){
@@ -616,63 +666,7 @@ function roomEntryHTML(room){
   }
 
   st.students.forEach((s,i)=>{
-    const sl=rd.salah[s.id]||{};
-    const e=equityFor(currentDate,room,s.id);
-    const study=rd.study[s.id]||{};
-    const foodVal = rd.food[s.id] || 'eaten';
-    const foodNote = rd.foodNote[s.id] || '';
-
-    h+=`<div class="entry-card">
-      <div class="entry-header">
-        <div>
-          <div class="entry-name">${i+1}. ${esc(s.name)} ${e.roles.length?`<span class="chip" style="font-size:10px">${e.roles.join('+')}</span>`:''}</div>
-          <div class="entry-id">${esc(s.id)} · ${classPill(s.class)||'<span class="muted">—</span>'}</div>
-        </div>
-        <div class="entry-score">${e.final}</div>
-      </div>`;
-
-    /* Salah */
-    h+=`<div class="section-head">Salah</div>`;
-    for(const [k,lbl] of PRAYERS){
-      h+=`<div class="entry-row">
-        <div class="entry-label">${lbl}</div>
-        <div class="btn-group">${bg(SALAH_STATUS, sl[k]||'', !canEdit, `setSalah('${room}','${s.id}','${k}'`)}</div>
-      </div>`;
-    }
-
-    /* Study times */
-    h+=`<div class="section-head">Study time (7 slots)
-      <span class="muted" style="text-transform:none;font-weight:400;letter-spacing:0"> · 📖 Reading room · 🛏 Bed · 📚 Room study · 🏢 Other floor</span></div>`;
-    for(const slot of STUDY_TIMES){
-      const cur = study[slot.k] || '';
-      h+=`<div class="entry-row">
-        <div class="entry-label">${slot.l}</div>
-        <div class="btn-group">${bg(STUDY_LOC, cur, !canEdit, `setStudy('${room}','${s.id}','${slot.k}'`)}</div>
-      </div>`;
-    }
-
-    /* Food */
-    h+=`<div class="section-head">Food</div>`;
-    h+=`<div class="entry-row">
-      <div class="entry-label">Food</div>
-      <div class="btn-group">${bg(FOOD_OPTS, foodVal, !canEdit, `setFood('${room}','${s.id}'`)}</div>
-      <input class="entry-note" value="${esc(foodNote)}" ${canEdit?'':'disabled'} onchange="setFoodNote('${room}','${s.id}',this.value)" placeholder="${foodVal==='not_eaten'?'what did they eat / why not?':'optional note'}">
-    </div>`;
-
-    /* Activity */
-    h+=`<div class="section-head">Activity / Whereabouts</div>`;
-    h+=`<div class="entry-row">
-      <div class="entry-label">Activity</div>
-      <div class="btn-group">${bg(ACTIVITY, rd.activity[s.id]||'', !canEdit, `setActivity('${room}','${s.id}'`)}</div>
-    </div>`;
-
-    /* Note */
-    h+=`<div class="entry-row">
-      <div class="entry-label">Note</div>
-      <input class="entry-note" value="${esc(rd.notes[s.id]||'')}" ${canEdit?'':'disabled'} onchange="setNote('${room}','${s.id}',this.value)" placeholder="optional">
-    </div>`;
-
-    h+=`</div>`;
+    h+=studentCardHTML(room,s,i,canEdit);
   });
 
   /* cleaning */
@@ -732,7 +726,86 @@ function roomEntryHTML(room){
   return h;
 }
 
-/* Build a button group. fnPrefix ends with a trailing comma+quote — the option value will be appended. */
+/* ---------- single student card ---------- */
+function studentCardHTML(room,s,i,canEdit){
+  const rd=getRoomDay(currentDate,room);
+  const sl=rd.salah[s.id]||{};
+  const e=equityFor(currentDate,room,s.id);
+  const study=rd.study[s.id]||{};
+  const food=rd.food[s.id]||{breakfast:'eaten',lunch:'eaten',dinner:'eaten'};
+  const foodNote=rd.foodNote[s.id]||{};
+  const isOpen=isCardOpen(room,s.id);
+
+  /* summary counts */
+  const salahDone = PRAYERS.filter(([k])=>sl[k]).length;
+  const studyDone = STUDY_TIMES.filter(t=>study[t.k]).length;
+  const mealsEaten = MEALS.filter(m=>(food[m.k]||'eaten')==='eaten').length;
+
+  let h=`<div class="entry-card ${isOpen?'open':''}">
+    <div class="entry-header" onclick="toggleCard('${room}','${s.id}')">
+      <div>
+        <div class="entry-name">${i+1}. ${esc(s.name)} ${e.roles.length?`<span class="chip" style="font-size:10px">${e.roles.join('+')}</span>`:''}</div>
+        <div class="entry-id">${esc(s.id)} · ${classPill(s.class)||'<span class="muted">—</span>'}</div>
+      </div>
+      <div class="entry-summary">
+        <span class="chip ${salahDone===5?'ok':salahDone?'warn':''}">Salah ${salahDone}/5</span>
+        <span class="chip ${studyDone===7?'ok':studyDone?'warn':''}">Study ${studyDone}/7</span>
+        <span class="chip ${mealsEaten===3?'ok':mealsEaten===0?'bad':'warn'}">🍽 ${mealsEaten}/3</span>
+        <span class="entry-score">${e.final}</span>
+        <span class="caret">▸</span>
+      </div>
+    </div>
+    <div class="entry-body">`;
+
+  /* Salah */
+  h+=`<div class="section-head">Salah</div>`;
+  for(const [k,lbl] of PRAYERS){
+    h+=`<div class="entry-row">
+      <div class="entry-label">${lbl}</div>
+      <div class="btn-group">${bg(SALAH_STATUS, sl[k]||'', !canEdit, `setSalah('${room}','${s.id}','${k}'`)}</div>
+    </div>`;
+  }
+
+  /* Study times */
+  h+=`<div class="section-head">Study time (7 slots) <span class="muted" style="text-transform:none;font-weight:400;letter-spacing:0">· 📖 Reading · 🛏 Bed · 📚 Room · 🏢 Other floor</span></div>`;
+  for(const slot of STUDY_TIMES){
+    const cur = study[slot.k] || '';
+    h+=`<div class="entry-row">
+      <div class="entry-label">${slot.l}</div>
+      <div class="btn-group">${bg(STUDY_LOC, cur, !canEdit, `setStudy('${room}','${s.id}','${slot.k}'`)}</div>
+    </div>`;
+  }
+
+  /* Food — 3 meals */
+  h+=`<div class="section-head">Food (3 meals)</div>`;
+  for(const meal of MEALS){
+    const cur = food[meal.k] || 'eaten';
+    const note = foodNote[meal.k] || '';
+    h+=`<div class="entry-row">
+      <div class="entry-label">${meal.l}</div>
+      <div class="btn-group">${bg(FOOD_OPTS, cur, !canEdit, `setFood('${room}','${s.id}','${meal.k}'`)}</div>
+      <input class="entry-note" value="${esc(note)}" ${canEdit?'':'disabled'} onchange="setFoodNote('${room}','${s.id}','${meal.k}',this.value)" placeholder="${cur==='not_eaten'?'why / what instead?':'what ate?'}">
+    </div>`;
+  }
+
+  /* Activity */
+  h+=`<div class="section-head">Activity / Whereabouts</div>`;
+  h+=`<div class="entry-row">
+    <div class="entry-label">Activity</div>
+    <div class="btn-group">${bg(ACTIVITY, rd.activity[s.id]||'', !canEdit, `setActivity('${room}','${s.id}'`)}</div>
+  </div>`;
+
+  /* Note */
+  h+=`<div class="entry-row">
+    <div class="entry-label">Note</div>
+    <input class="entry-note" value="${esc(rd.notes[s.id]||'')}" ${canEdit?'':'disabled'} onchange="setNote('${room}','${s.id}',this.value)" placeholder="optional">
+  </div>`;
+
+  h+=`</div></div>`;
+  return h;
+}
+
+/* Build a button group. fnPrefix ends with a trailing quote — the option value will be appended. */
 function bg(options, current, disabled, fnPrefix){
   return options.map(o=>{
     const active = o.v===current;
@@ -797,8 +870,18 @@ function setStudy(room,sid,slot,val){
   rd.study[sid][slot]=val;
   save();render();
 }
-function setFood(room,sid,val){const rd=getRoomDay(currentDate,room);rd.food[sid]=val;save();render();}
-function setFoodNote(room,sid,val){const rd=getRoomDay(currentDate,room);rd.foodNote[sid]=val;save();}
+function setFood(room,sid,meal,val){
+  const rd=getRoomDay(currentDate,room);
+  if(!rd.food[sid] || typeof rd.food[sid]==='string') rd.food[sid]={breakfast:'eaten',lunch:'eaten',dinner:'eaten'};
+  rd.food[sid][meal]=val;
+  save();render();
+}
+function setFoodNote(room,sid,meal,val){
+  const rd=getRoomDay(currentDate,room);
+  if(!rd.foodNote[sid] || typeof rd.foodNote[sid]==='string') rd.foodNote[sid]={breakfast:'',lunch:'',dinner:''};
+  rd.foodNote[sid][meal]=val;
+  save();
+}
 function setActivity(room,sid,val){const rd=getRoomDay(currentDate,room);rd.activity[sid]=val;save();render();}
 function setNote(room,sid,val){const rd=getRoomDay(currentDate,room);rd.notes[sid]=val;save();}
 function setClean(room,key,val){const rd=getRoomDay(currentDate,room);rd.cleaning[key]=val;save();}
@@ -1097,1112 +1180,9 @@ function adminView(){
       <button class="ghost" onclick="pushConfig()">Push roster &amp; passcodes now</button>
     </div>
     <div class="muted small" style="margin-top:10px">
-      Last daily sync: ${esc(S.meta.lastSync||'never')} · Last config sync: ${esc(S.meta.lastConfigSync||'never')}<br>
-      Sheet tabs: <b>State</b>, <b>Config</b>, <b>Daily Records</b>, <b>Room Sign-off</b>, <b>Floor Goods &amp; Sign-off</b>, <b>Roster</b>, <b>Sync Log</b>.
+      Last daily sync: ${esc(S.meta.lastSync||'never')} · Last config sync: ${esc(S.meta.lastConfigSync||'never')}
     </div>
   </div>`;
-  h+=`<div class="card"><h3>Backup &amp; restore</h3>
-    <div class="row">
-      <button class="ghost" onclick="exportJSON()">Download JSON backup</button>
-      <input type="file" id="importFile" accept=".json" onchange="importJSON(this)">
-      <div class="spacer"></div>
-      <button class="bad" onclick="wipeAll()">Erase all data</button>
-    </div>
-  </div>`;
-  return h;
-}
-function setStaff(which,key,val){S.users[which][key]=val;saveConfig();render();toast('Saved','ok');}
-function setRcPin(room,val){S.users.rc[room]=val;saveConfig();toast('Saved','ok');}
-function resetAllPins(){
-  if(!confirm('Reset every passcode to 1122?'))return;
-  S.users=defaultUsers();
-  saveConfig();render();toast('All passcodes reset to 1122','ok');
-}
-function exportJSON(){
-  const blob=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
-  a.download='floor-backup-'+todayStr()+'.json';a.click();
-}
-function importJSON(input){
-  const f=input.files[0];if(!f)return;
-  const fr=new FileReader();
-  fr.onload=()=>{
-    try{
-      const data=JSON.parse(fr.result);
-      if(!data.rooms)throw 0;
-      if(!confirm('Replace all current data with this backup?'))return;
-      S=data;migrateConfig();saveLocal();saveConfig();save();render();toast('Backup restored & pushed','ok');
-    }catch(e){toast('Invalid backup file','bad');}
-  };
-  fr.readAsText(f);
-}
-function wipeAll(){
-  if(!confirm('Erase ALL data? This cannot be undone.'))return;
-  if(!confirm('Really erase everything?'))return;
-  S=defaultState();saveLocal();saveConfig();render();toast('All data erased','bad');
-}
-function pingGAS(){
-  setSyncDot('syncing');
-  fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},
-    body:JSON.stringify({action:'ping',by:session?session.role:'anon'})})
-    .then(()=>{setSyncDot('ok');toast('Ping sent — check the Sync Log tab','ok');})
-    .catch(()=>{setSyncDot('bad');toast('Ping failed','bad');});
-}
-
-/* =========================================================
-   BOOT
-   ========================================================= */
-S=load();
-initialLoad();
-</script>
-</body>
-</html>button.primary{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:600}
-button.big{padding:14px 18px;font-size:15px;font-weight:600;border-radius:12px}
-button.ok{background:var(--ok);border-color:var(--ok);color:#04281a;font-weight:600}
-button.bad{background:var(--bad);border-color:var(--bad);color:#fff}
-button.ghost{background:transparent}button:disabled{opacity:.4;cursor:not-allowed}
-input,select,textarea{background:#0f1626;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:7px 9px;font:inherit}
-label.chk{display:flex;align-items:center;gap:8px;margin:8px 0;cursor:pointer}
-input[type=checkbox]{width:16px;height:16px;accent-color:var(--acc)}
-.warnnote{color:var(--warn);font-size:12.5px;margin:6px 0 10px;background:rgba(255,176,32,.08);border-left:3px solid var(--warn);padding:8px 10px;border-radius:0 8px 8px 0}
-.oknote{color:var(--ok);font-size:12.5px;margin:6px 0 10px;background:rgba(46,204,143,.08);border-left:3px solid var(--ok);padding:8px 10px;border-radius:0 8px 8px 0}
-.err{color:var(--bad);font-size:13px;min-height:18px;margin-top:8px}
-.loginwrap{display:flex;min-height:100vh;align-items:center;justify-content:center;padding:20px}
-.login{width:100%;max-width:400px}
-.login label{display:block;margin:12px 0 5px;font-size:13px;color:var(--muted)}
-.login input,.login select{width:100%}
-.dot{width:10px;height:10px;border-radius:50%;background:#44506b;display:inline-block}
-.dot.ok{background:var(--ok)}.dot.bad{background:var(--bad)}
-.dot.syncing{background:var(--warn);animation:pulse 1s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
-#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#22304d;border:1px solid var(--line);padding:10px 18px;border-radius:10px;opacity:0;pointer-events:none;transition:.25s;z-index:999;max-width:90vw;text-align:center}
-#toast.show{opacity:1}
-.stat{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px}
-.stat div{background:#101728;border:1px solid var(--line);border-radius:10px;padding:6px 12px;font-size:12px}
-.stat b{display:block;font-size:18px}
-hr{border:none;border-top:1px solid var(--line);margin:14px 0}
-
-/* ---- Entry UI ---- */
-.room-banner{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:14px}
-.room-banner h2{margin:0;font-size:22px}
-.entry-card{background:#1b2438;border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:12px}
-.entry-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--line);gap:10px;flex-wrap:wrap}
-.entry-name{font-weight:600;font-size:15px}
-.entry-id{color:var(--muted);font-size:12px;font-family:ui-monospace,monospace}
-.entry-score{font-size:18px;font-weight:700;color:var(--acc)}
-.entry-row{display:flex;gap:8px;align-items:flex-start;margin-bottom:7px}
-.entry-label{flex:0 0 90px;font-size:11px;color:var(--muted);padding-top:7px;text-transform:uppercase;letter-spacing:.06em;font-weight:600}
-.btn-group{display:flex;flex-wrap:wrap;gap:4px;flex:1}
-.btn-opt{padding:6px 10px;border-radius:8px;border:1px solid var(--line);background:#131c2e;color:var(--muted);cursor:pointer;font-size:12px;white-space:nowrap;transition:.12s;user-select:none}
-.btn-opt:hover{filter:brightness(1.3);border-color:var(--acc)}
-.btn-opt.active{color:#fff;font-weight:600;border-color:transparent}
-.btn-opt.active[data-tone="ok"]{background:var(--ok);color:#04281a}
-.btn-opt.active[data-tone="warn"]{background:var(--warn);color:#2a1a00}
-.btn-opt.active[data-tone="bad"]{background:var(--bad);color:#fff}
-.btn-opt.active[data-tone="info"]{background:var(--acc);color:#fff}
-.btn-opt.active[data-tone="muted"]{background:#44506b;color:#e8eefb}
-.entry-note{flex:1;padding:6px 9px;font-size:12px;min-width:120px}
-@media(max-width:640px){
-  .entry-row{flex-direction:column;gap:4px}
-  .entry-label{flex:0 0 auto;padding-top:0}
-  .btn-opt{padding:7px 9px}
-}
-.big-edit{padding:12px 18px;font-size:14px;font-weight:600;border-radius:11px;background:var(--acc);border-color:var(--acc);color:#fff}
-.big-edit:hover{filter:brightness(1.15)}
-.quickbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;background:#131c2e;border:1px solid var(--line);padding:10px 12px;border-radius:12px}
-</style>
-</head>
-<body>
-<div id="app"></div>
-<div id="toast"></div>
-
-<script>
-/* =========================================================
-   FLOOR MANAGEMENT SYSTEM — v4 (button-entry, self-study, no student login)
-   GAS: https://script.google.com/macros/s/AKfycbxDrzuq8tLkwojEkE5eg7djiaHjW0lG27VxlPuANP3qjPPHE75ErywgfWpOFGqQ5gnr/exec
-   ========================================================= */
-const GAS_URL='https://script.google.com/macros/s/AKfycbxDrzuq8tLkwojEkE5eg7djiaHjW0lG27VxlPuANP3qjPPHE75ErywgfWpOFGqQ5gnr/exec';
-const LS='fms_v1';
-const VERSION='v4';
-const ROOMS=['301','302','303'];
-const CLASSES=['9','10','11','12'];
-const PRAYERS=[['fajr','Fajr'],['dhuhr','Dhuhr'],['asr','Asr'],['maghrib','Maghrib'],['isha','Isha']];
-
-/* Salah status — compact buttons with tone colours */
-const SALAH_STATUS=[
-  {v:'',              l:'Not marked',         short:'—',   tone:'muted'},
-  {v:'rakat1',        l:'Attended from Rakat 1', short:'R1',  tone:'ok'},
-  {v:'middle',        l:'Joined in the middle',  short:'Mid', tone:'warn'},
-  {v:'floor_late',    l:'In floor — late',       short:'Flr·L',tone:'info'},
-  {v:'floor_space',   l:'In floor — no space',   short:'Flr·S',tone:'info'},
-  {v:'alone',         l:'Alone in the room',     short:'Alone',tone:'warn'},
-  {v:'not_completed', l:'Not completed',         short:'✗',   tone:'bad'},
-  {v:'na',            l:'N/A (leave / sick)',    short:'N/A', tone:'muted'}
-];
-
-/* Self-study location */
-const STUDY_LOC=[
-  {v:'',             l:'Not marked',           short:'—',        tone:'muted'},
-  {v:'reading_room', l:'Reading room',         short:'📖 Reading room', tone:'ok'},
-  {v:'bed',          l:'Bed',                  short:'🛏 Bed',    tone:'warn'},
-  {v:'room_study',   l:'Room study',           short:'📚 Room study', tone:'ok'},
-  {v:'other_floor',  l:'Other floor',          short:'🏢 Other floor', tone:'info'}
-];
-
-/* Overall activity / whereabouts */
-const ACTIVITY=[
-  {v:'',             l:'Not marked',           short:'—',          tone:'muted'},
-  {v:'self_study',   l:'Self study',           short:'📖 Self study', tone:'ok'},
-  {v:'sleeping',     l:'Sleeping',             short:'😴 Sleeping',   tone:'info'},
-  {v:'outside',      l:'Outside',              short:'🌳 Outside',    tone:'warn'},
-  {v:'playing',      l:'Playing',              short:'⚽ Playing',    tone:'warn'},
-  {v:'sick',         l:'Sick',                 short:'🤒 Sick',       tone:'bad'},
-  {v:'competition',  l:'Gone for a competition',short:'🏆 Competition',tone:'info'},
-  {v:'leave',        l:'On leave',             short:'🚪 Leave',      tone:'muted'},
-  {v:'class',        l:'In class / school',    short:'🎓 Class',      tone:'info'}
-];
-
-const EQUIP=[['harpic','Harpic'],['handwash','Handwash'],['toothpaste','Toothpaste'],['odonil','Odonil']];
-const FLOOR_GOODS=[['harpic','Harpic'],['handwash','Handwash'],['toothpaste','Toothpaste'],['odonil','Odonil'],
-  ['tissue','Tissue roll'],['phenyl','Phenyl'],['broom','Broom'],['soap','Hand soap']];
-
-const TABS={
-  rc:    [['entry','Daily Entry'],['confirm','Status'],['roster','Roster'],['reports','My Marks']],
-  fc:    [['overview','Overview'],['confirm','Confirm'],['goods','Floor Goods'],['entry','Inspect Rooms']],
-  fcom:  [['overview','Overview'],['confirm','Verify'],['entry','Edit Entries'],['reports','Reports']],
-  admin: [['overview','Overview'],['entry','Daily Entry'],['confirm','Verify'],['goods','Floor Goods'],['reports','Reports'],['admin','Admin']]
-};
-
-/* ---------- utils ---------- */
-const $=s=>document.querySelector(s);
-function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-function todayStr(){return fmtDate(new Date());}
-function fmtDate(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
-function parseDate(s){const [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d);}
-function addDays(s,n){const d=parseDate(s);d.setDate(d.getDate()+n);return fmtDate(d);}
-function diffDays(a,b){return Math.round((parseDate(b)-parseDate(a))/86400000);}
-function prettyDate(s){return parseDate(s).toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'short',year:'numeric'});}
-function mondayOf(d){const x=new Date(d);const k=(x.getDay()+6)%7;x.setDate(x.getDate()-k);return fmtDate(x);}
-function nowStamp(){return new Date().toLocaleString();}
-function toast(msg,kind){const t=$('#toast');t.textContent=msg;t.style.borderColor=kind==='bad'?'var(--bad)':kind==='ok'?'var(--ok)':'var(--line)';t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2600);}
-
-/* ---------- state ---------- */
-let S=null,session=null,currentDate=todayStr(),view='overview',activeRoom='301';
-let repFrom=addDays(todayStr(),-6),repTo=todayStr();
-
-function defaultUsers(){
-  return {
-    admin:{name:'Floor Incharge',pin:'1122'},
-    fc:{name:'Floor Captain',pin:'1122',studentId:''},
-    fcom:{name:'Floor Commander',pin:'1122',studentId:''},
-    rc:{'301':'1122','302':'1122','303':'1122'}
-  };
-}
-function defaultState(){
-  const rooms={};
-  const counts={'301':6,'302':6,'303':8};
-  for(const r of Object.keys(counts)){
-    const students=[];
-    const half=Math.ceil(counts[r]/2);
-    for(let i=1;i<=counts[r];i++){
-      const id=r+'-'+String(i).padStart(2,'0');
-      const cls = i<=half ? '9' : '10';
-      students.push({id,name:'Student '+id,class:cls});
-    }
-    rooms[r]={students,rotation:students.map(s=>s.id)};
-  }
-  return {rooms,days:{},users:defaultUsers(),
-    settings:{sheetUrl:GAS_URL,autoSync:true,rotationStart:mondayOf(new Date())},
-    meta:{version:VERSION,lastSync:null,lastConfigSync:null}};
-}
-function migrateConfig(){
-  /* First run of v4: force all pins to 1122 if the version marker is missing/old */
-  if(!S.meta) S.meta={};
-  if(S.meta.version !== VERSION){
-    S.users = defaultUsers();
-    S.meta.version = VERSION;
-  }
-  for(const r in S.rooms){
-    (S.rooms[r].students||[]).forEach(s=>{
-      if(!s.class) s.class='9';
-      delete s.password;   // no student passwords anymore
-    });
-    if(!S.rooms[r].rotation) S.rooms[r].rotation=(S.rooms[r].students||[]).map(s=>s.id);
-  }
-  const d=defaultUsers();
-  S.users = S.users || d;
-  S.users.admin = Object.assign({}, d.admin, S.users.admin||{});
-  S.users.fc    = Object.assign({}, d.fc,    S.users.fc||{});
-  S.users.fcom  = Object.assign({}, d.fcom,  S.users.fcom||{});
-  S.users.rc    = Object.assign({}, d.rc,    S.users.rc||{});
-  S.settings = S.settings || {};
-  S.settings.sheetUrl = GAS_URL;
-  S.settings.autoSync = S.settings.autoSync!==false;
-  S.settings.rotationStart = S.settings.rotationStart || mondayOf(new Date());
-}
-function load(){
-  try{const raw=localStorage.getItem(LS);
-    if(raw){const p=JSON.parse(raw);if(p&&p.rooms){S=p;migrateConfig();return S;}}
-  }catch(e){}
-  S=defaultState();return S;
-}
-function saveLocal(){try{localStorage.setItem(LS,JSON.stringify(S));}catch(e){}}
-
-/* ---------- day / room data ---------- */
-function lastRoomDayBefore(date,room){
-  const ds=Object.keys(S.days).filter(d=>d<date&&S.days[d]&&S.days[d].rooms&&S.days[d].rooms[room]).sort();
-  if(!ds.length)return null;
-  return S.days[ds[ds.length-1]].rooms[room];
-}
-function rotationCaptain(room,date){
-  const st=S.rooms[room];
-  if(!st||!st.rotation||!st.rotation.length)return '';
-  const start=S.settings.rotationStart||mondayOf(new Date());
-  const wk=Math.floor(diffDays(start,date)/7);
-  const n=st.rotation.length;
-  const idx=((wk%n)+n)%n;
-  return st.rotation[idx];
-}
-function newRoomDay(date,room){
-  const prev=lastRoomDayBefore(date,room);
-  const cleaning={washroomCleaned:false,washroomBy:'',roomCleaned:false,roomBy:'',harpic:false,handwash:false,toothpaste:false,odonil:false};
-  if(prev&&prev.cleaning){
-    for(const k of ['harpic','handwash','toothpaste','odonil']) cleaning[k]=!!prev.cleaning[k];
-    cleaning.washroomBy=prev.cleaning.washroomBy||'';
-    cleaning.roomBy=prev.cleaning.roomBy||'';
-  }
-  return {
-    captainId:rotationCaptain(room,date),acting:false,
-    salah:{}, study:{}, activity:{}, notes:{}, marks:{},
-    cleaning,
-    status:{rcSubmitted:false,rcAt:null,fcConfirmed:false,fcAt:null,fcNote:'',fcomVerified:false,fcomAt:null,fcomNote:''},
-    audit:[]
-  };
-}
-function getDay(date){
-  if(!S.days[date])S.days[date]={rooms:{},floor:null};
-  const d=S.days[date];
-  if(!d.rooms)d.rooms={};
-  if(!d.floor)d.floor=newFloorDay(date);
-  return d;
-}
-function newFloorDay(date){
-  const prevDates=Object.keys(S.days).filter(d=>d<date&&S.days[d]&&S.days[d].floor).sort();
-  const prev=prevDates.length?S.days[prevDates[prevDates.length-1]].floor:null;
-  const goods={};
-  FLOOR_GOODS.forEach(([k])=>goods[k]=prev&&prev.goods?!!prev.goods[k]:false);
-  return {goods,goodsBy:'',goodsNote:'',fcConfirmed:false,fcAt:null,fcBy:'',fcomVerified:false,fcomAt:null,fcomNote:'',adminNote:''};
-}
-function getRoomDay(date,room){
-  const day=getDay(date);
-  if(!day.rooms[room])day.rooms[room]=newRoomDay(date,room);
-  const rd=day.rooms[room];
-  if(!rd.study) rd.study={};
-  return rd;
-}
-function rdSafe(date,room){return S.days[date]&&S.days[date].rooms?S.days[date].rooms[room]:null;}
-function fdSafe(date){return S.days[date]&&S.days[date].floor?S.days[date].floor:null;}
-
-/* ---------- marks / equity ---------- */
-function equityFor(date,room,sid){
-  const rd=rdSafe(date,room);
-  const m=(rd&&rd.marks&&rd.marks[sid])||{};
-  const roles=[];
-  if(rd&&rd.captainId===sid)roles.push('RC');
-  if(S.users.fc.studentId===sid)roles.push('FC');
-  if(S.users.fcom.studentId===sid)roles.push('FCom');
-  const base=10;
-  const raw=base+10*roles.length;
-  const roleEquity=Math.min(10,raw);
-  const neg=Number(m.neg)||0;
-  const bonus=Number(m.bonus)||0;
-  return {base,roles,raw,roleEquity,neg,bonus,final:roleEquity+bonus-neg,negReason:m.negReason||'',bonusReason:m.bonusReason||''};
-}
-
-/* ---------- permissions ---------- */
-function ageOf(date){return diffDays(date,todayStr());}
-function canEditRoom(room){
-  const age=ageOf(currentDate);
-  if(age<0)return false;
-  if(session.role==='admin')return true;
-  if(session.role==='rc')   return session.room===room && age<=1;
-  if(session.role==='fcom') return age<=2;
-  return false;
-}
-function canEditMarks(room){
-  if(session.role==='admin')return true;
-  if(session.role==='rc')   return session.room===room && ageOf(currentDate)<=1;
-  if(session.role==='fcom') return ageOf(currentDate)<=2;
-  return false;
-}
-function canAddBonus(){return session.role==='admin';}
-
-/* ---------- audit ---------- */
-function audit(room,msg){
-  const rd=getRoomDay(currentDate,room);
-  rd.audit.push({t:nowStamp(),by:session?session.role:'system',msg});
-  if(rd.audit.length>200)rd.audit.shift();
-}
-
-/* =========================================================
-   AUTO-SYNC — daily + config
-   ========================================================= */
-let _syncTimer=null,_syncInFlight=false,_syncAgain=false;
-let _configTimer=null,_configInFlight=false,_configAgain=false;
-
-function setSyncDot(state){const d=document.getElementById('syncDot');if(!d)return;d.className='dot '+(state||'');}
-
-function scheduleAutoSync(){
-  if(!S.settings.autoSync)return;
-  clearTimeout(_syncTimer);setSyncDot('syncing');
-  _syncTimer=setTimeout(pushDay,1000);
-}
-function pushDay(){
-  if(_syncInFlight){_syncAgain=true;return;}
-  const day=S.days[currentDate];if(!day)return;
-  const payload={action:'saveDay',date:currentDate,
-    by:session?session.role+(session.room?' '+session.room:''):'anon',
-    rooms:{},floor:day.floor||null};
-  ROOMS.forEach(r=>{if(day.rooms&&day.rooms[r])payload.rooms[r]=day.rooms[r];});
-  if(!Object.keys(payload.rooms).length&&!payload.floor)return;
-  _syncInFlight=true;setSyncDot('syncing');
-  fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)})
-    .then(()=>{_syncInFlight=false;setSyncDot('ok');S.meta.lastSync=nowStamp();saveLocal();if(_syncAgain){_syncAgain=false;pushDay();}})
-    .catch(err=>{_syncInFlight=false;setSyncDot('bad');console.warn('Sync failed',err);});
-}
-function pushRange(from,to){
-  const dates=[];let d=from,g=0;
-  while(d<=to&&g++<400){dates.push(d);d=addDays(d,1);}
-  if(!dates.length)return;
-  setSyncDot('syncing');
-  const payload={action:'saveDay',date:dates[dates.length-1],rangeStart:dates[0],rangeEnd:dates[dates.length-1],
-    by:session?session.role:'anon',rooms:{},floor:null,multi:{}};
-  dates.forEach(dt=>{const day=S.days[dt];if(!day)return;payload.multi[dt]={rooms:day.rooms||{},floor:day.floor||null};});
-  fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)})
-    .then(()=>{setSyncDot('ok');S.meta.lastSync=nowStamp();saveLocal();toast('Range pushed','ok');})
-    .catch(()=>{setSyncDot('bad');toast('Range push failed','bad');});
-}
-
-function scheduleConfigSync(){
-  if(!S.settings.autoSync)return;
-  clearTimeout(_configTimer);setSyncDot('syncing');
-  _configTimer=setTimeout(pushConfig,800);
-}
-function pushConfig(){
-  if(_configInFlight){_configAgain=true;return;}
-  const payload={action:'saveConfig',
-    by:session?session.role:'anon',
-    config:{rooms:S.rooms,users:S.users,settings:{rotationStart:S.settings.rotationStart}}};
-  _configInFlight=true;setSyncDot('syncing');
-  fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)})
-    .then(()=>{_configInFlight=false;setSyncDot('ok');S.meta.lastConfigSync=nowStamp();saveLocal();if(_configAgain){_configAgain=false;pushConfig();}})
-    .catch(err=>{_configInFlight=false;setSyncDot('bad');console.warn('Config sync failed',err);});
-}
-function saveConfig(){saveLocal();scheduleConfigSync();}
-function save(){saveLocal();scheduleAutoSync();}
-
-async function initialLoad(){
-  if(!GAS_URL){render();return;}
-  setSyncDot('syncing');
-  try{
-    const res=await fetch(GAS_URL+'?action=load&days=30');
-    const data=await res.json();
-    if(data&&data.ok){
-      if(data.config){
-        if(data.config.rooms && typeof data.config.rooms==='object'){
-          for(const r in data.config.rooms){
-            S.rooms[r]=data.config.rooms[r];
-            if(!S.rooms[r].rotation) S.rooms[r].rotation=(S.rooms[r].students||[]).map(s=>s.id);
-          }
-        }
-        if(data.config.users && typeof data.config.users==='object'){
-          const d=defaultUsers();
-          S.users=Object.assign({},d,data.config.users);
-          S.users.admin=Object.assign({},d.admin,data.config.users.admin||{});
-          S.users.fc   =Object.assign({},d.fc,   data.config.users.fc||{});
-          S.users.fcom =Object.assign({},d.fcom, data.config.users.fcom||{});
-          S.users.rc   =Object.assign({},d.rc,   data.config.users.rc||{});
-        }
-        if(data.config.settings && data.config.settings.rotationStart){
-          S.settings.rotationStart=data.config.settings.rotationStart;
-        }
-      }
-      migrateConfig();
-      if(data.days){
-        for(const date in data.days){
-          const srv=data.days[date];
-          if(!S.days[date])S.days[date]={rooms:{},floor:null};
-          const loc=S.days[date];
-          if(!loc.rooms)loc.rooms={};
-          if(srv.rooms)Object.assign(loc.rooms,srv.rooms);
-          if(srv.floor)loc.floor=srv.floor;
-        }
-      }
-      saveLocal();setSyncDot('ok');
-    } else {setSyncDot('');}
-  }catch(err){console.warn('Initial load failed',err);setSyncDot('bad');}
-  render();
-}
-
-/* =========================================================
-   RENDER
-   ========================================================= */
-function render(){
-  const app=$('#app');
-  if(!session){app.innerHTML=loginHTML();return;}
-  app.innerHTML=headerHTML()+navHTML()+`<div class="wrap" style="padding-bottom:40px">${viewHTML()}</div>`;
-}
-function setView(v){view=v;render();}
-function setDate(d){currentDate=d;render();}
-function goToday(){currentDate=todayStr();render();}
-function setActiveRoom(r){activeRoom=r;render();}
-function logout(){session=null;render();}
-
-/* ---------- login ---------- */
-function loginHTML(){
-  return `<div class="loginwrap"><div class="card login">
-    <h1 style="margin:0 0 4px;font-size:20px">🏠 Floor Management</h1>
-    <div class="muted small" style="margin-bottom:16px">Rooms 301 · 302 · 303</div>
-    <label>Sign in as</label>
-    <select id="lgRole" onchange="lgRoleChange()">
-      <option value="rc">Room Captain</option>
-      <option value="fc">Floor Captain</option>
-      <option value="fcom">Floor Commander</option>
-      <option value="admin">Floor Incharge (Admin)</option>
-    </select>
-    <div id="lgRoomWrap">
-      <label>Room</label>
-      <select id="lgRoom"><option>301</option><option>302</option><option>303</option></select>
-    </div>
-    <label>Passcode</label>
-    <input type="password" id="lgPin" autocomplete="off" onkeydown="if(event.key==='Enter')doLogin()">
-    <button class="primary big" style="width:100%;margin-top:14px" onclick="doLogin()">Enter</button>
-    <div id="lgErr" class="err"></div>
-    <div class="muted small" style="margin-top:14px">Default passcode for everyone: <b class="mono">1122</b>. Change it in Admin → Roles & passcodes after first login.</div>
-  </div></div>`;
-}
-function lgRoleChange(){
-  $('#lgRoomWrap').style.display = $('#lgRole').value==='rc' ? '' : 'none';
-}
-function doLogin(){
-  const role=$('#lgRole').value;
-  const pin=$('#lgPin').value.trim();
-  let ok=false,room=null;
-  if(role==='rc'){room=$('#lgRoom').value;ok=(pin===S.users.rc[room]);}
-  else if(role==='fc')  ok=(pin===S.users.fc.pin);
-  else if(role==='fcom')ok=(pin===S.users.fcom.pin);
-  else                  ok=(pin===S.users.admin.pin);
-  if(!ok){$('#lgErr').textContent='Incorrect passcode.';return;}
-  session={role,room};
-  view = role==='rc' ? 'entry' : 'overview';
-  if(role==='rc')activeRoom=room;
-  render();
-}
-
-/* ---------- shell ---------- */
-function headerHTML(){
-  const roleName={rc:'Room Captain · '+session.room,fc:'Floor Captain',fcom:'Floor Commander',admin:'Floor Incharge'}[session.role];
-  const cls = session.role==='admin'?'bad':session.role==='fcom'?'warn':session.role==='fc'?'ok':'';
-  return `<div class="topbar"><div class="wrap">
-    <div class="brand">🏠 Floor Management <span class="muted small">· 301–303</span></div>
-    <div class="spacer"></div>
-    <span class="chip ${cls}">${roleName}</span>
-    <input type="date" value="${currentDate}" onchange="setDate(this.value)">
-    <button class="ghost" onclick="goToday()">Today</button>
-    <span class="dot" id="syncDot" title="Auto-sync status"></span>
-    <button class="ghost" onclick="logout()">Logout</button>
-  </div></div>`;
-}
-function navHTML(){
-  const tabs=TABS[session.role]||[];
-  return `<div class="wrap"><div class="tabs">${tabs.map(([k,l])=>`<button class="${view===k?'active':''}" onclick="setView('${k}')">${l}</button>`).join('')}</div></div>`;
-}
-function viewHTML(){
-  switch(view){
-    case 'entry':return entryView();
-    case 'overview':return overviewView();
-    case 'confirm':return confirmView();
-    case 'goods':return goodsView();
-    case 'reports':return reportsView();
-    case 'roster':return rosterView();
-    case 'admin':return adminView();
-    default:return overviewView();
-  }
-}
-function statusChip(rd){
-  if(!rd)return `<span class="chip">No data</span>`;
-  if(rd.status.fcomVerified)return `<span class="chip ok">✔ Verified</span>`;
-  if(rd.status.fcConfirmed)return `<span class="chip warn">FC confirmed</span>`;
-  if(rd.status.rcSubmitted)return `<span class="chip">Submitted</span>`;
-  return `<span class="chip bad">Not submitted</span>`;
-}
-function studentName(room,id){
-  const st=S.rooms[room];if(!st)return id;
-  const s=st.students.find(x=>x.id===id);return s?s.name:id;
-}
-function classPill(cls){
-  if(!cls)return '';
-  const c=cls==='9'?'ok':cls==='10'?'warn':'';
-  return `<span class="chip ${c}" style="font-size:10px">Class ${esc(cls)}</span>`;
-}
-
-/* =========================================================
-   OVERVIEW — prominent room edit buttons
-   ========================================================= */
-function overviewView(){
-  const fd=getDay(currentDate).floor;
-  let h=`<h2>Overview · ${prettyDate(currentDate)}</h2>`;
-  h+=`<div class="grid3">`;
-  for(const room of ROOMS){
-    const rd=getRoomDay(currentDate,room);
-    const st=S.rooms[room];
-    const cap=st.students.find(s=>s.id===rd.captainId);
-    const total=st.students.length;
-    const marked=st.students.filter(s=>{const sl=rd.salah[s.id]||{};return PRAYERS.every(p=>sl[p[0]]);}).length;
-    const studyMarked=st.students.filter(s=>rd.study[s.id]).length;
-    const clean=rd.cleaning;
-    const equipCount=EQUIP.filter(([k])=>clean[k]).length;
-    h+=`<div class="card">
-      <div class="row"><h3 style="margin:0">Room ${room}</h3><div class="spacer"></div>${statusChip(rd)}</div>
-      <div class="muted small" style="margin-top:6px">Captain on duty: <b>${cap?esc(cap.name):'—'}</b> ${cap?classPill(cap.class):''} ${rd.acting?'<span class="chip warn">Acting</span>':''}</div>
-      <div class="stat">
-        <div><b>${total}</b>students</div>
-        <div><b>${marked}/${total}</b>salah</div>
-        <div><b>${studyMarked}/${total}</b>self-study</div>
-        <div><b>${equipCount}/4</b>equipment</div>
-      </div>
-      <div class="row" style="margin-top:14px">
-        <button class="big-edit" onclick="editRoom('${room}')">✏️ Edit Room ${room}</button>
-      </div>
-    </div>`;
-  }
-  h+=`</div>`;
-  const allSub=ROOMS.every(r=>{const rd=rdSafe(currentDate,r);return rd&&rd.status.rcSubmitted;});
-  h+=`<div class="card"><h3>Floor sign-off</h3>
-    <div class="row">
-      <span class="chip ${allSub?'ok':'bad'}">${allSub?'All rooms submitted':'Rooms pending'}</span>
-      <span class="chip ${fd.fcConfirmed?'ok':''}">FC confirmed ${fd.fcConfirmed?'· '+esc(fd.fcAt||''):'—'}</span>
-      <span class="chip ${fd.fcomVerified?'ok':''}">FCom verified ${fd.fcomVerified?'· '+esc(fd.fcomAt||''):'—'}</span>
-    </div>
-  </div>`;
-  return h;
-}
-function editRoom(room){activeRoom=room;view='entry';render();}
-
-/* =========================================================
-   DAILY ENTRY — button-based UI
-   ========================================================= */
-function entryView(){
-  const rooms=session.role==='rc'?[session.room]:ROOMS;
-  let h='';
-  if(rooms.length>1){
-    h+=`<div class="quickbar">${rooms.map(r=>`<button class="${activeRoom===r?'primary':''}" onclick="setActiveRoom('${r}')">Room ${r}</button>`).join('')}</div>`;
-  }
-  const room=rooms.length===1?rooms[0]:(rooms.includes(activeRoom)?activeRoom:rooms[0]);
-  h+=roomEntryHTML(room);
-  return h;
-}
-function roomEntryHTML(room){
-  const rd=getRoomDay(currentDate,room);
-  const st=S.rooms[room];
-  const canEdit=canEditRoom(room);
-  const cap=st.students.find(s=>s.id===rd.captainId);
-
-  let h=`<div class="room-banner">
-    <h2>Room ${room}</h2>
-    <span class="chip">${prettyDate(currentDate)}</span>
-    ${statusChip(rd)}
-    <div class="spacer"></div>
-    ${canEdit?`<button class="primary" onclick="submitRoom('${room}')">${rd.status.rcSubmitted?'Re-submit':'Submit to Floor Captain'}</button>`:''}
-    ${(session.role==='admin'||session.role==='fcom'||(session.role==='rc'))?`<button class="ghost" onclick="openCaptainPicker('${room}')">Change captain</button>`:''}
-  </div>`;
-
-  h+=`<div class="card" style="padding:12px">
-    <div class="muted small">Captain on duty: <b>${cap?esc(cap.name):'—'}</b> ${cap?classPill(cap.class):''} (${rd.captainId||'—'}) ${rd.acting?'<span class="chip warn">Acting</span>':''}</div>
-  </div>`;
-
-  if(!canEdit){
-    if(session.role==='fc') h+=`<div class="warnnote">Read-only for the Floor Captain. You may re-examine and record a differing opinion below.</div>`;
-    else if(session.role==='fcom') h+=`<div class="warnnote">Read-only — Floor Commander may edit only within 2 days of the date.</div>`;
-    else h+=`<div class="warnnote">Read-only — editing window closed for this date.</div>`;
-  }
-
-  h+=`<h3 style="margin:18px 0 10px">Salah · Self-study · Activity</h3>`;
-
-  st.students.forEach((s,i)=>{
-    const sl=rd.salah[s.id]||{};
-    const e=equityFor(currentDate,room,s.id);
-    const studyVal = rd.study[s.id]||'';
-    const actVal = rd.activity[s.id]||'';
-    h+=`<div class="entry-card">
-      <div class="entry-header">
-        <div>
-          <div class="entry-name">${i+1}. ${esc(s.name)} ${e.roles.length?`<span class="chip" style="font-size:10px">${e.roles.join('+')}</span>`:''}</div>
-          <div class="entry-id">${esc(s.id)} · ${classPill(s.class)||'<span class="muted">—</span>'}</div>
-        </div>
-        <div class="entry-score">${e.final}</div>
-      </div>`;
-
-    for(const [k,lbl] of PRAYERS){
-      h+=`<div class="entry-row">
-        <div class="entry-label">${lbl}</div>
-        <div class="btn-group">${buttonGroup(SALAH_STATUS, sl[k]||'', !canEdit, `setSalah('${room}','${s.id}','${k}')`)}</div>
-      </div>`;
-    }
-    h+=`<div class="entry-row">
-      <div class="entry-label">Self-study</div>
-      <div class="btn-group">${buttonGroup(STUDY_LOC, studyVal, !canEdit, `setStudy('${room}','${s.id}')`)}</div>
-    </div>`;
-    h+=`<div class="entry-row">
-      <div class="entry-label">Activity</div>
-      <div class="btn-group">${buttonGroup(ACTIVITY, actVal, !canEdit, `setActivity('${room}','${s.id}')`)}</div>
-    </div>`;
-    h+=`<div class="entry-row">
-      <div class="entry-label">Note</div>
-      <input class="entry-note" value="${esc(rd.notes[s.id]||'')}" ${canEdit?'':'disabled'} onchange="setNote('${room}','${s.id}',this.value)" placeholder="optional">
-    </div>`;
-    h+=`</div>`;
-  });
-
-  /* cleaning */
-  const c=rd.cleaning;
-  const byOpts=[{v:'',l:'— nobody —',short:'— nobody —'}].concat(st.students.map(s=>({v:s.id,l:s.name,short:s.name})));
-  h+=`<div class="grid2">
-    <div class="card"><h3>Washroom &amp; Room cleaning</h3>
-      <label class="chk"><input type="checkbox" ${c.washroomCleaned?'checked':''} ${canEdit?'':'disabled'} onchange="setClean('${room}','washroomCleaned',this.checked)"> Washroom cleaned</label>
-      <div class="row small muted">Cleaned by:
-        <select ${canEdit?'':'disabled'} onchange="setClean('${room}','washroomBy',this.value)" style="width:auto">
-          ${byOpts.map(o=>`<option value="${o.v}" ${o.v===c.washroomBy?'selected':''}>${esc(o.l)}</option>`).join('')}
-        </select>
-      </div>
-      <hr>
-      <label class="chk"><input type="checkbox" ${c.roomCleaned?'checked':''} ${canEdit?'':'disabled'} onchange="setClean('${room}','roomCleaned',this.checked)"> Room cleaned</label>
-      <div class="row small muted">Cleaned by:
-        <select ${canEdit?'':'disabled'} onchange="setClean('${room}','roomBy',this.value)" style="width:auto">
-          ${byOpts.map(o=>`<option value="${o.v}" ${o.v===c.roomBy?'selected':''}>${esc(o.l)}</option>`).join('')}
-        </select>
-      </div>
-    </div>
-    <div class="card"><h3>Washroom equipment</h3>
-      <div class="btn-group">${EQUIP.map(([k,l])=>{
-        const on=c[k];
-        return `<div class="btn-opt ${on?'active':''}" data-tone="${on?'ok':''}" onclick="${canEdit?`toggleEquip('${room}','${k}')`:''}">${l}</div>`;
-      }).join('')}</div>
-      <div class="muted small" style="margin-top:10px">Tap to toggle. Defaults carry over from yesterday.</div>
-    </div>
-  </div>`;
-
-  h+=marksCard(room);
-
-  /* sign-off + audit */
-  h+=`<div class="grid2">
-    <div class="card"><h3>Sign-off</h3>
-      <div class="row"><span class="chip ${rd.status.rcSubmitted?'ok':''}">RC submitted ${rd.status.rcAt?'· '+esc(rd.status.rcAt):''}</span></div>
-      <div class="row" style="margin-top:8px"><span class="chip ${rd.status.fcConfirmed?'ok':''}">FC confirmed ${rd.status.fcAt?'· '+esc(rd.status.fcAt):''}</span></div>
-      ${rd.status.fcNote?`<div class="warnnote">FC opinion: ${esc(rd.status.fcNote)}</div>`:''}
-      <div class="row" style="margin-top:8px"><span class="chip ${rd.status.fcomVerified?'ok':''}">FCom verified ${rd.status.fcomAt?'· '+esc(rd.status.fcomAt):''}</span></div>
-      ${rd.status.fcomNote?`<div class="oknote">FCom note: ${esc(rd.status.fcomNote)}</div>`:''}
-    </div>
-    <div class="card"><h3>Audit trail</h3>
-      <div class="small muted" style="max-height:180px;overflow:auto">
-        ${rd.audit.length?rd.audit.slice().reverse().map(a=>`<div>${esc(a.t)} · <b>${esc(a.by)}</b> · ${esc(a.msg)}</div>`).join(''):'<i>No activity yet</i>'}
-      </div>
-    </div>
-  </div>`;
-
-  if(session.role==='fc'||session.role==='fcom'||session.role==='admin'){
-    h+=`<div class="card"><h3>Re-examination note</h3>
-      <textarea id="opine_${room}" rows="3" style="width:100%" placeholder="Record what you re-examined and any differing opinion.">${esc(rd.status.fcNote||'')}</textarea>
-      <div class="row" style="margin-top:8px"><button onclick="saveOpinion('${room}','fc')">Save FC opinion</button></div>
-      ${(session.role==='fcom'||session.role==='admin')?`<hr>
-        <textarea id="fcomnote_${room}" rows="3" style="width:100%" placeholder="Floor Commander verification note…">${esc(rd.status.fcomNote||'')}</textarea>
-        <div class="row" style="margin-top:8px"><button onclick="saveOpinion('${room}','fcom')">Save FCom note</button></div>`:''}
-    </div>`;
-  }
-  return h;
-}
-
-/* Generate a button group from an option list */
-function buttonGroup(options, current, disabled, clickFnName){
-  const roomMatch = clickFnName.match(/'([^']+)','([^']+)'/);
-  return options.map(o=>{
-    const active = o.v===current;
-    const tone = o.tone || 'info';
-    const onclick = disabled ? '' : `${clickFnName.slice(0,clickFnName.indexOf(','))},'${o.v}')`;
-    /* rebuild the call properly: setX('room','sid','value') */
-    const finalOnclick = disabled ? '' : clickFnName.replace(/\)$/,'') + `,'${o.v}')`;
-    return `<div class="btn-opt ${active?'active':''}" data-tone="${active?tone:''}" title="${esc(o.l)}" onclick="${finalOnclick}">${esc(o.short)}</div>`;
-  }).join('');
-}
-
-function openCaptainPicker(room){
-  const st=S.rooms[room];
-  const opts=st.students.map(s=>`<option value="${s.id}">${esc(s.name)} (${s.id}) · Class ${esc(s.class||'—')}</option>`).join('');
-  const current=getRoomDay(currentDate,room).captainId;
-  const v=prompt('Enter student ID for captain on duty today:\n\n'+st.students.map(s=>`${s.id} — ${s.name} (Cl.${s.class})`).join('\n'), current||'');
-  if(v===null)return;
-  const idv=v.trim();
-  if(!st.students.some(s=>s.id===idv))return toast('Unknown student ID','bad');
-  const rd=getRoomDay(currentDate,room);
-  rd.captainId=idv;
-  audit(room,'Captain set to '+idv);
-  save();render();toast('Captain updated','ok');
-}
-
-/* ---------- marks card ---------- */
-function marksCard(room){
-  const rd=getRoomDay(currentDate,room);
-  const st=S.rooms[room];
-  const canM=canEditMarks(room);
-  let h=`<div class="card scrollx"><h3>Marks &amp; Equity
-    <span class="muted small">· base 10/day · each captaincy role +10 → equity 10 · bonus may exceed 10</span></h3>
-    <table class="tbl"><thead><tr><th>ID</th><th>Class</th><th>Name</th><th>Roles</th><th>Raw</th><th>Equity</th><th>Bonus</th><th>Neg</th><th>Final</th><th>Reason</th><th></th></tr></thead><tbody>`;
-  for(const s of st.students){
-    const e=equityFor(currentDate,room,s.id);
-    const reasons=[e.bonusReason?'+ '+e.bonusReason:'',e.negReason?'− '+e.negReason:''].filter(Boolean).join(' | ');
-    h+=`<tr>
-      <td class="mono">${esc(s.id)}</td>
-      <td>${classPill(s.class)||'—'}</td>
-      <td>${esc(s.name)}</td>
-      <td>${e.roles.length?e.roles.join(' + '):'—'}</td>
-      <td class="muted">${e.raw}</td>
-      <td>${e.roleEquity}</td>
-      <td style="color:var(--ok)">+${e.bonus}</td>
-      <td style="color:var(--bad)">−${e.neg}</td>
-      <td><b style="font-size:15px">${e.final}</b></td>
-      <td class="small muted" style="white-space:normal;max-width:220px">${esc(reasons)}</td>
-      <td>
-        ${canM?`<button class="ghost small" onclick="adjMark('${room}','${s.id}','neg')">− neg</button>`:''}
-        ${canAddBonus()?`<button class="ghost small" onclick="adjMark('${room}','${s.id}','bonus')">+ bonus</button>`:''}
-        ${canAddBonus()?`<button class="ghost small" title="Helped with water, food or errand" onclick="quickBonus('${room}','${s.id}')">+1 help</button>`:''}
-      </td>
-    </tr>`;
-  }
-  h+=`</tbody></table>
-    <div class="muted small" style="margin-top:8px">Negative points are assigned by the Floor Incharge. Bonus points are for good work / helping the floor incharge.</div>
-  </div>`;
-  return h;
-}
-
-/* =========================================================
-   ACTIONS
-   ========================================================= */
-function setSalah(room,sid,prayer,val){const rd=getRoomDay(currentDate,room);if(!rd.salah[sid])rd.salah[sid]={};rd.salah[sid][prayer]=val;save();render();}
-function setStudy(room,sid,val){const rd=getRoomDay(currentDate,room);if(!rd.study)rd.study={};rd.study[sid]=val;save();render();}
-function setActivity(room,sid,val){const rd=getRoomDay(currentDate,room);rd.activity[sid]=val;save();render();}
-function setNote(room,sid,val){const rd=getRoomDay(currentDate,room);rd.notes[sid]=val;save();}
-function setClean(room,key,val){const rd=getRoomDay(currentDate,room);rd.cleaning[key]=val;save();}
-function toggleEquip(room,key){const rd=getRoomDay(currentDate,room);rd.cleaning[key]=!rd.cleaning[key];save();render();}
-function setActing(room,val){const rd=getRoomDay(currentDate,room);rd.acting=!!val;save();render();}
-function adjMark(room,sid,kind){
-  const rd=getRoomDay(currentDate,room);
-  if(!rd.marks[sid])rd.marks[sid]={neg:0,negReason:'',bonus:0,bonusReason:''};
-  const cur=kind==='neg'?rd.marks[sid].neg:rd.marks[sid].bonus;
-  const v=prompt(kind==='neg'?'Negative points:':'Bonus points:',cur||0);
-  if(v===null)return;
-  const n=Math.max(0,Number(v)||0);
-  const r=prompt('Reason:')||'';
-  if(kind==='neg'){rd.marks[sid].neg=n;rd.marks[sid].negReason=r;}
-  else{rd.marks[sid].bonus=n;rd.marks[sid].bonusReason=r;}
-  audit(room,`${kind} ${n} for ${sid} — ${r}`);save();render();toast('Mark updated','ok');
-}
-function quickBonus(room,sid){
-  const rd=getRoomDay(currentDate,room);
-  if(!rd.marks[sid])rd.marks[sid]={neg:0,negReason:'',bonus:0,bonusReason:''};
-  rd.marks[sid].bonus=(Number(rd.marks[sid].bonus)||0)+1;
-  rd.marks[sid].bonusReason=(rd.marks[sid].bonusReason?rd.marks[sid].bonusReason+'; ':'')+'Helped floor incharge';
-  audit(room,`+1 help point for ${sid}`);save();render();toast('+1 help point added','ok');
-}
-function submitRoom(room){
-  if(!canEditRoom(room))return toast('Editing window closed','bad');
-  const rd=getRoomDay(currentDate,room);
-  rd.status.rcSubmitted=true;rd.status.rcAt=nowStamp();
-  rd.status.fcConfirmed=false;rd.status.fcomVerified=false;
-  audit(room,'Room Captain submitted');
-  save();render();toast('Submitted to Floor Captain','ok');
-}
-function saveOpinion(room,which){
-  const rd=getRoomDay(currentDate,room);
-  if(which==='fc'){const v=(document.getElementById('opine_'+room)||{}).value||'';rd.status.fcNote=v;audit(room,'FC opinion recorded');save();toast('Opinion saved','ok');}
-  else{const v=(document.getElementById('fcomnote_'+room)||{}).value||'';rd.status.fcomNote=v;audit(room,'FCom note recorded');save();toast('Note saved','ok');}
-  render();
-}
-function fcConfirmRoom(room){const rd=getRoomDay(currentDate,room);if(!rd.status.rcSubmitted)return toast('Not submitted yet','bad');rd.status.fcConfirmed=true;rd.status.fcAt=nowStamp();audit(room,'FC confirmed');save();render();toast('Confirmed','ok');}
-function fcomVerifyRoom(room){const rd=getRoomDay(currentDate,room);if(!rd.status.fcConfirmed)return toast('FC not confirmed yet','bad');rd.status.fcomVerified=true;rd.status.fcomAt=nowStamp();audit(room,'FCom verified');save();render();toast('Verified','ok');}
-function fcConfirmFloor(){const allSub=ROOMS.every(r=>{const rd=rdSafe(currentDate,r);return rd&&rd.status.rcSubmitted;});if(!allSub)return toast('Not all rooms submitted','bad');const fd=getDay(currentDate).floor;fd.fcConfirmed=true;fd.fcAt=nowStamp();fd.fcBy=session.role;save();render();toast('Full day confirmed','ok');}
-function fcomVerifyFloor(){const fd=getDay(currentDate).floor;if(!fd.fcConfirmed)return toast('FC not confirmed yet','bad');fd.fcomVerified=true;fd.fcomAt=nowStamp();fd.fcomNote=(document.getElementById('fcomFloorNote')||{}).value||fd.fcomNote||'';save();render();toast('Full day verified','ok');}
-function setGoods(key,val){const fd=getDay(currentDate).floor;fd.goods[key]=val;save();}
-function setGoodsNote(val){getDay(currentDate).floor.goodsNote=val;save();}
-function saveGoodsBy(val){getDay(currentDate).floor.goodsBy=val;save();}
-
-/* =========================================================
-   CONFIRM / VERIFY
-   ========================================================= */
-function confirmView(){
-  const fd=getDay(currentDate).floor;
-  const allSub=ROOMS.every(r=>{const rd=rdSafe(currentDate,r);return rd&&rd.status.rcSubmitted;});
-  let h=`<h2>Confirmation &amp; Verification · ${prettyDate(currentDate)}</h2>`;
-  h+=`<div class="card"><h3>Room-level sign-off</h3>
-    <table class="tbl"><thead><tr><th>Room</th><th>Captain</th><th>Class</th><th>Submitted</th><th>FC confirmed</th><th>FCom verified</th><th>Marks</th><th></th></tr></thead><tbody>`;
-  for(const room of ROOMS){
-    const rd=getRoomDay(currentDate,room);
-    const capObj=S.rooms[room].students.find(x=>x.id===rd.captainId);
-    const cap=capObj?capObj.name:(rd.captainId||'—');
-    const capCls=capObj?capObj.class:'';
-    const tot=S.rooms[room].students.reduce((a,s)=>a+equityFor(currentDate,room,s.id).final,0);
-    h+=`<tr>
-      <td><b>${room}</b></td>
-      <td>${esc(cap)}</td>
-      <td>${classPill(capCls)||'—'}</td>
-      <td>${rd.status.rcSubmitted?`<span class="chip ok">${esc(rd.status.rcAt||'')}</span>`:'<span class="chip bad">pending</span>'}</td>
-      <td>${rd.status.fcConfirmed?`<span class="chip ok">${esc(rd.status.fcAt||'')}</span>`:'<span class="chip">—</span>'}</td>
-      <td>${rd.status.fcomVerified?`<span class="chip ok">${esc(rd.status.fcomAt||'')}</span>`:'<span class="chip">—</span>'}</td>
-      <td>${tot}</td>
-      <td class="row">
-        ${(session.role==='fc'||session.role==='admin')&&!rd.status.fcConfirmed?`<button class="ok" onclick="fcConfirmRoom('${room}')">Confirm</button>`:''}
-        ${(session.role==='fcom'||session.role==='admin')&&!rd.status.fcomVerified?`<button class="primary" onclick="fcomVerifyRoom('${room}')">Verify</button>`:''}
-        <button class="ghost" onclick="editRoom('${room}')">Open</button>
-      </td>
-    </tr>`;
-  }
-  h+=`</tbody></table></div>`;
-
-  h+=`<div class="card"><h3>Floor-level full-day sign-off</h3>
-    <div class="row">
-      <span class="chip ${allSub?'ok':'bad'}">${allSub?'All 3 rooms submitted':'Awaiting rooms'}</span>
-      <span class="chip ${fd.fcConfirmed?'ok':''}">FC confirmed ${fd.fcConfirmed?'· '+esc(fd.fcAt||''):''}</span>
-      <span class="chip ${fd.fcomVerified?'ok':''}">FCom verified ${fd.fcomVerified?'· '+esc(fd.fcomAt||''):''}</span>
-    </div>`;
-  if(session.role==='fc'||session.role==='admin'){
-    h+=`<hr>
-      <label class="chk"><input type="checkbox" ${allSub?'checked':''} disabled> All three rooms have submitted</label>
-      ${!allSub?`<div class="warnnote">Cannot confirm — ${ROOMS.filter(r=>{const rd=rdSafe(currentDate,r);return !rd||!rd.status.rcSubmitted;}).map(r=>'Room '+r).join(', ')} pending.</div>`:''}
-      <button class="ok" ${allSub?'':'disabled'} onclick="fcConfirmFloor()">Confirm full day data</button>`;
-  }
-  if(session.role==='fcom'||session.role==='admin'){
-    h+=`<hr>
-      <textarea id="fcomFloorNote" rows="2" style="width:100%" placeholder="Verification note…">${esc(fd.fcomNote||'')}</textarea>
-      <label class="chk" style="margin-top:10px"><input type="checkbox" id="xcheck" onchange="document.getElementById('vfBtn').disabled=!this.checked">
-        I have <b>physically cross-checked</b> this data.</label>
-      <div class="warnnote">⚠ <b>Do not verify without cross-checking.</b></div>
-      <button id="vfBtn" class="primary" disabled onclick="fcomVerifyFloor()">Verify full day</button>`;
-  }
-  h+=`</div>`;
-  return h;
-}
-
-/* =========================================================
-   FLOOR GOODS
-   ========================================================= */
-function goodsView(){
-  const fd=getDay(currentDate).floor;
-  const editable=session.role==='fc'||session.role==='admin';
-  let h=`<h2>Floor Goods · ${prettyDate(currentDate)}</h2>
-    <div class="card">
-      <h3>Availability of goods on the floor</h3>
-      <div class="btn-group" style="margin-top:10px">
-        ${FLOOR_GOODS.map(([k,l])=>{
-          const on=fd.goods[k];
-          return `<div class="btn-opt ${on?'active':''}" data-tone="${on?'ok':''}" onclick="${editable?`toggleGoods('${k}')`:''}">${l}</div>`;
-        }).join('')}
-      </div>
-      <div class="row" style="margin-top:14px">
-        <span class="small muted">Checked by:</span>
-        <input value="${esc(fd.goodsBy||'')}" ${editable?'':'disabled'} onchange="saveGoodsBy(this.value)" placeholder="Name / role">
-      </div>
-      <div style="margin-top:12px">
-        <textarea rows="2" style="width:100%" ${editable?'':'disabled'} placeholder="Notes…" onchange="setGoodsNote(this.value)">${esc(fd.goodsNote||'')}</textarea>
-      </div>
-    </div>`;
-  return h;
-}
-function toggleGoods(key){const fd=getDay(currentDate).floor;fd.goods[key]=!fd.goods[key];save();render();}
-
-/* =========================================================
-   ROSTER
-   ========================================================= */
-function rosterView(){
-  const rooms=session.role==='rc'?[session.room]:ROOMS;
-  const canEdit=session.role==='admin'||session.role==='fcom'||session.role==='rc';
-  let h=`<h2>Roster <span class="muted small">· names &amp; classes</span></h2>`;
-  for(const room of rooms){
-    const st=S.rooms[room];
-    const counts={9:0,10:0,11:0,12:0};
-    st.students.forEach(s=>{if(counts[s.class]!==undefined)counts[s.class]++;});
-    h+=`<div class="card"><h3>Room ${room} · ${st.students.length} students · ${st.rotation.length} in rotation</h3>
-      <div class="row small muted" style="margin-bottom:8px">
-        <span class="chip">Class 9: ${counts[9]}</span>
-        <span class="chip">Class 10: ${counts[10]}</span>
-        ${counts[11]?`<span class="chip">Class 11: ${counts[11]}</span>`:''}
-        ${counts[12]?`<span class="chip">Class 12: ${counts[12]}</span>`:''}
-      </div>
-      <div class="scrollx"><table class="tbl">
-        <thead><tr><th>#</th><th>ID</th><th>Name</th><th>Class</th><th>In rotation</th><th></th></tr></thead><tbody>
-        ${st.students.map((s,i)=>`<tr>
-          <td>${i+1}</td>
-          <td class="mono">${esc(s.id)}</td>
-          <td><input value="${esc(s.name)}" ${canEdit?'':'disabled'} onchange="renameStudent('${room}','${s.id}',this.value)"></td>
-          <td>${canEdit?`<select onchange="setStudentClass('${room}','${s.id}',this.value)">${CLASSES.map(c=>`<option value="${c}" ${s.class===c?'selected':''}>${c}</option>`).join('')}</select>`:classPill(s.class)}</td>
-          <td>${st.rotation.includes(s.id)?'✔':'—'}</td>
-          <td>
-            <button class="ghost" ${canEdit?'':'disabled'} onclick="toggleRotation('${room}','${s.id}')">${st.rotation.includes(s.id)?'Remove':'Add'}</button>
-            <button class="bad" ${canEdit?'':'disabled'} onclick="removeStudent('${room}','${s.id}')">Remove</button>
-          </td></tr>`).join('')}
-      </tbody></table></div>
-      <div class="row" style="margin-top:12px">
-        <input id="newId_${room}" placeholder="Student ID (e.g. ${room}-07)" style="width:180px">
-        <input id="newName_${room}" placeholder="Full name" style="width:200px">
-        <select id="newClass_${room}">${CLASSES.map(c=>`<option value="${c}">Class ${c}</option>`).join('')}</select>
-        <button class="primary" ${canEdit?'':'disabled'} onclick="addStudent('${room}')">Add student</button>
-      </div>
-    </div>`;
-  }
-  return h;
-}
-function addStudent(room){
-  const id=((document.getElementById('newId_'+room)||{}).value||'').trim();
-  const name=((document.getElementById('newName_'+room)||{}).value||'').trim();
-  const cls=((document.getElementById('newClass_'+room)||{}).value||'9');
-  if(!id)return toast('Enter a student ID','bad');
-  const st=S.rooms[room];
-  if(st.students.some(s=>s.id===id))return toast('That ID already exists','bad');
-  st.students.push({id,name:name||('Student '+id),class:cls});
-  if(!st.rotation.includes(id))st.rotation.push(id);
-  saveConfig();render();toast('Student added','ok');
-}
-function removeStudent(room,id){
-  if(!confirm('Remove '+id+' from Room '+room+'?'))return;
-  const st=S.rooms[room];
-  st.students=st.students.filter(s=>s.id!==id);
-  st.rotation=st.rotation.filter(x=>x!==id);
-  saveConfig();render();toast('Student removed','ok');
-}
-function renameStudent(room,id,val){const st=S.rooms[room];const s=st.students.find(x=>x.id===id);if(s){s.name=val;saveConfig();}}
-function setStudentClass(room,id,val){const st=S.rooms[room];const s=st.students.find(x=>x.id===id);if(s){s.class=val;saveConfig();toast('Class updated','ok');}}
-function toggleRotation(room,id){
-  const st=S.rooms[room];
-  if(st.rotation.includes(id))st.rotation=st.rotation.filter(x=>x!==id);
-  else st.rotation.push(id);
-  saveConfig();render();
-}
-
-/* =========================================================
-   REPORTS
-   ========================================================= */
-function reportsView(){
-  const roomList=session.role==='rc'?[session.room]:ROOMS;
-  let h=`<h2>Marks Report</h2>
-    <div class="card">
-      <div class="row">
-        <span class="small muted">From</span><input type="date" value="${repFrom}" onchange="repFrom=this.value;render()">
-        <span class="small muted">To</span><input type="date" value="${repTo}" onchange="repTo=this.value;render()">
-        <div class="spacer"></div>
-        <button class="ghost" onclick="pushRange(repFrom,repTo)">Push range to Sheet</button>
-      </div>
-    </div>`;
-  const dates=[];let d=repFrom,guard=0;
-  while(d<=repTo&&guard++<400){dates.push(d);d=addDays(d,1);}
-  for(const room of roomList){
-    const st=S.rooms[room];
-    h+=`<div class="card scrollx"><h3>Room ${room}</h3>
-      <table class="tbl"><thead><tr><th>ID</th><th>Class</th><th>Name</th><th>Days</th><th>Capt. days</th><th>Bonus</th><th>Neg</th><th>Total</th><th>Avg</th></tr></thead><tbody>`;
-    for(const s of st.students){
-      let days=0,cap=0,bonus=0,neg=0,total=0;
-      for(const dt of dates){
-        const rd=rdSafe(dt,room);
-        if(!rd)continue;
-        const has=(rd.salah&&Object.keys(rd.salah[s.id]||{}).length)||rd.activity[s.id]||rd.study[s.id];
-        if(!has&&!(rd.marks&&rd.marks[s.id]))continue;
-        const e=equityFor(dt,room,s.id);
-        days++;if(e.roles.includes('RC'))cap++;
-        bonus+=e.bonus;neg+=e.neg;total+=e.final;
-      }
-      h+=`<tr><td class="mono">${esc(s.id)}</td><td>${classPill(s.class)||'—'}</td><td>${esc(s.name)}</td><td>${days}</td><td>${cap}</td>
-        <td style="color:var(--ok)">+${bonus}</td><td style="color:var(--bad)">−${neg}</td>
-        <td><b>${total}</b></td><td>${days?(total/days).toFixed(2):'—'}</td></tr>`;
-    }
-    h+=`</tbody></table></div>`;
-  }
-  return h;
-}
-
-/* =========================================================
-   ADMIN
-   ========================================================= */
-function adminView(){
-  const allStudents=[];
-  for(const r of ROOMS)S.rooms[r].students.forEach(s=>allStudents.push({room:r,id:s.id,name:s.name,cls:s.class}));
-  const optList=[{v:'',l:'— none —',short:'— none —'}].concat(allStudents.map(s=>({v:s.id,l:s.name+' ('+s.room+') · Cl.'+(s.cls||'—'),short:s.name+' ('+s.room+')'})));
-  let h=`<h2>Administration</h2>`;
-
-  /* Roles & passcodes */
-  h+=`<div class="card"><h3>Roles &amp; passcodes
-    <span class="muted small">· all default to 1122 · change any time, saves to sheet automatically</span></h3>
-    <div class="grid2">
-      <div>
-        <label class="chk">Floor Captain — student ID</label>
-        <select onchange="setStaff('fc','studentId',this.value)">${optList.map(o=>`<option value="${o.v}" ${o.v===S.users.fc.studentId?'selected':''}>${esc(o.l)}</option>`).join('')}</select>
-        <div style="margin-top:10px"><label class="chk">Floor Captain passcode</label>
-        <input value="${esc(S.users.fc.pin)}" onchange="setStaff('fc','pin',this.value)"></div>
-      </div>
-      <div>
-        <label class="chk">Floor Commander — student ID</label>
-        <select onchange="setStaff('fcom','studentId',this.value)">${optList.map(o=>`<option value="${o.v}" ${o.v===S.users.fcom.studentId?'selected':''}>${esc(o.l)}</option>`).join('')}</select>
-        <div style="margin-top:10px"><label class="chk">Floor Commander passcode</label>
-        <input value="${esc(S.users.fcom.pin)}" onchange="setStaff('fcom','pin',this.value)"></div>
-      </div>
-    </div>
-    <hr>
-    <div class="grid3">
-      ${ROOMS.map(r=>`<div>
-        <label class="chk">Room ${r} passcode</label>
-        <input value="${esc(S.users.rc[r])}" onchange="setRcPin('${r}',this.value)">
-      </div>`).join('')}
-      <div>
-        <label class="chk">Floor Incharge passcode</label>
-        <input value="${esc(S.users.admin.pin)}" onchange="setStaff('admin','pin',this.value)">
-      </div>
-    </div>
-    <div class="row" style="margin-top:10px">
-      <button class="ghost" onclick="resetAllPins()">Reset all passcodes to 1122</button>
-    </div>
-  </div>`;
-
-  /* Rotation */
-  h+=`<div class="card"><h3>Weekly captaincy rotation</h3>
-    <div class="row">
-      <span class="small muted">Rotation start (Monday)</span>
-      <input type="date" value="${S.settings.rotationStart}" onchange="S.settings.rotationStart=this.value;saveConfig();render()">
-    </div>
-    <hr>
-    <div class="grid3">
-      ${ROOMS.map(r=>{
-        const cap=rotationCaptain(r,todayStr());
-        const s=S.rooms[r].students.find(x=>x.id===cap);
-        const cls=s?s.class:'—';
-        return `<div class="stat"><div><b>${esc(cap||'—')}</b>this week · Room ${r} · Class ${esc(cls)}</div></div>`;
-      }).join('')}
-    </div>
-  </div>`;
-
-  /* Sheet sync */
-  h+=`<div class="card"><h3>Google Sheet sync</h3>
-    <div class="row">
-      <input style="flex:1;min-width:280px" value="${esc(GAS_URL)}" readonly>
-      <button class="ghost" onclick="pingGAS()">Ping</button>
-    </div>
-    <label class="chk"><input type="checkbox" ${S.settings.autoSync?'checked':''} onchange="S.settings.autoSync=this.checked;saveConfig()"> Auto-push to sheet after every edit</label>
-    <div class="row" style="margin-top:10px">
-      <button class="primary" onclick="pushRange(addDays(todayStr(),-14),todayStr())">Push last 14 days now</button>
-      <button class="ghost" onclick="pushConfig()">Push roster &amp; passcodes now</button>
-    </div>
-    <div class="muted small" style="margin-top:10px">
-      Last daily sync: ${esc(S.meta.lastSync||'never')} · Last config sync: ${esc(S.meta.lastConfigSync||'never')}<br>
-      Sheet tabs: <b>State</b>, <b>Config</b>, <b>Daily Records</b>, <b>Room Sign-off</b>, <b>Floor Goods &amp; Sign-off</b>, <b>Roster</b>, <b>Sync Log</b>.
-    </div>
-  </div>`;
-
-  /* Backup */
   h+=`<div class="card"><h3>Backup &amp; restore</h3>
     <div class="row">
       <button class="ghost" onclick="exportJSON()">Download JSON backup</button>
