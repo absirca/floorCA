@@ -1017,14 +1017,15 @@ function rosterView(){
   let h=`<h2>Roster <span class="muted small">· names &amp; classes</span></h2>`;
   for(const room of rooms){
     const st=S.rooms[room];
-    const counts={9:0,10:0,11:0,12:0};
+    const counts={9:0,10:0,6:0,6:0,7:0};
     st.students.forEach(s=>{if(counts[s.class]!==undefined)counts[s.class]++;});
     h+=`<div class="card"><h3>Room ${room} · ${st.students.length} students · ${st.rotation.length} in rotation</h3>
       <div class="row small muted" style="margin-bottom:8px">
         <span class="chip">Class 9: ${counts[9]}</span>
         <span class="chip">Class 10: ${counts[10]}</span>
-        ${counts[11]?`<span class="chip">Class 11: ${counts[11]}</span>`:''}
-        ${counts[12]?`<span class="chip">Class 12: ${counts[12]}</span>`:''}
+        ${counts[6]?`<span class="chip">Class 6: ${counts[6]}</span>`:''}
+        ${counts[7]?`<span class="chip">Class 7: ${counts[7]}</span>`:''}
+        ${counts[8]?`<span class="chip">Class 8: ${counts[8]}</span>`:''}
       </div>
       <div class="scrollx"><table class="tbl">
         <thead><tr><th>#</th><th>ID</th><th>Name</th><th>Class</th><th>In rotation</th><th></th></tr></thead><tbody>
