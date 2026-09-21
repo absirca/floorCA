@@ -19,6 +19,7 @@ body{background:var(--bg);color:var(--txt);font:14px/1.5 system-ui,-apple-system
 .chip.ok{background:rgba(46,204,143,.15);border-color:var(--ok);color:var(--ok)}
 .chip.warn{background:rgba(255,176,32,.15);border-color:var(--warn);color:var(--warn)}
 .chip.bad{background:rgba(255,92,108,.15);border-color:var(--bad);color:var(--bad)}
+.chip.info{background:rgba(91,140,255,.15);border-color:var(--acc);color:var(--acc)}
 .tabs{display:flex;gap:8px;flex-wrap:wrap;padding:12px 0}
 .tabs button{background:transparent;border:1px solid transparent;color:var(--muted)}
 .tabs button.active{background:#22304d;border-color:var(--line);color:var(--txt);font-weight:600}
@@ -48,6 +49,7 @@ label.chk{display:flex;align-items:center;gap:8px;margin:8px 0;cursor:pointer}
 input[type=checkbox]{width:16px;height:16px;accent-color:var(--acc)}
 .warnnote{color:var(--warn);font-size:12.5px;margin:6px 0 10px;background:rgba(255,176,32,.08);border-left:3px solid var(--warn);padding:8px 10px;border-radius:0 8px 8px 0}
 .oknote{color:var(--ok);font-size:12.5px;margin:6px 0 10px;background:rgba(46,204,143,.08);border-left:3px solid var(--ok);padding:8px 10px;border-radius:0 8px 8px 0}
+.badnote{color:var(--bad);font-size:12.5px;margin:6px 0 10px;background:rgba(255,92,108,.08);border-left:3px solid var(--bad);padding:8px 10px;border-radius:0 8px 8px 0}
 .err{color:var(--bad);font-size:13px;min-height:18px;margin-top:8px}
 .loginwrap{display:flex;min-height:100vh;align-items:center;justify-content:center;padding:20px}
 .login{width:100%;max-width:400px}
@@ -56,11 +58,13 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--acc)}
 .dot{width:10px;height:10px;border-radius:50%;background:#44506b;display:inline-block}
 .dot.ok{background:var(--ok)}
 .dot.bad{background:var(--bad)}
+.dot.pending{background:var(--acc)}
 .dot.syncing{background:var(--warn);animation:pulse 1s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.syncwrap{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);cursor:pointer}
 #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#22304d;border:1px solid var(--line);padding:10px 18px;border-radius:10px;opacity:0;pointer-events:none;transition:.25s;z-index:999;max-width:90vw;text-align:center}
 #toast.show{opacity:1}
-.stat{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px}
+.stat{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
 .stat div{background:#101728;border:1px solid var(--line);border-radius:10px;padding:6px 12px;font-size:12px}
 .stat b{display:block;font-size:18px}
 hr{border:none;border-top:1px solid var(--line);margin:14px 0}
@@ -92,7 +96,8 @@ hr{border:none;border-top:1px solid var(--line);margin:14px 0}
 .btn-opt.active[data-tone="info"]{background:var(--acc);color:#fff}
 .btn-opt.active[data-tone="muted"]{background:#44506b;color:#e8eefb}
 .btn-opt[data-clickable=""]{opacity:.5}
-.entry-note{flex:1;padding:6px 9px;font-size:12px;min-width:120px}
+.entry-note{flex:1;padding:6px 9px;font-size:12px;min-width:140px}
+.entry-note.need{border-color:var(--bad);box-shadow:0 0 0 1px var(--bad)}
 .section-head{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin:12px 0 6px;padding-top:10px;border-top:1px dashed var(--line)}
 .section-head:first-child{margin-top:0;padding-top:0;border-top:none}
 @media(max-width:640px){
@@ -103,10 +108,18 @@ hr{border:none;border-top:1px solid var(--line);margin:14px 0}
 .big-edit{padding:12px 18px;font-size:14px;font-weight:600;border-radius:11px;background:var(--acc);border-color:var(--acc);color:#fff}
 .quickbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;background:#131c2e;border:1px solid var(--line);padding:10px 12px;border-radius:12px}
 .clean-block{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:#131c2e;margin-bottom:10px}
-.clean-block .row{display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap}
-.clean-block .entry-label{flex:0 0 110px}
+.clean-block.missing{border-color:var(--warn);box-shadow:0 0 0 1px var(--warn)}
+.clean-block.notdone{border-color:var(--bad)}
 .duty-select{flex:1;min-width:180px;padding:7px 9px;font-size:13px}
-.duty-missing{border-color:var(--warn)!important;box-shadow:0 0 0 1px var(--warn)}
+.duty-select.need{border-color:var(--warn);box-shadow:0 0 0 1px var(--warn)}
+.chk-item{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:7px 0;border-bottom:1px dashed var(--line)}
+.chk-item:last-child{border-bottom:none}
+.chk-item .lbl{flex:0 0 150px;font-size:13px}
+.streak{display:inline-flex;gap:3px;vertical-align:middle}
+.streak i{width:10px;height:10px;border-radius:3px;background:#44506b;display:inline-block}
+.streak i.ok{background:var(--ok)}
+.streak i.bad{background:var(--bad)}
+.streak i.na{background:#2b3752}
 </style>
 </head>
 <body>
@@ -115,36 +128,34 @@ hr{border:none;border-top:1px solid var(--line);margin:14px 0}
 
 <script>
 /* =========================================================
-   FLOOR MANAGEMENT SYSTEM — v8
-   Features:
-     • Food note asks "what did they NOT eat?" when Not eaten
-     • Cleaning has explicit Duty person for washroom / room / floor
-     • Floor Captain fills floor cleaning (duty person required)
-     • Fixed login reset bug
+   FLOOR MANAGEMENT SYSTEM — v9
+   • Two-way auto sync (debounced push, queue, pull, merge)
+   • Food: "Not eaten" → REQUIRES "what they don't eat";
+     per-student persistent food restrictions
+   • Cleaning: duty person ALWAYS required; status = Done / Not done
+     (washroom, room, floor)
+   • Discipline checklist for RCs (bed, cupboard, shoes, dustbin,
+     lights/fan, windows, laundry, uniform, valuables, curfew, head-count)
+   • Duty-repeat / non-completion tracking + 7-day streak
+   • Login: reset bug fixed (no re-render on login screen)
    ========================================================= */
 const GAS_URL='https://script.google.com/macros/s/AKfycbxDrzuq8tLkwojEkE5eg7djiaHjW0lG27VxlPuANP3qjPPHE75ErywgfWpOFGqQ5gnr/exec';
 const LS='fms_v1';
 const LS_OPEN='fms_openCards';
-const VERSION='v8';
+const LS_QUEUE='fms_dirty';
+const LS_ROLE='fms_lastRole';
+const LS_ROOM='fms_lastRoom';
+const VERSION='v9';
+const PULL_MS=20000;
 const ROOMS=['301','302','303'];
-const CLASSES=['9','10','11','12'];
+const CLASSES=['6','7','8','9','10','11','12'];
 const PRAYERS=[['fajr','Fajr'],['dhuhr','Dhuhr'],['asr','Asr'],['maghrib','Maghrib'],['isha','Isha']];
 
 const STUDY_TIMES=[
-  {k:'quran',    l:'Quran'},
-  {k:'pre_bf',   l:'Pre-bf'},
-  {k:'post_bf',  l:'Post-bf'},
-  {k:'midday',   l:'Midday'},
-  {k:'afternoon',l:'Afternoon'},
-  {k:'evening',  l:'Evening'},
-  {k:'night',    l:'Night'}
+  {k:'quran',l:'Quran'},{k:'pre_bf',l:'Pre-bf'},{k:'post_bf',l:'Post-bf'},
+  {k:'midday',l:'Midday'},{k:'afternoon',l:'Afternoon'},{k:'evening',l:'Evening'},{k:'night',l:'Night'}
 ];
-const MEALS=[
-  {k:'breakfast',l:'Breakfast'},
-  {k:'lunch',    l:'Lunch'},
-  {k:'dinner',   l:'Dinner'}
-];
-
+const MEALS=[{k:'breakfast',l:'Breakfast'},{k:'lunch',l:'Lunch'},{k:'dinner',l:'Dinner'}];
 const SALAH_STATUS=[
   {v:'',l:'Not marked',short:'—',tone:'muted'},
   {v:'rakat1',l:'Attended from Rakat 1',short:'R1',tone:'ok'},
@@ -177,22 +188,50 @@ const FOOD_OPTS=[
   {v:'eaten',l:'Eaten',short:'🍽 Eaten',tone:'ok'},
   {v:'not_eaten',l:'Not eaten',short:'🚫 Not eaten',tone:'bad'}
 ];
-/* Cleaning status — Done / Not done */
 const CLEAN_STATUS=[
   {v:'',l:'Not confirmed',short:'— Not confirmed',tone:'muted'},
   {v:'done',l:'Done',short:'✓ Done',tone:'ok'},
   {v:'not_done',l:'Not done',short:'✗ Not done',tone:'bad'}
 ];
-
+const CHECK_STATUS=[
+  {v:'',l:'Not checked',short:'—',tone:'muted'},
+  {v:'ok',l:'OK',short:'✓ OK',tone:'ok'},
+  {v:'issue',l:'Issue',short:'✗ Issue',tone:'bad'}
+];
+/* Discipline checks done by the Room Captain */
+const DISCIPLINE=[
+  {k:'beds',      l:'Beds made & tidy'},
+  {k:'cupboards', l:'Cupboards / lockers tidy'},
+  {k:'shoes',     l:'Shoes arranged on rack'},
+  {k:'dustbin',   l:'Dustbin emptied'},
+  {k:'floorSwept',l:'Room floor swept / mopped'},
+  {k:'windows',   l:'Windows & curtains in order'},
+  {k:'lights',    l:'Lights / fans off when empty'},
+  {k:'laundry',   l:'Laundry & clothes managed'},
+  {k:'uniform',   l:'Uniform / dress code proper'},
+  {k:'valuables', l:'No mobile / banned items'},
+  {k:'curfew',    l:'All in room at lights-out'},
+  {k:'headcount', l:'Head-count done'}
+];
 const EQUIP=[['harpic','Harpic'],['handwash','Handwash'],['toothpaste','Toothpaste'],['odonil','Odonil']];
 const FLOOR_GOODS=[['harpic','Harpic'],['handwash','Handwash'],['toothpaste','Toothpaste'],['odonil','Odonil'],
   ['tissue','Tissue roll'],['phenyl','Phenyl'],['broom','Broom'],['soap','Hand soap']];
+/* Floor-level checks done by the Floor Captain */
+const FLOOR_CHECKS=[
+  {k:'corridor', l:'Corridor clean'},
+  {k:'stairs',   l:'Stairs / landing clean'},
+  {k:'drinking', l:'Drinking water available'},
+  {k:'dustbins', l:'Floor dustbins emptied'},
+  {k:'lights',   l:'Corridor lights working'},
+  {k:'fans',     l:'Fans / exhaust in order'},
+  {k:'noise',    l:'Silence maintained'}
+];
 
 const TABS={
   rc:    [['entry','Daily Entry'],['confirm','Status'],['roster','Roster'],['reports','My Marks']],
-  fc:    [['overview','Overview'],['confirm','Confirm'],['goods','Floor Goods'],['entry','Inspect Rooms']],
+  fc:    [['overview','Overview'],['confirm','Confirm'],['goods','Floor Duty'],['entry','Inspect Rooms']],
   fcom:  [['overview','Overview'],['confirm','Verify'],['entry','Edit Entries'],['reports','Reports']],
-  admin: [['overview','Overview'],['entry','Daily Entry'],['confirm','Verify'],['goods','Floor Goods'],['reports','Reports'],['admin','Admin']]
+  admin: [['overview','Overview'],['entry','Daily Entry'],['confirm','Verify'],['goods','Floor Duty'],['reports','Reports'],['admin','Admin']]
 };
 
 /* ---------- utils ---------- */
@@ -206,12 +245,18 @@ function diffDays(a,b){return Math.round((parseDate(b)-parseDate(a))/86400000);}
 function prettyDate(s){return parseDate(s).toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'short',year:'numeric'});}
 function mondayOf(d){const x=new Date(d);const k=(x.getDay()+6)%7;x.setDate(x.getDate()-k);return fmtDate(x);}
 function nowStamp(){return new Date().toLocaleString();}
-function toast(msg,kind){const t=$('#toast');t.textContent=msg;t.style.borderColor=kind==='bad'?'var(--bad)':kind==='ok'?'var(--ok)':'var(--line)';t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2600);}
+function lsGet(k,d){try{const v=localStorage.getItem(k);return v==null?d:v;}catch(e){return d;}}
+function lsSet(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+function toast(msg,kind){const t=$('#toast');t.textContent=msg;t.style.borderColor=kind==='bad'?'var(--bad)':kind==='ok'?'var(--ok)':'var(--line)';t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2800);}
+function studentName(id){
+  for(const r of ROOMS){const s=(S.rooms[r]&&S.rooms[r].students||[]).find(x=>x.id===id);if(s)return s.name;}
+  return id||'—';
+}
 
 /* ---------- collapse state ---------- */
 let openCards={};
-try{openCards=JSON.parse(localStorage.getItem(LS_OPEN)||'{}');}catch(e){openCards={};}
-function saveOpenCards(){try{localStorage.setItem(LS_OPEN,JSON.stringify(openCards));}catch(e){}}
+try{openCards=JSON.parse(lsGet(LS_OPEN,'{}'));}catch(e){openCards={};}
+function saveOpenCards(){lsSet(LS_OPEN,JSON.stringify(openCards));}
 function cardKey(room,sid){return room+'||'+sid;}
 function isCardOpen(room,sid){return !!openCards[cardKey(room,sid)];}
 function toggleCard(room,sid){const k=cardKey(room,sid);openCards[k]=!openCards[k];saveOpenCards();render();}
@@ -238,67 +283,63 @@ function defaultState(){
     const half=Math.ceil(counts[r]/2);
     for(let i=1;i<=counts[r];i++){
       const id=r+'-'+String(i).padStart(2,'0');
-      const cls = i<=half ? '9' : '10';
-      students.push({id,name:'Student '+id,class:cls});
+      students.push({id,name:'Student '+id,class:i<=half?'9':'10',avoid:''});
     }
     rooms[r]={students,rotation:students.map(s=>s.id)};
   }
   return {rooms,days:{},users:defaultUsers(),
     settings:{sheetUrl:GAS_URL,autoSync:true,rotationStart:mondayOf(new Date())},
-    meta:{version:VERSION,lastSync:null,lastConfigSync:null}};
+    meta:{version:VERSION,lastSync:null,lastConfigSync:null,lastPull:null,cfgTs:0}};
 }
+
+/* ---------- migrations ---------- */
 function migrateCleaning(c){
-  if(!c) c={};
-  /* old flat format → nested */
-  if(typeof c.washroom !== 'object' || c.washroom===null || typeof c.washroom === 'boolean'){
-    c.washroom = { status: c.washroomCleaned ? 'done' : '', dutyBy: c.washroomBy || '' };
-  }
-  if(typeof c.room !== 'object' || c.room===null || typeof c.room === 'boolean'){
-    c.room = { status: c.roomCleaned ? 'done' : '', dutyBy: c.roomBy || '' };
-  }
-  if(!c.washroom) c.washroom = { status:'', dutyBy:'' };
-  if(!c.room)     c.room     = { status:'', dutyBy:'' };
-  if(typeof c.harpic!=='boolean') c.harpic=false;
-  if(typeof c.handwash!=='boolean') c.handwash=false;
-  if(typeof c.toothpaste!=='boolean') c.toothpaste=false;
-  if(typeof c.odonil!=='boolean') c.odonil=false;
-  /* remove legacy fields */
-  delete c.washroomCleaned; delete c.washroomBy;
-  delete c.roomCleaned; delete c.roomBy;
+  if(!c)c={};
+  if(typeof c.washroom!=='object'||c.washroom===null)c.washroom={status:c.washroom===true||c.washroomCleaned?'done':'',dutyBy:c.washroomBy||''};
+  if(typeof c.room!=='object'||c.room===null)c.room={status:c.room===true||c.roomCleaned?'done':'',dutyBy:c.roomBy||''};
+  ['washroom','room'].forEach(k=>{
+    if(c[k].status===undefined)c[k].status='';
+    if(c[k].dutyBy===undefined)c[k].dutyBy='';
+    if(c[k].note===undefined)c[k].note='';
+  });
+  ['harpic','handwash','toothpaste','odonil'].forEach(k=>{if(typeof c[k]!=='boolean')c[k]=false;});
+  delete c.washroomCleaned;delete c.washroomBy;delete c.roomCleaned;delete c.roomBy;
   return c;
 }
-function migrateFloorCleaning(f){
-  if(!f) f={};
-  if(typeof f.floorCleaning !== 'object' || f.floorCleaning===null){
-    f.floorCleaning = { status:'', dutyBy:'' };
-  }
-  if(!f.floorCleaning) f.floorCleaning = { status:'', dutyBy:'' };
+function migrateFloorDay(f){
+  if(!f)f={};
+  if(!f.goods)f.goods={};
+  FLOOR_GOODS.forEach(([k])=>{if(typeof f.goods[k]!=='boolean')f.goods[k]=false;});
+  if(typeof f.floorCleaning!=='object'||f.floorCleaning===null)f.floorCleaning={status:'',dutyBy:'',note:''};
+  if(f.floorCleaning.note===undefined)f.floorCleaning.note='';
+  if(!f.checks)f.checks={};
+  if(f.goodsBy===undefined)f.goodsBy='';
+  if(f.goodsNote===undefined)f.goodsNote='';
   return f;
 }
 function migrateConfig(){
-  if(!S.meta) S.meta={};
-  if(S.meta.version !== VERSION) S.meta.version = VERSION;
+  if(!S.meta)S.meta={};
+  S.meta.version=VERSION;
+  if(!S.meta.cfgTs)S.meta.cfgTs=0;
   for(const r in S.rooms){
-    (S.rooms[r].students||[]).forEach(s=>{ if(!s.class) s.class='9'; });
-    if(!S.rooms[r].rotation) S.rooms[r].rotation=(S.rooms[r].students||[]).map(s=>s.id);
+    (S.rooms[r].students||[]).forEach(s=>{if(!s.class)s.class='9';if(s.avoid===undefined)s.avoid='';});
+    if(!S.rooms[r].rotation)S.rooms[r].rotation=(S.rooms[r].students||[]).map(s=>s.id);
   }
   for(const dt in S.days){
     const day=S.days[dt];
-    if(day&&day.rooms){
-      for(const r in day.rooms){ if(day.rooms[r].cleaning) migrateCleaning(day.rooms[r].cleaning); }
-    }
-    if(day&&day.floor) migrateFloorCleaning(day.floor);
+    if(day&&day.rooms)for(const r in day.rooms){if(day.rooms[r].cleaning)migrateCleaning(day.rooms[r].cleaning);}
+    if(day&&day.floor)migrateFloorDay(day.floor);
   }
   const d=defaultUsers();
-  S.users = S.users || d;
-  S.users.admin = Object.assign({}, d.admin, S.users.admin||{});
-  S.users.fc    = Object.assign({}, d.fc,    S.users.fc||{});
-  S.users.fcom  = Object.assign({}, d.fcom,  S.users.fcom||{});
-  S.users.rc    = Object.assign({}, d.rc,    S.users.rc||{});
-  S.settings = S.settings || {};
-  S.settings.sheetUrl = GAS_URL;
-  S.settings.autoSync = S.settings.autoSync!==false;
-  S.settings.rotationStart = S.settings.rotationStart || mondayOf(new Date());
+  S.users=S.users||d;
+  S.users.admin=Object.assign({},d.admin,S.users.admin||{});
+  S.users.fc=Object.assign({},d.fc,S.users.fc||{});
+  S.users.fcom=Object.assign({},d.fcom,S.users.fcom||{});
+  S.users.rc=Object.assign({},d.rc,S.users.rc||{});
+  S.settings=S.settings||{};
+  S.settings.sheetUrl=GAS_URL;
+  S.settings.autoSync=S.settings.autoSync!==false;
+  S.settings.rotationStart=S.settings.rotationStart||mondayOf(new Date());
 }
 function load(){
   try{const raw=localStorage.getItem(LS);
@@ -320,83 +361,59 @@ function rotationCaptain(room,date){
   const start=S.settings.rotationStart||mondayOf(new Date());
   const wk=Math.floor(diffDays(start,date)/7);
   const n=st.rotation.length;
-  const idx=((wk%n)+n)%n;
-  return st.rotation[idx];
+  return st.rotation[((wk%n)+n)%n];
 }
 function newRoomDay(date,room){
   const prev=lastRoomDayBefore(date,room);
-  const cleaning={
-    washroom:{ status:'', dutyBy:'' },
-    room:    { status:'', dutyBy:'' },
-    harpic:false,handwash:false,toothpaste:false,odonil:false
-  };
-  /* consumables carry over; duty persons carry over too (same duty roster often) */
+  const cleaning=migrateCleaning({});
   if(prev&&prev.cleaning){
-    for(const k of ['harpic','handwash','toothpaste','odonil']) cleaning[k]=!!prev.cleaning[k];
     const pc=migrateCleaning(prev.cleaning);
-    cleaning.washroom.dutyBy = pc.washroom.dutyBy || '';
-    cleaning.room.dutyBy     = pc.room.dutyBy || '';
+    for(const k of ['harpic','handwash','toothpaste','odonil'])cleaning[k]=!!pc[k];
+    /* duty person does NOT carry over blindly – must be chosen each day (forces accountability) */
   }
   return {
     captainId:rotationCaptain(room,date),acting:false,
-    salah:{}, study:{}, food:{}, foodNote:{},
-    activity:{}, notes:{}, marks:{}, cleaning,
+    salah:{},study:{},food:{},foodNote:{},
+    activity:{},notes:{},marks:{},cleaning,discipline:{},
     status:{rcSubmitted:false,rcAt:null,fcConfirmed:false,fcAt:null,fcNote:'',fcomVerified:false,fcomAt:null,fcomNote:''},
-    audit:[]
+    audit:[],_ts:0
   };
+}
+function newFloorDay(date){
+  const prevDates=Object.keys(S.days).filter(d=>d<date&&S.days[d]&&S.days[d].floor).sort();
+  const prev=prevDates.length?S.days[prevDates[prevDates.length-1]].floor:null;
+  const f=migrateFloorDay({});
+  if(prev&&prev.goods)FLOOR_GOODS.forEach(([k])=>f.goods[k]=!!prev.goods[k]);
+  Object.assign(f,{fcConfirmed:false,fcAt:null,fcBy:'',fcomVerified:false,fcomAt:null,fcomNote:'',adminNote:'',_ts:0});
+  return f;
 }
 function getDay(date){
   if(!S.days[date])S.days[date]={rooms:{},floor:null};
   const d=S.days[date];
   if(!d.rooms)d.rooms={};
   if(!d.floor)d.floor=newFloorDay(date);
+  migrateFloorDay(d.floor);
   return d;
-}
-function newFloorDay(date){
-  const prevDates=Object.keys(S.days).filter(d=>d<date&&S.days[d]&&S.days[d].floor).sort();
-  const prev=prevDates.length?S.days[prevDates[prevDates.length-1]].floor:null;
-  const goods={};
-  FLOOR_GOODS.forEach(([k])=>goods[k]=prev&&prev.goods?!!prev.goods[k]:false);
-  const floorCleaning={ status:'', dutyBy:'' };
-  if(prev&&prev.floorCleaning){ floorCleaning.dutyBy=prev.floorCleaning.dutyBy||''; }
-  return {goods,goodsBy:'',goodsNote:'',
-          floorCleaning,
-          fcConfirmed:false,fcAt:null,fcBy:'',
-          fcomVerified:false,fcomAt:null,fcomNote:'',adminNote:''};
 }
 function getRoomDay(date,room){
   const day=getDay(date);
   if(!day.rooms[room])day.rooms[room]=newRoomDay(date,room);
   const rd=day.rooms[room];
-  if(!rd.study) rd.study={};
-  if(!rd.food) rd.food={};
-  if(!rd.foodNote) rd.foodNote={};
-  migrateCleaning(rd.cleaning);
-  /* food migrations */
+  ['study','food','foodNote','salah','activity','notes','marks','discipline'].forEach(k=>{if(!rd[k])rd[k]={};});
+  if(!rd.audit)rd.audit=[];
+  migrateCleaning(rd.cleaning||(rd.cleaning={}));
   for(const sid in rd.food){
-    if(typeof rd.food[sid]==='string'){
-      const old=rd.food[sid];
-      rd.food[sid]={breakfast:old||'eaten',lunch:old||'eaten',dinner:old||'eaten'};
-    }
+    if(typeof rd.food[sid]==='string'){const o=rd.food[sid];rd.food[sid]={breakfast:o||'eaten',lunch:o||'eaten',dinner:o||'eaten'};}
   }
   for(const sid in rd.foodNote){
-    if(typeof rd.foodNote[sid]==='string'){
-      const old=rd.foodNote[sid];
-      rd.foodNote[sid]={breakfast:old,lunch:'',dinner:''};
-    }
+    if(typeof rd.foodNote[sid]==='string'){rd.foodNote[sid]={breakfast:rd.foodNote[sid],lunch:'',dinner:''};}
   }
-  /* study migration v4 single-string → object */
   for(const sid in rd.study){
-    if(typeof rd.study[sid]==='string'){
-      const old=rd.study[sid];
-      rd.study[sid]={};
-      if(old) rd.study[sid].quran=old;
-    }
+    if(typeof rd.study[sid]==='string'){const o=rd.study[sid];rd.study[sid]={};if(o)rd.study[sid].quran=o;}
   }
   return rd;
 }
 function rdSafe(date,room){return S.days[date]&&S.days[date].rooms?S.days[date].rooms[room]:null;}
-function fdSafe(date){return S.days[date]&&S.days[date].floor?S.days[date].floor:null;}
 
 /* ---------- marks / equity ---------- */
 function equityFor(date,room,sid){
@@ -420,122 +437,320 @@ function canEditRoom(room){
   const age=ageOf(currentDate);
   if(age<0)return false;
   if(session.role==='admin')return true;
-  if(session.role==='rc')   return session.room===room && age<=1;
-  if(session.role==='fcom') return age<=2;
+  if(session.role==='rc')return session.room===room&&age<=1;
+  if(session.role==='fcom')return age<=2;
   return false;
 }
 function canEditMarks(room){
   if(session.role==='admin')return true;
-  if(session.role==='rc')   return session.room===room && ageOf(currentDate)<=1;
-  if(session.role==='fcom') return ageOf(currentDate)<=2;
+  if(session.role==='rc')return session.room===room&&ageOf(currentDate)<=1;
+  if(session.role==='fcom')return ageOf(currentDate)<=2;
   return false;
 }
-function canEditFloorGoods(){return session.role==='fc'||session.role==='admin';}
+function canEditFloor(){
+  const age=ageOf(currentDate);
+  if(age<0)return false;
+  if(session.role==='admin')return true;
+  if(session.role==='fc')return age<=1;
+  if(session.role==='fcom')return age<=2;
+  return false;
+}
 function canAddBonus(){return session.role==='admin';}
-
 function audit(room,msg){
   const rd=getRoomDay(currentDate,room);
   rd.audit.push({t:nowStamp(),by:session?session.role:'system',msg});
   if(rd.audit.length>200)rd.audit.shift();
 }
 
+/* ---------- accountability helpers ---------- */
+/* problems list for a room-day: things a captain must fix before submitting */
+function roomProblems(room,date){
+  date=date||currentDate;
+  const rd=getRoomDay(date,room);const st=S.rooms[room];const p=[];
+  ['washroom','room'].forEach(k=>{
+    const c=rd.cleaning[k];
+    const nm=k==='washroom'?'Washroom':'Room';
+    if(!c.status)p.push(nm+' cleaning not confirmed');
+    if(!c.dutyBy)p.push(nm+' duty person missing');
+    if(c.status==='not_done'&&!(c.note||'').trim())p.push(nm+' not done — reason missing');
+  });
+  st.students.forEach(s=>{
+    const f=rd.food[s.id]||{};const n=rd.foodNote[s.id]||{};
+    MEALS.forEach(m=>{
+      if((f[m.k]||'eaten')==='not_eaten'&&!(n[m.k]||'').trim())p.push(s.name+' — '+m.l+': what they don\'t eat?');
+    });
+  });
+  const unchecked=DISCIPLINE.filter(d=>!(rd.discipline[d.k]&&rd.discipline[d.k].status)).length;
+  if(unchecked)p.push(unchecked+' discipline check(s) not done');
+  DISCIPLINE.forEach(d=>{
+    const x=rd.discipline[d.k];
+    if(x&&x.status==='issue'&&!(x.note||'').trim())p.push('Discipline issue "'+d.l+'" needs a note');
+  });
+  return p;
+}
+function floorProblems(date){
+  date=date||currentDate;
+  const fd=getDay(date).floor;const p=[];
+  const c=fd.floorCleaning;
+  if(!c.status)p.push('Floor cleaning not confirmed');
+  if(!c.dutyBy)p.push('Floor cleaning duty person missing');
+  if(c.status==='not_done'&&!(c.note||'').trim())p.push('Floor cleaning not done — reason missing');
+  const unchecked=FLOOR_CHECKS.filter(d=>!(fd.checks[d.k]&&fd.checks[d.k].status)).length;
+  if(unchecked)p.push(unchecked+' floor check(s) not done');
+  FLOOR_CHECKS.forEach(d=>{const x=fd.checks[d.k];if(x&&x.status==='issue'&&!(x.note||'').trim())p.push('Floor issue "'+d.l+'" needs a note');});
+  return p;
+}
+/* last-N-days cleaning record for a task: array of 'ok'|'bad'|'na' */
+function cleanStreak(kind,room,n){
+  n=n||7;const out=[];
+  for(let i=n-1;i>=0;i--){
+    const dt=addDays(todayStr(),-i);let c=null;
+    if(kind==='floor'){const f=S.days[dt]&&S.days[dt].floor;c=f&&f.floorCleaning;}
+    else{const rd=rdSafe(dt,room);c=rd&&rd.cleaning&&rd.cleaning[kind];}
+    out.push(!c||!c.status?'na':c.status==='done'?'ok':'bad');
+  }
+  return out;
+}
+function streakHTML(arr){return `<span class="streak" title="last ${arr.length} days (oldest → today)">${arr.map(x=>`<i class="${x}"></i>`).join('')}</span>`;}
+/* how many times a student was on duty for a task in last 30 days */
+function dutyCounts(){
+  const cnt={};const from=addDays(todayStr(),-29);
+  for(const dt in S.days){
+    if(dt<from||dt>todayStr())continue;
+    const day=S.days[dt];
+    for(const r in (day.rooms||{})){
+      const c=day.rooms[r].cleaning;if(!c)continue;
+      ['washroom','room'].forEach(k=>{
+        const x=c[k];if(x&&x.dutyBy){
+          const o=cnt[x.dutyBy]||(cnt[x.dutyBy]={total:0,done:0,notdone:0});
+          o.total++;if(x.status==='done')o.done++;if(x.status==='not_done')o.notdone++;
+        }
+      });
+    }
+    const f=day.floor&&day.floor.floorCleaning;
+    if(f&&f.dutyBy){const o=cnt[f.dutyBy]||(cnt[f.dutyBy]={total:0,done:0,notdone:0});o.total++;if(f.status==='done')o.done++;if(f.status==='not_done')o.notdone++;}
+  }
+  return cnt;
+}
+
 /* =========================================================
-   SYNC
+   SYNC — auto push (debounced, queued, offline-safe)
+         + auto pull (interval / focus / reconnect) with
+           per-room timestamp merge
    ========================================================= */
-let _syncTimer=null,_syncInFlight=false,_syncAgain=false;
-let _configTimer=null,_configInFlight=false,_configAgain=false;
-function setSyncDot(state){const d=document.getElementById('syncDot');if(!d)return;d.className='dot '+(state||'');}
-function cancelSyncTimers(){clearTimeout(_syncTimer);clearTimeout(_configTimer);}
+let dirty=new Set();
+try{dirty=new Set(JSON.parse(lsGet(LS_QUEUE,'[]')));}catch(e){}
+function saveDirty(){lsSet(LS_QUEUE,JSON.stringify([...dirty]));}
+let _pushTimer=null,_pushBusy=false,_cfgTimer=null,_cfgBusy=false,_cfgDirty=false,_pullBusy=false,_pullTimer=null;
+let syncState='';
+function setSync(st){
+  syncState=st;
+  const d=document.getElementById('syncDot');if(d)d.className='dot '+st;
+  const l=document.getElementById('syncLbl');if(l)l.textContent=({ok:'Synced',syncing:'Syncing…',pending:'Unsaved',bad:'Offline'}[st]||'');
+}
+function markDirty(date){dirty.add(date);saveDirty();}
 function scheduleAutoSync(){
   if(!S.settings.autoSync)return;
-  clearTimeout(_syncTimer);setSyncDot('syncing');
-  _syncTimer=setTimeout(pushDay,1000);
+  markDirty(currentDate);
+  clearTimeout(_pushTimer);setSync('pending');
+  _pushTimer=setTimeout(pushDirty,900);
 }
-function pushDay(){
-  if(_syncInFlight){_syncAgain=true;return;}
-  const day=S.days[currentDate];if(!day)return;
-  const payload={action:'saveDay',date:currentDate,
-    by:session?session.role+(session.room?' '+session.room:''):'anon',
-    rooms:{},floor:day.floor||null};
-  ROOMS.forEach(r=>{if(day.rooms&&day.rooms[r])payload.rooms[r]=day.rooms[r];});
-  if(!Object.keys(payload.rooms).length&&!payload.floor)return;
-  _syncInFlight=true;setSyncDot('syncing');
-  fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)})
-    .then(()=>{_syncInFlight=false;setSyncDot('ok');S.meta.lastSync=nowStamp();saveLocal();if(_syncAgain){_syncAgain=false;pushDay();}})
-    .catch(err=>{_syncInFlight=false;setSyncDot('bad');console.warn('Sync failed',err);});
+function dayPayload(date){
+  const day=S.days[date];if(!day)return null;
+  const rooms={};
+  ROOMS.forEach(r=>{if(day.rooms&&day.rooms[r])rooms[r]=day.rooms[r];});
+  if(!Object.keys(rooms).length&&!day.floor)return null;
+  return {rooms,floor:day.floor||null};
+}
+function post(payload){
+  return fetch(GAS_URL,{method:'POST',mode:'no-cors',keepalive:true,headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)});
+}
+async function pushDirty(){
+  if(_pushBusy)return;
+  if(!navigator.onLine){setSync('bad');return;}
+  const dates=[...dirty].sort();
+  if(!dates.length){setSync('ok');return;}
+  _pushBusy=true;setSync('syncing');
+  const by=session?session.role+(session.room?' '+session.room:''):'anon';
+  try{
+    for(const date of dates){
+      const p=dayPayload(date);
+      if(!p){dirty.delete(date);continue;}
+      await post({action:'saveDay',date,by,rooms:p.rooms,floor:p.floor});
+      dirty.delete(date);
+    }
+    saveDirty();S.meta.lastSync=nowStamp();saveLocal();
+    _pushBusy=false;
+    if(dirty.size){pushDirty();return;}
+    setSync('ok');
+  }catch(err){
+    _pushBusy=false;saveDirty();setSync('bad');
+    clearTimeout(_pushTimer);_pushTimer=setTimeout(pushDirty,8000);
+  }
+}
+function flushBeacon(){
+  if(!S||!S.settings.autoSync)return;
+  const by=session?session.role:'anon';
+  for(const date of dirty){
+    const p=dayPayload(date);if(!p)continue;
+    const body=JSON.stringify({action:'saveDay',date,by,rooms:p.rooms,floor:p.floor});
+    try{
+      if(!(navigator.sendBeacon&&navigator.sendBeacon(GAS_URL,new Blob([body],{type:'text/plain;charset=utf-8'}))))
+        fetch(GAS_URL,{method:'POST',mode:'no-cors',keepalive:true,headers:{'Content-Type':'text/plain;charset=utf-8'},body});
+    }catch(e){}
+  }
+  if(_cfgDirty){
+    try{
+      const body=JSON.stringify({action:'saveConfig',by:session?session.role:'anon',config:{rooms:S.rooms,users:S.users,settings:{rotationStart:S.settings.rotationStart},ts:S.meta.cfgTs}});
+      navigator.sendBeacon&&navigator.sendBeacon(GAS_URL,new Blob([body],{type:'text/plain;charset=utf-8'}));
+    }catch(e){}
+  }
 }
 function pushRange(from,to){
   const dates=[];let d=from,g=0;
   while(d<=to&&g++<400){dates.push(d);d=addDays(d,1);}
   if(!dates.length)return;
-  setSyncDot('syncing');
-  const payload={action:'saveDay',date:dates[dates.length-1],rangeStart:dates[0],rangeEnd:dates[dates.length-1],
-    by:session?session.role:'anon',rooms:{},floor:null,multi:{}};
-  dates.forEach(dt=>{const day=S.days[dt];if(!day)return;payload.multi[dt]={rooms:day.rooms||{},floor:day.floor||null};});
-  fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)})
-    .then(()=>{setSyncDot('ok');S.meta.lastSync=nowStamp();saveLocal();toast('Range pushed','ok');})
-    .catch(()=>{setSyncDot('bad');toast('Range push failed','bad');});
+  setSync('syncing');
+  const multi={};
+  dates.forEach(dt=>{const day=S.days[dt];if(!day)return;multi[dt]={rooms:day.rooms||{},floor:day.floor||null};});
+  post({action:'saveDay',date:dates[dates.length-1],rangeStart:dates[0],rangeEnd:dates[dates.length-1],
+    by:session?session.role:'anon',rooms:{},floor:null,multi})
+    .then(()=>{setSync('ok');S.meta.lastSync=nowStamp();saveLocal();toast('Range pushed','ok');})
+    .catch(()=>{setSync('bad');toast('Range push failed','bad');});
 }
-function scheduleConfigSync(){
+function saveConfig(){
+  S.meta.cfgTs=Date.now();saveLocal();
   if(!S.settings.autoSync)return;
-  clearTimeout(_configTimer);setSyncDot('syncing');
-  _configTimer=setTimeout(pushConfig,800);
+  _cfgDirty=true;
+  clearTimeout(_cfgTimer);setSync('pending');
+  _cfgTimer=setTimeout(pushConfig,800);
 }
-function pushConfig(){
-  if(_configInFlight){_configAgain=true;return;}
-  const payload={action:'saveConfig',by:session?session.role:'anon',
-    config:{rooms:S.rooms,users:S.users,settings:{rotationStart:S.settings.rotationStart}}};
-  _configInFlight=true;setSyncDot('syncing');
-  fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)})
-    .then(()=>{_configInFlight=false;setSyncDot('ok');S.meta.lastConfigSync=nowStamp();saveLocal();if(_configAgain){_configAgain=false;pushConfig();}})
-    .catch(err=>{_configInFlight=false;setSyncDot('bad');console.warn('Config sync failed',err);});
-}
-function saveConfig(){saveLocal();scheduleConfigSync();}
-function save(){saveLocal();scheduleAutoSync();}
-
-async function initialLoad(){
-  if(!GAS_URL){render();return;}
-  setSyncDot('syncing');
+async function pushConfig(){
+  if(_cfgBusy)return;
+  if(!navigator.onLine){setSync('bad');return;}
+  _cfgBusy=true;_cfgDirty=false;setSync('syncing');
   try{
-    const res=await fetch(GAS_URL+'?action=load&days=30');
+    await post({action:'saveConfig',by:session?session.role:'anon',
+      config:{rooms:S.rooms,users:S.users,settings:{rotationStart:S.settings.rotationStart},ts:S.meta.cfgTs}});
+    S.meta.lastConfigSync=nowStamp();saveLocal();
+    _cfgBusy=false;
+    if(_cfgDirty){pushConfig();return;}
+    if(!dirty.size)setSync('ok');
+  }catch(e){
+    _cfgBusy=false;_cfgDirty=true;setSync('bad');
+    clearTimeout(_cfgTimer);_cfgTimer=setTimeout(pushConfig,8000);
+  }
+}
+function save(){
+  const day=S.days[currentDate];
+  if(day){
+    const t=Date.now();
+    if(day.floor)day.floor._ts=t;
+    if(day.rooms){
+      const rs=session&&session.role==='rc'?[session.room]:ROOMS;
+      rs.forEach(r=>{if(day.rooms[r])day.rooms[r]._ts=t;});
+    }
+  }
+  saveLocal();scheduleAutoSync();
+}
+function cancelSyncTimers(){clearTimeout(_pushTimer);clearTimeout(_cfgTimer);}
+
+function mergeDay(date,srv){
+  if(!S.days[date])S.days[date]={rooms:{},floor:null};
+  const loc=S.days[date];
+  if(!loc.rooms)loc.rooms={};
+  let changed=false;
+  if(srv.rooms){
+    for(const r in srv.rooms){
+      const s=srv.rooms[r],l=loc.rooms[r];
+      if(dirty.has(date)&&l)continue;
+      if(!l||(s._ts||0)>(l._ts||0)||(!l._ts&&!s._ts)){
+        if(!l||JSON.stringify(l)!==JSON.stringify(s)){loc.rooms[r]=s;changed=true;}
+      }
+    }
+  }
+  if(srv.floor){
+    const l=loc.floor;
+    if(!(dirty.has(date)&&l)){
+      if(!l||(srv.floor._ts||0)>(l._ts||0)||(!l._ts&&!srv.floor._ts)){
+        if(!l||JSON.stringify(l)!==JSON.stringify(srv.floor)){loc.floor=srv.floor;changed=true;}
+      }
+    }
+  }
+  return changed;
+}
+function userIsBusy(){
+  if(document.getElementById('modal')&&document.getElementById('modal').style.display!=='none')return true;
+  const a=document.activeElement;
+  return !!a&&(a.tagName==='INPUT'||a.tagName==='TEXTAREA'||a.tagName==='SELECT');
+}
+async function pullNow(opts){
+  opts=opts||{};
+  if(_pullBusy||!GAS_URL||!navigator.onLine)return;
+  _pullBusy=true;
+  if(!opts.silent&&!dirty.size)setSync('syncing');
+  try{
+    const res=await fetch(GAS_URL+'?action=load&days='+(opts.days||30)+'&_='+Date.now());
     const data=await res.json();
     if(data&&data.ok){
-      if(data.config){
-        if(data.config.rooms && typeof data.config.rooms==='object'){
-          for(const r in data.config.rooms){
-            S.rooms[r]=data.config.rooms[r];
-            if(!S.rooms[r].rotation) S.rooms[r].rotation=(S.rooms[r].students||[]).map(s=>s.id);
+      let changed=false;
+      if(data.config&&!_cfgDirty&&!_cfgBusy){
+        const srvTs=Number(data.config.ts)||0;
+        if(srvTs>=(S.meta.cfgTs||0)){
+          const before=JSON.stringify([S.rooms,S.users,S.settings.rotationStart]);
+          if(data.config.rooms&&typeof data.config.rooms==='object'){
+            for(const r in data.config.rooms){
+              S.rooms[r]=data.config.rooms[r];
+              if(!S.rooms[r].rotation)S.rooms[r].rotation=(S.rooms[r].students||[]).map(s=>s.id);
+            }
           }
-        }
-        if(data.config.users && typeof data.config.users==='object'){
-          const d=defaultUsers();
-          S.users=Object.assign({},d,data.config.users);
-          S.users.admin=Object.assign({},d.admin,data.config.users.admin||{});
-          S.users.fc   =Object.assign({},d.fc,   data.config.users.fc||{});
-          S.users.fcom =Object.assign({},d.fcom, data.config.users.fcom||{});
-          S.users.rc   =Object.assign({},d.rc,   data.config.users.rc||{});
-        }
-        if(data.config.settings && data.config.settings.rotationStart){
-          S.settings.rotationStart=data.config.settings.rotationStart;
+          if(data.config.users&&typeof data.config.users==='object'){
+            const d=defaultUsers();
+            S.users=Object.assign({},d,data.config.users);
+            S.users.admin=Object.assign({},d.admin,data.config.users.admin||{});
+            S.users.fc=Object.assign({},d.fc,data.config.users.fc||{});
+            S.users.fcom=Object.assign({},d.fcom,data.config.users.fcom||{});
+            S.users.rc=Object.assign({},d.rc,data.config.users.rc||{});
+          }
+          if(data.config.settings&&data.config.settings.rotationStart)S.settings.rotationStart=data.config.settings.rotationStart;
+          if(srvTs)S.meta.cfgTs=srvTs;
+          migrateConfig();
+          if(before!==JSON.stringify([S.rooms,S.users,S.settings.rotationStart]))changed=true;
         }
       }
+      if(data.days)for(const date in data.days){if(mergeDay(date,data.days[date]))changed=true;}
+      S.meta.lastPull=nowStamp();
       migrateConfig();
-      if(data.days){
-        for(const date in data.days){
-          const srv=data.days[date];
-          if(!S.days[date])S.days[date]={rooms:{},floor:null};
-          const loc=S.days[date];
-          if(!loc.rooms)loc.rooms={};
-          if(srv.rooms)Object.assign(loc.rooms,srv.rooms);
-          if(srv.floor)loc.floor=srv.floor;
-        }
-      }
-      saveLocal();setSyncDot('ok');
-    } else {setSyncDot('');}
-  }catch(err){console.warn('Initial load failed',err);setSyncDot('bad');}
-  /* IMPORTANT: only re-render if user is already logged in.
-     Re-rendering the login screen resets the form while typing. */
-  if(session) render();
+      saveLocal();
+      if(!dirty.size&&!_pushBusy)setSync('ok');
+      /* NEVER re-render the login screen (that was the "reset to Room Captain" bug).
+         Only refresh a logged-in view, and never while the user is typing / a modal is open. */
+      if(changed&&session&&!userIsBusy())render();
+    }else if(!dirty.size)setSync('');
+  }catch(err){
+    console.warn('Pull failed',err);
+    if(!dirty.size)setSync('bad');
+  }
+  _pullBusy=false;
+}
+function startPolling(){
+  clearInterval(_pullTimer);
+  _pullTimer=setInterval(()=>{if(!document.hidden&&S.settings.autoSync){if(dirty.size)pushDirty();pullNow({silent:true});}},PULL_MS);
+}
+window.addEventListener('online',()=>{setSync('pending');pushDirty();if(_cfgDirty)pushConfig();pullNow({silent:true});});
+window.addEventListener('offline',()=>setSync('bad'));
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden)flushBeacon();
+  else{pushDirty();pullNow({silent:true});}
+});
+window.addEventListener('pagehide',flushBeacon);
+window.addEventListener('focus',()=>{if(S&&S.settings.autoSync)pullNow({silent:true});});
+
+async function initialLoad(){
+  render();                 /* draw login once */
+  await pullNow();          /* pull silently – never redraws login */
+  if(dirty.size)pushDirty();
+  startPolling();
 }
 
 /* =========================================================
@@ -543,18 +758,23 @@ async function initialLoad(){
    ========================================================= */
 function render(){
   const app=$('#app');
-  if(!session){app.innerHTML=loginHTML();return;}
+  if(!session){
+    /* login screen: only build it once; never wipe what the user is typing */
+    if(!document.getElementById('lgRole'))app.innerHTML=loginHTML();
+    return;
+  }
   app.innerHTML=headerHTML()+navHTML()+`<div class="wrap" style="padding-bottom:40px">${viewHTML()}</div>`;
+  setSync(syncState);
 }
 function setView(v){view=v;render();}
-function setDate(d){currentDate=d;render();}
+function setDate(d){if(!d)return;currentDate=d;render();pullNow({silent:true});}
 function goToday(){currentDate=todayStr();render();}
 function setActiveRoom(r){activeRoom=r;render();}
-function logout(){session=null;render();}
+function logout(){if(dirty.size)pushDirty();session=null;$('#app').innerHTML=loginHTML();}
 
 function loginHTML(){
-  let last='rc';
-  try{last=localStorage.getItem('fms_lastRole')||'rc';}catch(e){}
+  const last=lsGet(LS_ROLE,'rc');
+  const lastRoom=lsGet(LS_ROOM,'301');
   const roleName={rc:'Room Captain',fc:'Floor Captain',fcom:'Floor Commander',admin:'Floor Incharge (Admin)'};
   return `<div class="loginwrap"><div class="card login">
     <h1 style="margin:0 0 4px;font-size:20px">🏠 Floor Management</h1>
@@ -565,7 +785,7 @@ function loginHTML(){
     </select>
     <div id="lgRoomWrap" style="display:${last==='rc'?'':'none'}">
       <label>Room</label>
-      <select id="lgRoom"><option>301</option><option>302</option><option>303</option></select>
+      <select id="lgRoom" onchange="lsSet('${LS_ROOM}',this.value)">${ROOMS.map(r=>`<option ${r===lastRoom?'selected':''}>${r}</option>`).join('')}</select>
     </div>
     <label>Passcode</label>
     <input type="password" id="lgPin" autocomplete="off" onkeydown="if(event.key==='Enter')doLogin()">
@@ -576,36 +796,39 @@ function loginHTML(){
 }
 function lgRoleChange(){
   const v=$('#lgRole').value;
-  $('#lgRoomWrap').style.display = v==='rc' ? '' : 'none';
-  try{localStorage.setItem('fms_lastRole', v);}catch(e){}
+  $('#lgRoomWrap').style.display=v==='rc'?'':'none';
+  lsSet(LS_ROLE,v);
+  const p=$('#lgPin');if(p)p.focus();
 }
 function doLogin(){
   const role=$('#lgRole').value;
   const pin=$('#lgPin').value.trim();
   let ok=false,room=null;
   if(role==='rc'){room=$('#lgRoom').value;ok=(pin===S.users.rc[room]);}
-  else if(role==='fc')  ok=(pin===S.users.fc.pin);
+  else if(role==='fc')ok=(pin===S.users.fc.pin);
   else if(role==='fcom')ok=(pin===S.users.fcom.pin);
-  else                  ok=(pin===S.users.admin.pin);
-  if(!ok){$('#lgErr').textContent='Incorrect passcode.';return;}
+  else ok=(pin===S.users.admin.pin);
+  if(!ok){$('#lgErr').textContent='Incorrect passcode.';$('#lgPin').select();return;}
   session={role,room};
-  view = role==='rc' ? 'entry' : 'overview';
+  view=role==='rc'?'entry':'overview';
   if(role==='rc')activeRoom=room;
   render();
+  pullNow({silent:true});
 }
 function headerHTML(){
   const roleName={rc:'Room Captain · '+session.room,fc:'Floor Captain',fcom:'Floor Commander',admin:'Floor Incharge'}[session.role];
-  const cls = session.role==='admin'?'bad':session.role==='fcom'?'warn':session.role==='fc'?'ok':'';
+  const cls=session.role==='admin'?'bad':session.role==='fcom'?'warn':session.role==='fc'?'ok':'';
   return `<div class="topbar"><div class="wrap">
     <div class="brand">🏠 Floor Management <span class="muted small">· 301–303</span></div>
     <div class="spacer"></div>
     <span class="chip ${cls}">${roleName}</span>
     <input type="date" value="${currentDate}" onchange="setDate(this.value)">
     <button class="ghost" onclick="goToday()">Today</button>
-    <span class="dot" id="syncDot" title="Auto-sync status"></span>
+    <span class="syncwrap" title="Tap to sync now" onclick="syncNow()"><span class="dot" id="syncDot"></span><span id="syncLbl"></span></span>
     <button class="ghost" onclick="logout()">Logout</button>
   </div></div>`;
 }
+function syncNow(){pushDirty();if(_cfgDirty)pushConfig();pullNow();toast('Syncing…');}
 function navHTML(){
   const tabs=TABS[session.role]||[];
   return `<div class="wrap"><div class="tabs">${tabs.map(([k,l])=>`<button class="${view===k?'active':''}" onclick="setView('${k}')">${l}</button>`).join('')}</div></div>`;
@@ -631,8 +854,12 @@ function statusChip(rd){
 }
 function classPill(cls){
   if(!cls)return '';
-  const c=cls==='9'?'ok':cls==='10'?'warn':'';
+  const n=Number(cls);const c=n<=8?'info':n<=10?'ok':'warn';
   return `<span class="chip ${c}" style="font-size:10px">Class ${esc(cls)}</span>`;
+}
+function cleanChip(label,c){
+  const st=c&&c.status;
+  return `<span class="chip ${st==='done'?'ok':st==='not_done'?'bad':''}">${label}: ${st==='done'?'✔':st==='not_done'?'✗':'—'}</span>`;
 }
 
 /* =========================================================
@@ -649,36 +876,34 @@ function overviewView(){
     const marked=st.students.filter(s=>{const sl=rd.salah[s.id]||{};return PRAYERS.every(p=>sl[p[0]]);}).length;
     const studyMarked=st.students.filter(s=>rd.study[s.id]&&Object.keys(rd.study[s.id]).length).length;
     const foodMarked=st.students.filter(s=>rd.food[s.id]&&Object.keys(rd.food[s.id]).length).length;
-    const clean=rd.cleaning;
-    const wash=clean.washroom&&clean.washroom.status==='done';
-    const rm=clean.room&&clean.room.status==='done';
-    const equipCount=EQUIP.filter(([k])=>clean[k]).length;
+    const discDone=DISCIPLINE.filter(d=>rd.discipline[d.k]&&rd.discipline[d.k].status).length;
+    const discIssue=DISCIPLINE.filter(d=>rd.discipline[d.k]&&rd.discipline[d.k].status==='issue').length;
+    const probs=roomProblems(room).length;
     h+=`<div class="card">
       <div class="row"><h3 style="margin:0">Room ${room}</h3><div class="spacer"></div>${statusChip(rd)}</div>
       <div class="muted small" style="margin-top:6px">Captain: <b>${cap?esc(cap.name):'—'}</b> ${cap?classPill(cap.class):''} ${rd.acting?'<span class="chip warn">Acting</span>':''}</div>
+      <div class="row" style="margin-top:8px">${cleanChip('Washroom',rd.cleaning.washroom)}${cleanChip('Room',rd.cleaning.room)}</div>
       <div class="stat">
         <div><b>${total}</b>students</div>
         <div><b>${marked}/${total}</b>salah</div>
         <div><b>${studyMarked}/${total}</b>study</div>
         <div><b>${foodMarked}/${total}</b>food</div>
-        <div><b>${wash?'✔':'—'}</b>washroom</div>
-        <div><b>${rm?'✔':'—'}</b>room</div>
-        <div><b>${equipCount}/4</b>equip</div>
+        <div><b ${discIssue?'style="color:var(--bad)"':''}>${discDone}/${DISCIPLINE.length}</b>discipline</div>
       </div>
-      <div class="row" style="margin-top:14px">
-        <button class="big-edit" onclick="editRoom('${room}')">✏️ Edit Room ${room}</button>
-      </div>
+      ${probs?`<div class="warnnote" style="margin-top:10px">⚠ ${probs} item(s) still need attention</div>`:`<div class="oknote" style="margin-top:10px">✔ Nothing pending</div>`}
+      <div class="row" style="margin-top:10px"><button class="big-edit" onclick="editRoom('${room}')">✏️ Edit Room ${room}</button></div>
     </div>`;
   }
   h+=`</div>`;
   const allSub=ROOMS.every(r=>{const rd=rdSafe(currentDate,r);return rd&&rd.status.rcSubmitted;});
-  const floorClean=fd.floorCleaning||{status:''};
+  const fprobs=floorProblems().length;
   h+=`<div class="card"><h3>Floor sign-off</h3>
     <div class="row">
       <span class="chip ${allSub?'ok':'bad'}">${allSub?'All rooms submitted':'Rooms pending'}</span>
       <span class="chip ${fd.fcConfirmed?'ok':''}">FC confirmed ${fd.fcConfirmed?'· '+esc(fd.fcAt||''):'—'}</span>
       <span class="chip ${fd.fcomVerified?'ok':''}">FCom verified ${fd.fcomVerified?'· '+esc(fd.fcomAt||''):'—'}</span>
-      <span class="chip ${floorClean.status==='done'?'ok':floorClean.status==='not_done'?'bad':''}">Floor cleaning: ${floorClean.status==='done'?'✔ Done':floorClean.status==='not_done'?'✗ Not done':'—'}</span>
+      ${cleanChip('Floor cleaning',fd.floorCleaning)}
+      ${fprobs?`<span class="chip warn">⚠ ${fprobs} floor item(s) pending</span>`:`<span class="chip ok">Floor duty complete</span>`}
     </div>
   </div>`;
   return h;
@@ -691,18 +916,16 @@ function editRoom(room){activeRoom=room;view='entry';render();}
 function entryView(){
   const rooms=session.role==='rc'?[session.room]:ROOMS;
   let h='';
-  if(rooms.length>1){
-    h+=`<div class="quickbar">${rooms.map(r=>`<button class="${activeRoom===r?'primary':''}" onclick="setActiveRoom('${r}')">Room ${r}</button>`).join('')}</div>`;
-  }
+  if(rooms.length>1)h+=`<div class="quickbar">${rooms.map(r=>`<button class="${activeRoom===r?'primary':''}" onclick="setActiveRoom('${r}')">Room ${r}</button>`).join('')}</div>`;
   const room=rooms.length===1?rooms[0]:(rooms.includes(activeRoom)?activeRoom:rooms[0]);
-  h+=roomEntryHTML(room);
-  return h;
+  return h+roomEntryHTML(room);
 }
 function roomEntryHTML(room){
   const rd=getRoomDay(currentDate,room);
   const st=S.rooms[room];
   const canEdit=canEditRoom(room);
   const cap=st.students.find(s=>s.id===rd.captainId);
+  const probs=roomProblems(room);
 
   let h=`<div class="room-banner">
     <h2>Room ${room}</h2>
@@ -713,6 +936,10 @@ function roomEntryHTML(room){
     <button class="ghost" onclick="openCaptainPicker('${room}')">Change captain</button>
   </div>`;
 
+  if(canEdit&&probs.length){
+    h+=`<div class="warnnote"><b>⚠ Before submitting (${probs.length}):</b><br>${probs.slice(0,8).map(esc).join('<br>')}${probs.length>8?`<br>…and ${probs.length-8} more`:''}</div>`;
+  }
+
   h+=`<div class="quickbar">
     <span class="small muted" style="align-self:center">Cards:</span>
     <button class="ghost" onclick="openAllCards('${room}')">▾ Open all</button>
@@ -722,17 +949,14 @@ function roomEntryHTML(room){
   </div>`;
 
   if(!canEdit){
-    if(session.role==='fc') h+=`<div class="warnnote">Read-only for the Floor Captain. You may record a differing opinion below.</div>`;
-    else if(session.role==='fcom') h+=`<div class="warnnote">Read-only — Floor Commander may edit only within 2 days of the date.</div>`;
+    if(session.role==='fc')h+=`<div class="warnnote">Read-only for the Floor Captain. You may record a differing opinion below.</div>`;
+    else if(session.role==='fcom')h+=`<div class="warnnote">Read-only — Floor Commander may edit only within 2 days of the date.</div>`;
     else h+=`<div class="warnnote">Read-only — editing window closed for this date.</div>`;
   }
 
-  /* student cards */
-  st.students.forEach((s,i)=>{ h+=studentCardHTML(room,s,i,canEdit); });
-
-  /* cleaning — always visible to RC / admin / fcom */
+  st.students.forEach((s,i)=>{h+=studentCardHTML(room,s,i,canEdit);});
   h+=cleaningSectionHTML(room,canEdit);
-
+  h+=disciplineSectionHTML(room,canEdit);
   h+=marksCard(room);
 
   h+=`<div class="grid2">
@@ -762,68 +986,72 @@ function roomEntryHTML(room){
   return h;
 }
 
-/* ---------- cleaning section (per room) ---------- */
+/* ---------- cleaning: duty ALWAYS required, status = Done / Not done ---------- */
+function dutyOptions(students){
+  return [{v:'',l:'— select duty person —'}].concat(students.map(s=>({v:s.id,l:s.name+' ('+s.id+')'})));
+}
+function cleanBlockHTML(title,c,students,canEdit,onStatus,onDuty,onNote,streakArr){
+  const missing=(!c.status||!c.dutyBy);
+  const opts=dutyOptions(students);
+  return `<div class="clean-block ${c.status==='not_done'?'notdone':missing?'missing':''}">
+    <div class="row" style="justify-content:space-between;margin-bottom:6px">
+      <b>${title}</b>
+      <span class="row small muted" style="gap:6px">7 days ${streakHTML(streakArr)}</span>
+    </div>
+    <div class="entry-row">
+      <div class="entry-label">Duty person *</div>
+      <select class="duty-select ${!c.dutyBy?'need':''}" ${canEdit?'':'disabled'} onchange="${onDuty}(this.value)">
+        ${opts.map(o=>`<option value="${esc(o.v)}" ${o.v===c.dutyBy?'selected':''}>${esc(o.l)}</option>`).join('')}
+      </select>
+    </div>
+    <div class="entry-row">
+      <div class="entry-label">Status *</div>
+      <div class="btn-group">${bg(CLEAN_STATUS,c.status||'',!canEdit,onStatus)}</div>
+    </div>
+    ${c.status==='not_done'?`<div class="entry-row">
+      <div class="entry-label">Why not?</div>
+      <input class="entry-note ${!(c.note||'').trim()?'need':''}" value="${esc(c.note||'')}" ${canEdit?'':'disabled'} onchange="${onNote}(this.value)" placeholder="Reason it was not done (required)">
+    </div>`:''}
+    ${!c.dutyBy&&c.status?`<div class="badnote" style="margin:6px 0 0">Duty person must be recorded — even when the task is done.</div>`:''}
+  </div>`;
+}
 function cleaningSectionHTML(room,canEdit){
   const rd=getRoomDay(currentDate,room);
   const st=S.rooms[room];
   const c=rd.cleaning;
-  const students=st.students;
-  const dutyOpts=[{v:'',l:'— select duty person —',short:'— select —'}].concat(
-    students.map(s=>({v:s.id,l:s.name+' ('+s.id+')',short:s.name}))
-  );
-  function dutySelect(which,val){
-    return `<select class="duty-select ${!val?'duty-missing':''}" ${canEdit?'':'disabled'} onchange="setCleanDuty('${room}','${which}',this.value)">
-      ${dutyOpts.map(o=>`<option value="${o.v}" ${o.v===val?'selected':''}>${esc(o.l)}</option>`).join('')}
-    </select>`;
-  }
-  let h=`<div class="card">
-    <h3>🧹 Cleaning &amp; Duty</h3>
-    <div class="muted small" style="margin-bottom:10px">
-      Record <b>who was on duty</b> for each task, then mark whether it was done. Duty is required even when the task was completed.
-    </div>
-
-    <div class="clean-block">
-      <div class="row" style="justify-content:space-between;margin-bottom:6px">
-        <b>Washroom cleaning</b>
-        ${!c.washroom.dutyBy && c.washroom.status ? `<span class="chip warn">Duty person missing</span>` : ''}
-      </div>
-      <div class="row">
-        <div class="entry-label">Status</div>
-        <div class="btn-group">${bg(CLEAN_STATUS, c.washroom.status||'', !canEdit, `setCleanStatus('${room}','washroom'`)}</div>
-      </div>
-      <div class="row" style="margin-top:6px">
-        <div class="entry-label">Duty person</div>
-        ${dutySelect('washroom', c.washroom.dutyBy)}
-      </div>
-    </div>
-
-    <div class="clean-block">
-      <div class="row" style="justify-content:space-between;margin-bottom:6px">
-        <b>Room cleaning</b>
-        ${!c.room.dutyBy && c.room.status ? `<span class="chip warn">Duty person missing</span>` : ''}
-      </div>
-      <div class="row">
-        <div class="entry-label">Status</div>
-        <div class="btn-group">${bg(CLEAN_STATUS, c.room.status||'', !canEdit, `setCleanStatus('${room}','room'`)}</div>
-      </div>
-      <div class="row" style="margin-top:6px">
-        <div class="entry-label">Duty person</div>
-        ${dutySelect('room', c.room.dutyBy)}
-      </div>
-    </div>
-
-    <div class="clean-block" style="margin-bottom:0">
+  let h=`<div class="card"><h3>🧹 Cleaning &amp; Duty</h3>
+    <div class="muted small" style="margin-bottom:10px">Every task has an owner. <b>Always record who was on duty</b>, then confirm only <b>Done</b> or <b>Not done</b>.</div>`;
+  h+=cleanBlockHTML('Washroom cleaning',c.washroom,st.students,canEdit,`setCleanStatusW('${room}'`,`setCleanDutyW('${room}'`,`setCleanNoteW('${room}'`,cleanStreak('washroom',room));
+  h+=cleanBlockHTML('Room cleaning',c.room,st.students,canEdit,`setCleanStatusR('${room}'`,`setCleanDutyR('${room}'`,`setCleanNoteR('${room}'`,cleanStreak('room',room));
+  h+=`<div class="clean-block" style="margin-bottom:0">
       <b>Washroom equipment</b>
       <div class="btn-group" style="margin-top:8px">
-        ${EQUIP.map(([k,l])=>{
-          const on=c[k];
-          return `<div class="btn-opt ${on?'active':''}" data-clickable="${canEdit?'1':''}" data-tone="${on?'ok':''}" onclick="${canEdit?`toggleEquip('${room}','${k}')`:''}">${l}</div>`;
-        }).join('')}
+        ${EQUIP.map(([k,l])=>{const on=c[k];
+          return `<div class="btn-opt ${on?'active':''}" data-clickable="${canEdit?'1':''}" data-tone="${on?'ok':''}" onclick="${canEdit?`toggleEquip('${room}','${k}')`:''}">${l}</div>`;}).join('')}
       </div>
-      <div class="muted small" style="margin-top:8px">Defaults carry over from yesterday.</div>
+      <div class="muted small" style="margin-top:8px">Tap to toggle. Defaults carry over from yesterday.</div>
     </div>
   </div>`;
   return h;
+}
+
+/* ---------- discipline checklist (Room Captain) ---------- */
+function disciplineSectionHTML(room,canEdit){
+  const rd=getRoomDay(currentDate,room);
+  const d=rd.discipline;
+  const done=DISCIPLINE.filter(x=>d[x.k]&&d[x.k].status).length;
+  let h=`<div class="card"><h3>📋 Discipline checklist <span class="muted small">· ${done}/${DISCIPLINE.length} checked · Room Captain</span></h3>
+    <div class="muted small" style="margin-bottom:8px">Walk the room and mark each item. Any <b>Issue</b> needs a short note (who / what).</div>`;
+  DISCIPLINE.forEach(x=>{
+    const cur=d[x.k]||{status:'',note:''};
+    h+=`<div class="chk-item">
+      <div class="lbl">${esc(x.l)}</div>
+      <div class="btn-group" style="flex:0 0 auto">${bg(CHECK_STATUS,cur.status||'',!canEdit,`setDisc('${room}','${x.k}'`)}</div>
+      ${cur.status==='issue'?`<input class="entry-note ${!(cur.note||'').trim()?'need':''}" value="${esc(cur.note||'')}" ${canEdit?'':'disabled'} onchange="setDiscNote('${room}','${x.k}',this.value)" placeholder="What is the issue? (required)">`:''}
+    </div>`;
+  });
+  if(canEdit)h+=`<div class="row" style="margin-top:10px"><button class="ghost" onclick="discAllOk('${room}')">✓ Mark all remaining as OK</button></div>`;
+  return h+`</div>`;
 }
 
 /* ---------- single student card ---------- */
@@ -835,22 +1063,22 @@ function studentCardHTML(room,s,i,canEdit){
   const food=rd.food[s.id]||{breakfast:'eaten',lunch:'eaten',dinner:'eaten'};
   const foodNote=rd.foodNote[s.id]||{};
   const isOpen=isCardOpen(room,s.id);
-
   const salahDone=PRAYERS.filter(([k])=>sl[k]).length;
   const studyDone=STUDY_TIMES.filter(t=>study[t.k]).length;
   const mealsEaten=MEALS.filter(m=>(food[m.k]||'eaten')==='eaten').length;
-  const mealsNotEaten=MEALS.filter(m=>(food[m.k]||'eaten')==='not_eaten').length;
+  const mealsNot=MEALS.filter(m=>(food[m.k]||'eaten')==='not_eaten').length;
+  const missingNote=MEALS.some(m=>(food[m.k]||'eaten')==='not_eaten'&&!(foodNote[m.k]||'').trim());
 
   let h=`<div class="entry-card ${isOpen?'open':''}">
     <div class="entry-header" onclick="toggleCard('${room}','${s.id}')">
       <div>
-        <div class="entry-name">${i+1}. ${esc(s.name)} ${e.roles.length?`<span class="chip" style="font-size:10px">${e.roles.join('+')}</span>`:''}</div>
+        <div class="entry-name">${i+1}. ${esc(s.name)} ${e.roles.length?`<span class="chip" style="font-size:10px">${e.roles.join('+')}</span>`:''} ${s.avoid?`<span class="chip warn" style="font-size:10px" title="Doesn't eat: ${esc(s.avoid)}">🚫 ${esc(s.avoid)}</span>`:''}</div>
         <div class="entry-id">${esc(s.id)} · ${classPill(s.class)||'<span class="muted">—</span>'}</div>
       </div>
       <div class="entry-summary">
         <span class="chip ${salahDone===5?'ok':salahDone?'warn':''}">Salah ${salahDone}/5</span>
         <span class="chip ${studyDone===7?'ok':studyDone?'warn':''}">Study ${studyDone}/7</span>
-        <span class="chip ${mealsEaten===3?'ok':mealsNotEaten?'bad':'warn'}">🍽 ${mealsEaten}/3</span>
+        <span class="chip ${missingNote?'bad':mealsEaten===3?'ok':mealsNot?'warn':''}">🍽 ${mealsEaten}/3${missingNote?' !':''}</span>
         <span class="entry-score">${e.final}</span>
         <span class="caret">▸</span>
       </div>
@@ -859,51 +1087,43 @@ function studentCardHTML(room,s,i,canEdit){
 
   h+=`<div class="section-head">Salah</div>`;
   for(const [k,lbl] of PRAYERS){
-    h+=`<div class="entry-row">
-      <div class="entry-label">${lbl}</div>
-      <div class="btn-group">${bg(SALAH_STATUS, sl[k]||'', !canEdit, `setSalah('${room}','${s.id}','${k}'`)}</div>
-    </div>`;
+    h+=`<div class="entry-row"><div class="entry-label">${lbl}</div>
+      <div class="btn-group">${bg(SALAH_STATUS,sl[k]||'',!canEdit,`setSalah('${room}','${s.id}','${k}'`)}</div></div>`;
   }
-
   h+=`<div class="section-head">Study time (7 slots) <span class="muted" style="text-transform:none;font-weight:400;letter-spacing:0">· 📖 Reading · 🛏 Bed · 📚 Room · 🏢 Other floor</span></div>`;
   for(const slot of STUDY_TIMES){
-    h+=`<div class="entry-row">
-      <div class="entry-label">${slot.l}</div>
-      <div class="btn-group">${bg(STUDY_LOC, study[slot.k]||'', !canEdit, `setStudy('${room}','${s.id}','${slot.k}'`)}</div>
-    </div>`;
+    h+=`<div class="entry-row"><div class="entry-label">${slot.l}</div>
+      <div class="btn-group">${bg(STUDY_LOC,study[slot.k]||'',!canEdit,`setStudy('${room}','${s.id}','${slot.k}'`)}</div></div>`;
   }
 
-  h+=`<div class="section-head">Food (3 meals)</div>`;
+  h+=`<div class="section-head">Food (3 meals) <span class="muted" style="text-transform:none;font-weight:400;letter-spacing:0">· if not eaten, write <b>what they don't eat</b></span></div>`;
+  h+=`<div class="entry-row"><div class="entry-label">Usually avoids</div>
+    <input class="entry-note" value="${esc(s.avoid||'')}" ${(canEdit||session.role==='rc')?'':'disabled'} onchange="setAvoid('${room}','${s.id}',this.value)" placeholder="Standing food dislikes / allergies (e.g. egg, brinjal, fish)">
+  </div>`;
   for(const meal of MEALS){
     const cur=food[meal.k]||'eaten';
     const note=foodNote[meal.k]||'';
-    const placeholder = cur==='not_eaten'
-      ? 'What did they NOT eat? (e.g. rice, dal, egg)'
-      : 'Optional note';
-    h+=`<div class="entry-row">
-      <div class="entry-label">${meal.l}</div>
-      <div class="btn-group">${bg(FOOD_OPTS, cur, !canEdit, `setFood('${room}','${s.id}','${meal.k}'`)}</div>
-      <input class="entry-note" value="${esc(note)}" ${canEdit?'':'disabled'} onchange="setFoodNote('${room}','${s.id}','${meal.k}',this.value)" placeholder="${esc(placeholder)}">
+    const notEaten=cur==='not_eaten';
+    h+=`<div class="entry-row"><div class="entry-label">${meal.l}</div>
+      <div class="btn-group">${bg(FOOD_OPTS,cur,!canEdit,`setFood('${room}','${s.id}','${meal.k}'`)}</div>
+      <input class="entry-note ${notEaten&&!note.trim()?'need':''}" value="${esc(note)}" ${canEdit?'':'disabled'}
+        onchange="setFoodNote('${room}','${s.id}','${meal.k}',this.value)"
+        placeholder="${notEaten?'What does he NOT eat? (required — e.g. rice, dal, egg)':'Optional note'}">
     </div>`;
+    if(notEaten&&s.avoid&&!note.trim()&&canEdit){
+      h+=`<div class="entry-row"><div class="entry-label"></div><div class="btn-group">
+        <div class="btn-opt" data-clickable="1" onclick="setFoodNote('${room}','${s.id}','${meal.k}','${esc(s.avoid).replace(/'/g,"\\'")}');render()">↳ use "${esc(s.avoid)}"</div></div></div>`;
+    }
   }
 
-  h+=`<div class="section-head">Activity / Whereabouts</div>`;
-  h+=`<div class="entry-row">
-    <div class="entry-label">Activity</div>
-    <div class="btn-group">${bg(ACTIVITY, rd.activity[s.id]||'', !canEdit, `setActivity('${room}','${s.id}'`)}</div>
-  </div>`;
-
-  h+=`<div class="entry-row">
-    <div class="entry-label">Note</div>
-    <input class="entry-note" value="${esc(rd.notes[s.id]||'')}" ${canEdit?'':'disabled'} onchange="setNote('${room}','${s.id}',this.value)" placeholder="optional">
-  </div>`;
-
-  h+=`</div></div>`;
-  return h;
+  h+=`<div class="section-head">Activity / Whereabouts</div>
+    <div class="entry-row"><div class="entry-label">Activity</div>
+    <div class="btn-group">${bg(ACTIVITY,rd.activity[s.id]||'',!canEdit,`setActivity('${room}','${s.id}'`)}</div></div>
+    <div class="entry-row"><div class="entry-label">Note</div>
+    <input class="entry-note" value="${esc(rd.notes[s.id]||'')}" ${canEdit?'':'disabled'} onchange="setNote('${room}','${s.id}',this.value)" placeholder="optional"></div>`;
+  return h+`</div></div>`;
 }
-
-/* Button-group builder. fnPrefix ends with a trailing quote — we append ,'value') */
-function bg(options, current, disabled, fnPrefix){
+function bg(options,current,disabled,fnPrefix){
   return options.map(o=>{
     const active=o.v===current;
     const tone=o.tone||'info';
@@ -912,6 +1132,7 @@ function bg(options, current, disabled, fnPrefix){
   }).join('');
 }
 
+/* ---------- captain picker modal ---------- */
 function openCaptainPicker(room){
   const st=S.rooms[room];
   const rd=getRoomDay(currentDate,room);
@@ -926,16 +1147,14 @@ function openCaptainPicker(room){
     <div class="row" style="margin-top:14px;gap:8px">
       <button class="primary" onclick="applyHandover('${room}')">Save</button>
       <button class="ghost" onclick="closeModal()">Cancel</button>
-    </div>
-  `);
+    </div>`);
 }
 function showModal(html){
   let m=document.getElementById('modal');
   if(!m){
-    m=document.createElement('div');
-    m.id='modal';
+    m=document.createElement('div');m.id='modal';
     m.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px';
-    m.onclick=function(e){ if(e.target===m) closeModal(); };
+    m.onclick=function(e){if(e.target===m)closeModal();};
     document.body.appendChild(m);
   }
   m.innerHTML=`<div class="card" style="max-width:460px;width:100%;margin:0">${html}</div>`;
@@ -947,13 +1166,13 @@ function applyHandover(room){
   const acting=document.getElementById('handover_acting');
   const newId=sel?sel.value:'';
   const rd=getRoomDay(currentDate,room);
-  rd.captainId=newId||'';
-  rd.acting=acting?!!acting.checked:false;
+  rd.captainId=newId||'';rd.acting=acting?!!acting.checked:false;
   audit(room,'Handover: captain set to '+(newId||'—')+(rd.acting?' (acting)':''));
   save();closeModal();render();
   toast(newId?('Captain set to '+newId):'Captain cleared','ok');
 }
 
+/* ---------- marks ---------- */
 function marksCard(room){
   const rd=getRoomDay(currentDate,room);
   const st=S.rooms[room];
@@ -965,25 +1184,19 @@ function marksCard(room){
     const e=equityFor(currentDate,room,s.id);
     const reasons=[e.bonusReason?'+ '+e.bonusReason:'',e.negReason?'− '+e.negReason:''].filter(Boolean).join(' | ');
     h+=`<tr>
-      <td class="mono">${esc(s.id)}</td>
-      <td>${classPill(s.class)||'—'}</td>
-      <td>${esc(s.name)}</td>
+      <td class="mono">${esc(s.id)}</td><td>${classPill(s.class)||'—'}</td><td>${esc(s.name)}</td>
       <td>${e.roles.length?e.roles.join(' + '):'—'}</td>
-      <td class="muted">${e.raw}</td>
-      <td>${e.roleEquity}</td>
-      <td style="color:var(--ok)">+${e.bonus}</td>
-      <td style="color:var(--bad)">−${e.neg}</td>
+      <td class="muted">${e.raw}</td><td>${e.roleEquity}</td>
+      <td style="color:var(--ok)">+${e.bonus}</td><td style="color:var(--bad)">−${e.neg}</td>
       <td><b style="font-size:15px">${e.final}</b></td>
       <td class="small muted" style="white-space:normal;max-width:220px">${esc(reasons)}</td>
       <td>
         ${canM?`<button class="ghost small" onclick="adjMark('${room}','${s.id}','neg')">− neg</button>`:''}
         ${canAddBonus()?`<button class="ghost small" onclick="adjMark('${room}','${s.id}','bonus')">+ bonus</button>`:''}
         ${canAddBonus()?`<button class="ghost small" title="Helped with water, food or errand" onclick="quickBonus('${room}','${s.id}')">+1 help</button>`:''}
-      </td>
-    </tr>`;
+      </td></tr>`;
   }
-  h+=`</tbody></table></div>`;
-  return h;
+  return h+`</tbody></table></div>`;
 }
 
 /* =========================================================
@@ -991,24 +1204,33 @@ function marksCard(room){
    ========================================================= */
 function setSalah(room,sid,prayer,val){const rd=getRoomDay(currentDate,room);if(!rd.salah[sid])rd.salah[sid]={};rd.salah[sid][prayer]=val;save();render();}
 function setStudy(room,sid,slot,val){const rd=getRoomDay(currentDate,room);if(!rd.study[sid]||typeof rd.study[sid]==='string')rd.study[sid]={};rd.study[sid][slot]=val;save();render();}
-function setFood(room,sid,meal,val){const rd=getRoomDay(currentDate,room);if(!rd.food[sid]||typeof rd.food[sid]==='string')rd.food[sid]={breakfast:'eaten',lunch:'eaten',dinner:'eaten'};rd.food[sid][meal]=val;save();render();}
+function setFood(room,sid,meal,val){
+  const rd=getRoomDay(currentDate,room);
+  if(!rd.food[sid]||typeof rd.food[sid]==='string')rd.food[sid]={breakfast:'eaten',lunch:'eaten',dinner:'eaten'};
+  rd.food[sid][meal]=val;
+  save();render();
+  if(val==='not_eaten'){toast('Write what he does not eat','ok');}
+}
 function setFoodNote(room,sid,meal,val){const rd=getRoomDay(currentDate,room);if(!rd.foodNote[sid]||typeof rd.foodNote[sid]==='string')rd.foodNote[sid]={breakfast:'',lunch:'',dinner:''};rd.foodNote[sid][meal]=val;save();}
-function setActivity(room,sid,val){const rd=getRoomDay(currentDate,room);rd.activity[sid]=val;save();render();}
-function setNote(room,sid,val){const rd=getRoomDay(currentDate,room);rd.notes[sid]=val;save();}
-function setCleanStatus(room,which,val){
-  const rd=getRoomDay(currentDate,room);
-  migrateCleaning(rd.cleaning);
-  rd.cleaning[which].status=val;
-  save();render();
-}
-function setCleanDuty(room,which,val){
-  const rd=getRoomDay(currentDate,room);
-  migrateCleaning(rd.cleaning);
-  rd.cleaning[which].dutyBy=val;
-  save();render();
-}
+function setAvoid(room,sid,val){const s=S.rooms[room].students.find(x=>x.id===sid);if(s){s.avoid=val.trim();saveConfig();render();}}
+function setActivity(room,sid,val){getRoomDay(currentDate,room).activity[sid]=val;save();render();}
+function setNote(room,sid,val){getRoomDay(currentDate,room).notes[sid]=val;save();}
+/* cleaning */
+function setCleanStatusW(room,val){getRoomDay(currentDate,room).cleaning.washroom.status=val;audit(room,'Washroom '+val);save();render();}
+function setCleanDutyW(room,val){getRoomDay(currentDate,room).cleaning.washroom.dutyBy=val;audit(room,'Washroom duty → '+studentName(val));save();render();}
+function setCleanNoteW(room,val){getRoomDay(currentDate,room).cleaning.washroom.note=val;save();}
+function setCleanStatusR(room,val){getRoomDay(currentDate,room).cleaning.room.status=val;audit(room,'Room cleaning '+val);save();render();}
+function setCleanDutyR(room,val){getRoomDay(currentDate,room).cleaning.room.dutyBy=val;audit(room,'Room duty → '+studentName(val));save();render();}
+function setCleanNoteR(room,val){getRoomDay(currentDate,room).cleaning.room.note=val;save();}
 function toggleEquip(room,key){const rd=getRoomDay(currentDate,room);rd.cleaning[key]=!rd.cleaning[key];save();render();}
-function setActing(room,val){const rd=getRoomDay(currentDate,room);rd.acting=!!val;save();render();}
+/* discipline */
+function setDisc(room,key,val){const rd=getRoomDay(currentDate,room);if(!rd.discipline[key])rd.discipline[key]={status:'',note:''};rd.discipline[key].status=val;if(val!=='issue')rd.discipline[key].note='';save();render();}
+function setDiscNote(room,key,val){const rd=getRoomDay(currentDate,room);if(!rd.discipline[key])rd.discipline[key]={status:'issue',note:''};rd.discipline[key].note=val;save();}
+function discAllOk(room){
+  const rd=getRoomDay(currentDate,room);
+  DISCIPLINE.forEach(x=>{if(!rd.discipline[x.k]||!rd.discipline[x.k].status)rd.discipline[x.k]={status:'ok',note:''};});
+  audit(room,'Discipline: remaining marked OK');save();render();toast('Remaining items marked OK','ok');
+}
 function adjMark(room,sid,kind){
   const rd=getRoomDay(currentDate,room);
   if(!rd.marks[sid])rd.marks[sid]={neg:0,negReason:'',bonus:0,bonusReason:''};
@@ -1030,35 +1252,41 @@ function quickBonus(room,sid){
 }
 function submitRoom(room){
   if(!canEditRoom(room))return toast('Editing window closed','bad');
+  const probs=roomProblems(room);
+  if(probs.length&&!confirm('These items are still incomplete:\n\n• '+probs.slice(0,10).join('\n• ')+(probs.length>10?'\n…and '+(probs.length-10)+' more':'')+'\n\nSubmit anyway?'))return;
   const rd=getRoomDay(currentDate,room);
-  /* soft warnings — do not block, but notify */
-  const warns=[];
-  if(rd.cleaning.washroom.status && !rd.cleaning.washroom.dutyBy) warns.push('washroom duty person');
-  if(rd.cleaning.room.status && !rd.cleaning.room.dutyBy) warns.push('room duty person');
   rd.status.rcSubmitted=true;rd.status.rcAt=nowStamp();
   rd.status.fcConfirmed=false;rd.status.fcomVerified=false;
-  audit(room,'Room Captain submitted'+(warns.length?' (missing: '+warns.join(', ')+')':''));
-  save();render();
-  toast(warns.length?('Submitted — note: '+warns.join(', ')+' missing'):'Submitted to Floor Captain','ok');
+  audit(room,'Room Captain submitted'+(probs.length?' ('+probs.length+' pending items)':''));
+  save();render();toast(probs.length?'Submitted with '+probs.length+' pending item(s)':'Submitted to Floor Captain','ok');
 }
 function saveOpinion(room,which){
   const rd=getRoomDay(currentDate,room);
-  if(which==='fc'){const v=(document.getElementById('opine_'+room)||{}).value||'';rd.status.fcNote=v;audit(room,'FC opinion recorded');save();toast('Opinion saved','ok');}
-  else{const v=(document.getElementById('fcomnote_'+room)||{}).value||'';rd.status.fcomNote=v;audit(room,'FCom note recorded');save();toast('Note saved','ok');}
-  render();
+  if(which==='fc'){rd.status.fcNote=(document.getElementById('opine_'+room)||{}).value||'';audit(room,'FC opinion recorded');}
+  else{rd.status.fcomNote=(document.getElementById('fcomnote_'+room)||{}).value||'';audit(room,'FCom note recorded');}
+  save();render();toast('Saved','ok');
 }
 function fcConfirmRoom(room){const rd=getRoomDay(currentDate,room);if(!rd.status.rcSubmitted)return toast('Not submitted yet','bad');rd.status.fcConfirmed=true;rd.status.fcAt=nowStamp();audit(room,'FC confirmed');save();render();toast('Confirmed','ok');}
 function fcomVerifyRoom(room){const rd=getRoomDay(currentDate,room);if(!rd.status.fcConfirmed)return toast('FC not confirmed yet','bad');rd.status.fcomVerified=true;rd.status.fcomAt=nowStamp();audit(room,'FCom verified');save();render();toast('Verified','ok');}
-function fcConfirmFloor(){const allSub=ROOMS.every(r=>{const rd=rdSafe(currentDate,r);return rd&&rd.status.rcSubmitted;});if(!allSub)return toast('Not all rooms submitted','bad');const fd=getDay(currentDate).floor;fd.fcConfirmed=true;fd.fcAt=nowStamp();fd.fcBy=session.role;save();render();toast('Full day confirmed','ok');}
+function fcConfirmFloor(){
+  const allSub=ROOMS.every(r=>{const rd=rdSafe(currentDate,r);return rd&&rd.status.rcSubmitted;});
+  if(!allSub)return toast('Not all rooms submitted','bad');
+  const fp=floorProblems();
+  if(fp.length&&!confirm('Floor duty incomplete:\n\n• '+fp.join('\n• ')+'\n\nConfirm anyway?'))return;
+  const fd=getDay(currentDate).floor;fd.fcConfirmed=true;fd.fcAt=nowStamp();fd.fcBy=session.role;
+  save();render();toast('Full day confirmed','ok');
+}
 function fcomVerifyFloor(){const fd=getDay(currentDate).floor;if(!fd.fcConfirmed)return toast('FC not confirmed yet','bad');fd.fcomVerified=true;fd.fcomAt=nowStamp();fd.fcomNote=(document.getElementById('fcomFloorNote')||{}).value||fd.fcomNote||'';save();render();toast('Full day verified','ok');}
-function setGoods(key,val){const fd=getDay(currentDate).floor;fd.goods[key]=val;save();}
+/* floor duty */
 function setGoodsNote(val){getDay(currentDate).floor.goodsNote=val;save();}
 function saveGoodsBy(val){getDay(currentDate).floor.goodsBy=val;save();}
 function toggleGoods(key){const fd=getDay(currentDate).floor;fd.goods[key]=!fd.goods[key];save();render();}
-
-/* Floor cleaning actions */
-function setFloorCleanStatus(val){const fd=getDay(currentDate).floor;migrateFloorCleaning(fd);fd.floorCleaning.status=val;save();render();}
-function setFloorCleanDuty(val){const fd=getDay(currentDate).floor;migrateFloorCleaning(fd);fd.floorCleaning.dutyBy=val;save();render();}
+function setFloorCleanStatus(val){getDay(currentDate).floor.floorCleaning.status=val;save();render();}
+function setFloorCleanDuty(val){getDay(currentDate).floor.floorCleaning.dutyBy=val;save();render();}
+function setFloorCleanNote(val){getDay(currentDate).floor.floorCleaning.note=val;save();}
+function setFloorCheck(key,val){const fd=getDay(currentDate).floor;if(!fd.checks[key])fd.checks[key]={status:'',note:''};fd.checks[key].status=val;if(val!=='issue')fd.checks[key].note='';save();render();}
+function setFloorCheckNote(key,val){const fd=getDay(currentDate).floor;if(!fd.checks[key])fd.checks[key]={status:'issue',note:''};fd.checks[key].note=val;save();}
+function floorAllOk(){const fd=getDay(currentDate).floor;FLOOR_CHECKS.forEach(x=>{if(!fd.checks[x.k]||!fd.checks[x.k].status)fd.checks[x.k]={status:'ok',note:''};});save();render();toast('Remaining floor checks marked OK','ok');}
 
 /* =========================================================
    CONFIRM / VERIFY
@@ -1067,34 +1295,37 @@ function confirmView(){
   const fd=getDay(currentDate).floor;
   const allSub=ROOMS.every(r=>{const rd=rdSafe(currentDate,r);return rd&&rd.status.rcSubmitted;});
   let h=`<h2>Confirmation &amp; Verification · ${prettyDate(currentDate)}</h2>`;
-  h+=`<div class="card"><h3>Room-level sign-off</h3>
-    <table class="tbl"><thead><tr><th>Room</th><th>Captain</th><th>Class</th><th>Submitted</th><th>FC confirmed</th><th>FCom verified</th><th>Marks</th><th></th></tr></thead><tbody>`;
+  h+=`<div class="card scrollx"><h3>Room-level sign-off</h3>
+    <table class="tbl"><thead><tr><th>Room</th><th>Captain</th><th>Class</th><th>Submitted</th><th>FC confirmed</th><th>FCom verified</th><th>Pending</th><th>Marks</th><th></th></tr></thead><tbody>`;
   for(const room of ROOMS){
     const rd=getRoomDay(currentDate,room);
     const capObj=S.rooms[room].students.find(x=>x.id===rd.captainId);
     const cap=capObj?capObj.name:(rd.captainId||'—');
-    const capCls=capObj?capObj.class:'';
     const tot=S.rooms[room].students.reduce((a,s)=>a+equityFor(currentDate,room,s.id).final,0);
+    const pr=roomProblems(room).length;
     h+=`<tr>
-      <td><b>${room}</b></td><td>${esc(cap)}</td><td>${classPill(capCls)||'—'}</td>
+      <td><b>${room}</b></td><td>${esc(cap)}</td><td>${classPill(capObj?capObj.class:'')||'—'}</td>
       <td>${rd.status.rcSubmitted?`<span class="chip ok">${esc(rd.status.rcAt||'')}</span>`:'<span class="chip bad">pending</span>'}</td>
       <td>${rd.status.fcConfirmed?`<span class="chip ok">${esc(rd.status.fcAt||'')}</span>`:'<span class="chip">—</span>'}</td>
       <td>${rd.status.fcomVerified?`<span class="chip ok">${esc(rd.status.fcomAt||'')}</span>`:'<span class="chip">—</span>'}</td>
+      <td>${pr?`<span class="chip warn">${pr}</span>`:'<span class="chip ok">0</span>'}</td>
       <td>${tot}</td>
       <td class="row">
         ${(session.role==='fc'||session.role==='admin')&&!rd.status.fcConfirmed?`<button class="ok" onclick="fcConfirmRoom('${room}')">Confirm</button>`:''}
         ${(session.role==='fcom'||session.role==='admin')&&!rd.status.fcomVerified?`<button class="primary" onclick="fcomVerifyRoom('${room}')">Verify</button>`:''}
         <button class="ghost" onclick="editRoom('${room}')">Open</button>
-      </td>
-    </tr>`;
+      </td></tr>`;
   }
   h+=`</tbody></table></div>`;
+  const fp=floorProblems();
   h+=`<div class="card"><h3>Floor-level full-day sign-off</h3>
     <div class="row">
       <span class="chip ${allSub?'ok':'bad'}">${allSub?'All 3 rooms submitted':'Awaiting rooms'}</span>
       <span class="chip ${fd.fcConfirmed?'ok':''}">FC confirmed ${fd.fcConfirmed?'· '+esc(fd.fcAt||''):''}</span>
       <span class="chip ${fd.fcomVerified?'ok':''}">FCom verified ${fd.fcomVerified?'· '+esc(fd.fcomAt||''):''}</span>
-    </div>`;
+      <span class="chip ${fp.length?'warn':'ok'}">Floor duty: ${fp.length?fp.length+' pending':'complete'}</span>
+    </div>
+    ${fp.length?`<div class="warnnote" style="margin-top:10px">${fp.map(esc).join('<br>')}</div>`:''}`;
   if(session.role==='fc'||session.role==='admin'){
     h+=`<hr>
       <label class="chk"><input type="checkbox" ${allSub?'checked':''} disabled> All three rooms have submitted</label>
@@ -1109,64 +1340,64 @@ function confirmView(){
       <div class="warnnote">⚠ <b>Do not verify without cross-checking.</b></div>
       <button id="vfBtn" class="primary" disabled onclick="fcomVerifyFloor()">Verify full day</button>`;
   }
-  h+=`</div>`;
-  return h;
+  return h+`</div>`;
 }
 
 /* =========================================================
-   FLOOR GOODS + FLOOR CLEANING
+   FLOOR DUTY  (Floor Captain: floor cleaning + checks + goods)
    ========================================================= */
 function goodsView(){
   const fd=getDay(currentDate).floor;
-  migrateFloorCleaning(fd);
-  const editable=canEditFloorGoods();
-  const dutyOpts=[{v:'',l:'— select duty person —',short:'— select —'}];
-  for(const r of ROOMS){
-    for(const s of S.rooms[r].students){
-      dutyOpts.push({v:s.id, l:s.name+' · Room '+r+' ('+s.id+')', short:s.name+' ('+r+')'});
-    }
-  }
-  let h=`<h2>Floor Goods &amp; Floor Cleaning · ${prettyDate(currentDate)}</h2>`;
+  const editable=canEditFloor();
+  const all=[];
+  for(const r of ROOMS)S.rooms[r].students.forEach(s=>all.push({id:s.id,name:s.name+' · Room '+r}));
+  const opts=[{v:'',l:'— select duty person —'}].concat(all.map(s=>({v:s.id,l:s.name+' ('+s.id+')'})));
+  const c=fd.floorCleaning;
+  const fp=floorProblems();
+  let h=`<h2>Floor Duty · ${prettyDate(currentDate)}</h2>`;
+  if(!editable)h+=`<div class="warnnote">Read-only — editing window closed or your role cannot edit floor duty.</div>`;
+  if(editable&&fp.length)h+=`<div class="warnnote"><b>⚠ Pending (${fp.length}):</b><br>${fp.map(esc).join('<br>')}</div>`;
 
-  h+=`<div class="card">
-    <h3>🧹 Floor cleaning</h3>
-    <div class="muted small" style="margin-bottom:10px">Floor Captain confirms floor cleaning; duty person is required.</div>
-    <div class="clean-block">
-      <div class="row" style="justify-content:space-between;margin-bottom:6px">
-        <b>Floor cleaning status</b>
-        ${!fd.floorCleaning.dutyBy && fd.floorCleaning.status ? `<span class="chip warn">Duty person missing</span>` : ''}
-      </div>
-      <div class="row">
-        <div class="entry-label">Status</div>
-        <div class="btn-group">${bg(CLEAN_STATUS, fd.floorCleaning.status||'', !editable, `setFloorCleanStatus('`)}</div>
-      </div>
-      <div class="row" style="margin-top:6px">
-        <div class="entry-label">Duty person</div>
-        <select class="duty-select ${!fd.floorCleaning.dutyBy?'duty-missing':''}" ${editable?'':'disabled'} onchange="setFloorCleanDuty(this.value)">
-          ${dutyOpts.map(o=>`<option value="${o.v}" ${o.v===fd.floorCleaning.dutyBy?'selected':''}>${esc(o.l)}</option>`).join('')}
-        </select>
-      </div>
-    </div>
-  </div>`;
+  h+=`<div class="card"><h3>🧹 Floor cleaning</h3>
+    <div class="muted small" style="margin-bottom:10px">Floor Captain records <b>who was on duty</b> (always), then confirms Done / Not done.</div>
+    <div class="clean-block ${c.status==='not_done'?'notdone':(!c.status||!c.dutyBy)?'missing':''}">
+      <div class="row" style="justify-content:space-between;margin-bottom:6px"><b>Floor cleaning</b>
+        <span class="row small muted" style="gap:6px">7 days ${streakHTML(cleanStreak('floor'))}</span></div>
+      <div class="entry-row"><div class="entry-label">Duty person *</div>
+        <select class="duty-select ${!c.dutyBy?'need':''}" ${editable?'':'disabled'} onchange="setFloorCleanDuty(this.value)">
+          ${opts.map(o=>`<option value="${esc(o.v)}" ${o.v===c.dutyBy?'selected':''}>${esc(o.l)}</option>`).join('')}
+        </select></div>
+      <div class="entry-row"><div class="entry-label">Status *</div>
+        <div class="btn-group">${bg(CLEAN_STATUS,c.status||'',!editable,`setFloorStatusWrap(''`)}</div></div>
+      ${c.status==='not_done'?`<div class="entry-row"><div class="entry-label">Why not?</div>
+        <input class="entry-note ${!(c.note||'').trim()?'need':''}" value="${esc(c.note||'')}" ${editable?'':'disabled'} onchange="setFloorCleanNote(this.value)" placeholder="Reason it was not done (required)"></div>`:''}
+      ${!c.dutyBy&&c.status?`<div class="badnote" style="margin:6px 0 0">Duty person must be recorded — even when the task is done.</div>`:''}
+    </div></div>`;
 
-  h+=`<div class="card">
-    <h3>📦 Availability of goods on the floor</h3>
+  h+=`<div class="card"><h3>📋 Floor inspection <span class="muted small">· ${FLOOR_CHECKS.filter(x=>fd.checks[x.k]&&fd.checks[x.k].status).length}/${FLOOR_CHECKS.length} checked</span></h3>`;
+  FLOOR_CHECKS.forEach(x=>{
+    const cur=fd.checks[x.k]||{status:'',note:''};
+    h+=`<div class="chk-item"><div class="lbl">${esc(x.l)}</div>
+      <div class="btn-group" style="flex:0 0 auto">${bg(CHECK_STATUS,cur.status||'',!editable,`setFloorCheck('${x.k}'`)}</div>
+      ${cur.status==='issue'?`<input class="entry-note ${!(cur.note||'').trim()?'need':''}" value="${esc(cur.note||'')}" ${editable?'':'disabled'} onchange="setFloorCheckNote('${x.k}',this.value)" placeholder="What is the issue? (required)">`:''}
+    </div>`;
+  });
+  if(editable)h+=`<div class="row" style="margin-top:10px"><button class="ghost" onclick="floorAllOk()">✓ Mark all remaining as OK</button></div>`;
+  h+=`</div>`;
+
+  h+=`<div class="card"><h3>📦 Availability of goods on the floor</h3>
     <div class="btn-group" style="margin-top:10px">
-      ${FLOOR_GOODS.map(([k,l])=>{
-        const on=fd.goods[k];
-        return `<div class="btn-opt ${on?'active':''}" data-clickable="${editable?'1':''}" data-tone="${on?'ok':''}" onclick="${editable?`toggleGoods('${k}')`:''}">${l}</div>`;
-      }).join('')}
+      ${FLOOR_GOODS.map(([k,l])=>{const on=fd.goods[k];
+        return `<div class="btn-opt ${on?'active':''}" data-clickable="${editable?'1':''}" data-tone="${on?'ok':''}" onclick="${editable?`toggleGoods('${k}')`:''}">${l}</div>`;}).join('')}
     </div>
-    <div class="row" style="margin-top:14px">
-      <span class="small muted">Checked by:</span>
-      <input value="${esc(fd.goodsBy||'')}" ${editable?'':'disabled'} onchange="saveGoodsBy(this.value)" placeholder="Name / role">
-    </div>
-    <div style="margin-top:12px">
-      <textarea rows="2" style="width:100%" ${editable?'':'disabled'} placeholder="Notes…" onchange="setGoodsNote(this.value)">${esc(fd.goodsNote||'')}</textarea>
-    </div>
+    <div class="row" style="margin-top:14px"><span class="small muted">Checked by:</span>
+      <input value="${esc(fd.goodsBy||'')}" ${editable?'':'disabled'} onchange="saveGoodsBy(this.value)" placeholder="Name / role"></div>
+    <div style="margin-top:12px"><textarea rows="2" style="width:100%" ${editable?'':'disabled'} placeholder="Notes…" onchange="setGoodsNote(this.value)">${esc(fd.goodsNote||'')}</textarea></div>
   </div>`;
   return h;
 }
+/* bg() appends ,'value') — floor status has no leading args, so wrap */
+function setFloorStatusWrap(_,v){setFloorCleanStatus(v);}
 
 /* =========================================================
    ROSTER
@@ -1174,28 +1405,25 @@ function goodsView(){
 function rosterView(){
   const rooms=session.role==='rc'?[session.room]:ROOMS;
   const canEdit=session.role==='admin'||session.role==='fcom'||session.role==='rc';
-  let h=`<h2>Roster <span class="muted small">· names &amp; classes</span></h2>`;
+  let h=`<h2>Roster <span class="muted small">· names, classes &amp; food dislikes</span></h2>`;
   for(const room of rooms){
     const st=S.rooms[room];
-    const counts={9:0,10:0,11:0,12:0};
-    st.students.forEach(s=>{if(counts[s.class]!==undefined)counts[s.class]++;});
+    const counts={};
+    st.students.forEach(s=>{counts[s.class]=(counts[s.class]||0)+1;});
     h+=`<div class="card"><h3>Room ${room} · ${st.students.length} students · ${st.rotation.length} in rotation</h3>
       <div class="row small muted" style="margin-bottom:8px">
-        <span class="chip">Class 9: ${counts[9]}</span>
-        <span class="chip">Class 10: ${counts[10]}</span>
-        ${counts[11]?`<span class="chip">Class 11: ${counts[11]}</span>`:''}
-        ${counts[12]?`<span class="chip">Class 12: ${counts[12]}</span>`:''}
+        ${CLASSES.filter(c=>counts[c]).map(c=>`<span class="chip">Class ${c}: ${counts[c]}</span>`).join('')||'<span class="chip">No students</span>'}
       </div>
       <div class="scrollx"><table class="tbl">
-        <thead><tr><th>#</th><th>ID</th><th>Name</th><th>Class</th><th>In rotation</th><th></th></tr></thead><tbody>
+        <thead><tr><th>#</th><th>ID</th><th>Name</th><th>Class</th><th>Doesn't eat</th><th>In rotation</th><th></th></tr></thead><tbody>
         ${st.students.map((s,i)=>`<tr>
-          <td>${i+1}</td>
-          <td class="mono">${esc(s.id)}</td>
+          <td>${i+1}</td><td class="mono">${esc(s.id)}</td>
           <td><input value="${esc(s.name)}" ${canEdit?'':'disabled'} onchange="renameStudent('${room}','${s.id}',this.value)"></td>
           <td>${canEdit?`<select onchange="setStudentClass('${room}','${s.id}',this.value)">${CLASSES.map(c=>`<option value="${c}" ${s.class===c?'selected':''}>${c}</option>`).join('')}</select>`:classPill(s.class)}</td>
+          <td><input value="${esc(s.avoid||'')}" ${canEdit?'':'disabled'} onchange="setAvoid('${room}','${s.id}',this.value)" placeholder="e.g. egg, fish"></td>
           <td>${st.rotation.includes(s.id)?'✔':'—'}</td>
           <td>
-            <button class="ghost" ${canEdit?'':'disabled'} onclick="toggleRotation('${room}','${s.id}')">${st.rotation.includes(s.id)?'Remove':'Add'}</button>
+            <button class="ghost" ${canEdit?'':'disabled'} onclick="toggleRotation('${room}','${s.id}')">${st.rotation.includes(s.id)?'Remove from rotation':'Add to rotation'}</button>
             <button class="bad" ${canEdit?'':'disabled'} onclick="removeStudent('${room}','${s.id}')">Remove</button>
           </td></tr>`).join('')}
       </tbody></table></div>
@@ -1216,7 +1444,7 @@ function addStudent(room){
   if(!id)return toast('Enter a student ID','bad');
   const st=S.rooms[room];
   if(st.students.some(s=>s.id===id))return toast('That ID already exists','bad');
-  st.students.push({id,name:name||('Student '+id),class:cls});
+  st.students.push({id,name:name||('Student '+id),class:cls,avoid:''});
   if(!st.rotation.includes(id))st.rotation.push(id);
   saveConfig();render();toast('Student added','ok');
 }
@@ -1227,41 +1455,37 @@ function removeStudent(room,id){
   st.rotation=st.rotation.filter(x=>x!==id);
   saveConfig();render();toast('Student removed','ok');
 }
-function renameStudent(room,id,val){const st=S.rooms[room];const s=st.students.find(x=>x.id===id);if(s){s.name=val;saveConfig();}}
-function setStudentClass(room,id,val){const st=S.rooms[room];const s=st.students.find(x=>x.id===id);if(s){s.class=val;saveConfig();toast('Class updated','ok');}}
+function renameStudent(room,id,val){const s=S.rooms[room].students.find(x=>x.id===id);if(s){s.name=val;saveConfig();}}
+function setStudentClass(room,id,val){const s=S.rooms[room].students.find(x=>x.id===id);if(s){s.class=val;saveConfig();toast('Class updated','ok');}}
 function toggleRotation(room,id){
   const st=S.rooms[room];
-  if(st.rotation.includes(id))st.rotation=st.rotation.filter(x=>x!==id);
-  else st.rotation.push(id);
+  if(st.rotation.includes(id))st.rotation=st.rotation.filter(x=>x!==id);else st.rotation.push(id);
   saveConfig();render();
 }
 
 /* =========================================================
-   REPORTS
+   REPORTS  (marks + duty accountability)
    ========================================================= */
 function reportsView(){
   const roomList=session.role==='rc'?[session.room]:ROOMS;
-  let h=`<h2>Marks Report</h2>
-    <div class="card">
-      <div class="row">
-        <span class="small muted">From</span><input type="date" value="${repFrom}" onchange="repFrom=this.value;render()">
-        <span class="small muted">To</span><input type="date" value="${repTo}" onchange="repTo=this.value;render()">
-        <div class="spacer"></div>
-        <button class="ghost" onclick="pushRange(repFrom,repTo)">Push range to Sheet</button>
-      </div>
-    </div>`;
+  let h=`<h2>Reports</h2>
+    <div class="card"><div class="row">
+      <span class="small muted">From</span><input type="date" value="${repFrom}" onchange="repFrom=this.value;render()">
+      <span class="small muted">To</span><input type="date" value="${repTo}" onchange="repTo=this.value;render()">
+      <div class="spacer"></div>
+      <button class="ghost" onclick="pushRange(repFrom,repTo)">Push range to Sheet</button>
+    </div></div>`;
   const dates=[];let d=repFrom,guard=0;
   while(d<=repTo&&guard++<400){dates.push(d);d=addDays(d,1);}
   for(const room of roomList){
     const st=S.rooms[room];
-    h+=`<div class="card scrollx"><h3>Room ${room}</h3>
+    h+=`<div class="card scrollx"><h3>Room ${room} · Marks</h3>
       <table class="tbl"><thead><tr><th>ID</th><th>Class</th><th>Name</th><th>Days</th><th>Capt. days</th><th>Bonus</th><th>Neg</th><th>Total</th><th>Avg</th></tr></thead><tbody>`;
     for(const s of st.students){
       let days=0,cap=0,bonus=0,neg=0,total=0;
       for(const dt of dates){
-        const rd=rdSafe(dt,room);
-        if(!rd)continue;
-        const has=(rd.salah&&Object.keys(rd.salah[s.id]||{}).length)||rd.activity[s.id]||(rd.study&&rd.study[s.id]);
+        const rd=rdSafe(dt,room);if(!rd)continue;
+        const has=(rd.salah&&Object.keys(rd.salah[s.id]||{}).length)||(rd.activity&&rd.activity[s.id])||(rd.study&&rd.study[s.id]);
         if(!has&&!(rd.marks&&rd.marks[s.id]))continue;
         const e=equityFor(dt,room,s.id);
         days++;if(e.roles.includes('RC'))cap++;
@@ -1273,6 +1497,34 @@ function reportsView(){
     }
     h+=`</tbody></table></div>`;
   }
+  /* duty accountability */
+  const cnt={};
+  for(const dt of dates){
+    const day=S.days[dt];if(!day)continue;
+    for(const r of roomList){
+      const c=day.rooms&&day.rooms[r]&&day.rooms[r].cleaning;if(!c)continue;
+      [['washroom','Washroom'],['room','Room']].forEach(([k,lbl])=>{
+        const x=c[k];if(!x||!x.dutyBy)return;
+        const o=cnt[x.dutyBy]||(cnt[x.dutyBy]={total:0,done:0,notdone:0,tasks:{}});
+        o.total++;if(x.status==='done')o.done++;if(x.status==='not_done')o.notdone++;
+        o.tasks[lbl]=(o.tasks[lbl]||0)+1;
+      });
+    }
+    if(session.role!=='rc'){
+      const f=day.floor&&day.floor.floorCleaning;
+      if(f&&f.dutyBy){const o=cnt[f.dutyBy]||(cnt[f.dutyBy]={total:0,done:0,notdone:0,tasks:{}});o.total++;if(f.status==='done')o.done++;if(f.status==='not_done')o.notdone++;o.tasks.Floor=(o.tasks.Floor||0)+1;}
+    }
+  }
+  const rows=Object.keys(cnt).sort((a,b)=>cnt[b].notdone-cnt[a].notdone||cnt[b].total-cnt[a].total);
+  h+=`<div class="card scrollx"><h3>🧹 Duty accountability <span class="muted small">· who was on duty, and did they complete it</span></h3>
+    <table class="tbl"><thead><tr><th>Student</th><th>Duties</th><th>Done</th><th>Not done</th><th>Not confirmed</th><th>Tasks</th></tr></thead><tbody>
+    ${rows.length?rows.map(id=>{const o=cnt[id];return `<tr>
+      <td><b>${esc(studentName(id))}</b> <span class="muted mono small">${esc(id)}</span></td>
+      <td>${o.total}</td><td style="color:var(--ok)">${o.done}</td>
+      <td style="color:${o.notdone?'var(--bad)':'inherit'}"><b>${o.notdone}</b></td>
+      <td>${o.total-o.done-o.notdone}</td>
+      <td class="small muted">${Object.entries(o.tasks).map(([k,v])=>k+' ×'+v).join(', ')}</td></tr>`;}).join(''):'<tr><td colspan="6" class="muted">No duty records in this range.</td></tr>'}
+    </tbody></table></div>`;
   return h;
 }
 
@@ -1282,10 +1534,9 @@ function reportsView(){
 function adminView(){
   const allStudents=[];
   for(const r of ROOMS)S.rooms[r].students.forEach(s=>allStudents.push({room:r,id:s.id,name:s.name,cls:s.class}));
-  const optList=[{v:'',l:'— none —',short:'— none —'}].concat(allStudents.map(s=>({v:s.id,l:s.name+' ('+s.room+') · Cl.'+(s.cls||'—'),short:s.name+' ('+s.room+')'})));
+  const optList=[{v:'',l:'— none —'}].concat(allStudents.map(s=>({v:s.id,l:s.name+' ('+s.room+') · Cl.'+(s.cls||'—')})));
   let h=`<h2>Administration</h2>`;
-  h+=`<div class="card"><h3>Roles &amp; passcodes
-    <span class="muted small">· default 1122 · saves to sheet automatically</span></h3>
+  h+=`<div class="card"><h3>Roles &amp; passcodes <span class="muted small">· default 1122 · saves to sheet automatically</span></h3>
     <div class="grid2">
       <div>
         <label class="chk">Floor Captain — student ID</label>
@@ -1299,29 +1550,19 @@ function adminView(){
         <div style="margin-top:10px"><label class="chk">Floor Commander passcode</label>
         <input value="${esc(S.users.fcom.pin)}" onchange="setStaff('fcom','pin',this.value)"></div>
       </div>
-    </div>
-    <hr>
+    </div><hr>
     <div class="grid3">
-      ${ROOMS.map(r=>`<div>
-        <label class="chk">Room ${r} passcode</label>
-        <input value="${esc(S.users.rc[r])}" onchange="setRcPin('${r}',this.value)">
-      </div>`).join('')}
-      <div>
-        <label class="chk">Floor Incharge passcode</label>
-        <input value="${esc(S.users.admin.pin)}" onchange="setStaff('admin','pin',this.value)">
-      </div>
+      ${ROOMS.map(r=>`<div><label class="chk">Room ${r} passcode</label>
+        <input value="${esc(S.users.rc[r])}" onchange="setRcPin('${r}',this.value)"></div>`).join('')}
+      <div><label class="chk">Floor Incharge passcode</label>
+        <input value="${esc(S.users.admin.pin)}" onchange="setStaff('admin','pin',this.value)"></div>
     </div>
-    <div class="row" style="margin-top:10px">
-      <button class="ghost" onclick="resetAllPins()">Reset all passcodes to 1122</button>
-    </div>
+    <div class="row" style="margin-top:10px"><button class="ghost" onclick="resetAllPins()">Reset all passcodes to 1122</button></div>
   </div>`;
   h+=`<div class="card"><h3>Weekly captaincy rotation</h3>
-    <div class="row">
-      <span class="small muted">Rotation start (Monday)</span>
-      <input type="date" value="${S.settings.rotationStart}" onchange="S.settings.rotationStart=this.value;saveConfig();render()">
-    </div>
-    <hr>
-    <div class="grid3">
+    <div class="row"><span class="small muted">Rotation start (Monday)</span>
+      <input type="date" value="${S.settings.rotationStart}" onchange="S.settings.rotationStart=this.value;saveConfig();render()"></div>
+    <hr><div class="grid3">
       ${ROOMS.map(r=>{
         const cap=rotationCaptain(r,todayStr());
         const s=S.rooms[r].students.find(x=>x.id===cap);
@@ -1330,17 +1571,16 @@ function adminView(){
     </div>
   </div>`;
   h+=`<div class="card"><h3>Google Sheet sync</h3>
-    <div class="row">
-      <input style="flex:1;min-width:280px" value="${esc(GAS_URL)}" readonly>
-      <button class="ghost" onclick="pingGAS()">Ping</button>
-    </div>
-    <label class="chk"><input type="checkbox" ${S.settings.autoSync?'checked':''} onchange="S.settings.autoSync=this.checked;if(!this.checked){cancelSyncTimers();}saveConfig()"> Auto-push to sheet after every edit</label>
+    <div class="row"><input style="flex:1;min-width:280px" value="${esc(GAS_URL)}" readonly>
+      <button class="ghost" onclick="pingGAS()">Ping</button></div>
+    <label class="chk"><input type="checkbox" ${S.settings.autoSync?'checked':''} onchange="S.settings.autoSync=this.checked;if(!this.checked)cancelSyncTimers();saveConfig()"> Auto-sync (push after every edit · pull every ${PULL_MS/1000}s)</label>
     <div class="row" style="margin-top:10px">
       <button class="primary" onclick="pushRange(addDays(todayStr(),-14),todayStr())">Push last 14 days now</button>
       <button class="ghost" onclick="pushConfig()">Push roster &amp; passcodes now</button>
+      <button class="ghost" onclick="pullNow({days:60});toast('Pulling…')">Pull from sheet now</button>
     </div>
     <div class="muted small" style="margin-top:10px">
-      Last daily sync: ${esc(S.meta.lastSync||'never')} · Last config sync: ${esc(S.meta.lastConfigSync||'never')}
+      Last push: ${esc(S.meta.lastSync||'never')} · Last config push: ${esc(S.meta.lastConfigSync||'never')} · Last pull: ${esc(S.meta.lastPull||'never')} · Unsynced dates: ${dirty.size}
     </div>
   </div>`;
   h+=`<div class="card"><h3>Backup &amp; restore</h3>
@@ -1357,8 +1597,7 @@ function setStaff(which,key,val){S.users[which][key]=val;saveConfig();render();t
 function setRcPin(room,val){S.users.rc[room]=val;saveConfig();toast('Saved','ok');}
 function resetAllPins(){
   if(!confirm('Reset every passcode to 1122?'))return;
-  S.users=defaultUsers();
-  saveConfig();render();toast('All passcodes reset to 1122','ok');
+  S.users=defaultUsers();saveConfig();render();toast('All passcodes reset to 1122','ok');
 }
 function exportJSON(){
   const blob=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
@@ -1373,7 +1612,9 @@ function importJSON(input){
       const data=JSON.parse(fr.result);
       if(!data.rooms)throw 0;
       if(!confirm('Replace all current data with this backup?'))return;
-      S=data;migrateConfig();saveLocal();saveConfig();save();render();toast('Backup restored & pushed','ok');
+      S=data;migrateConfig();
+      Object.keys(S.days||{}).forEach(markDirty);
+      saveLocal();saveConfig();pushDirty();render();toast('Backup restored & pushing','ok');
     }catch(e){toast('Invalid backup file','bad');}
   };
   fr.readAsText(f);
@@ -1381,14 +1622,14 @@ function importJSON(input){
 function wipeAll(){
   if(!confirm('Erase ALL data? This cannot be undone.'))return;
   if(!confirm('Really erase everything?'))return;
+  dirty.clear();saveDirty();
   S=defaultState();saveLocal();saveConfig();render();toast('All data erased','bad');
 }
 function pingGAS(){
-  setSyncDot('syncing');
-  fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},
-    body:JSON.stringify({action:'ping',by:session?session.role:'anon'})})
-    .then(()=>{setSyncDot('ok');toast('Ping sent — check the Sync Log tab','ok');})
-    .catch(()=>{setSyncDot('bad');toast('Ping failed','bad');});
+  setSync('syncing');
+  post({action:'ping',by:session?session.role:'anon'})
+    .then(()=>{setSync('ok');toast('Ping sent — check the Sync Log tab','ok');})
+    .catch(()=>{setSync('bad');toast('Ping failed','bad');});
 }
 
 /* =========================================================
