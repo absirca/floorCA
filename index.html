@@ -18,7 +18,6 @@ body{background:var(--bg);color:var(--txt);font:14px/1.5 system-ui,-apple-system
 .chip{display:inline-block;padding:3px 10px;border-radius:999px;background:#22304d;border:1px solid var(--line);font-size:12px}
 .chip.ok{background:rgba(46,204,143,.15);border-color:var(--ok);color:var(--ok)}
 .chip.warn{background:rgba(255,176,32,.15);border-color:var(--warn);color:var(--warn)}
-.chip.info{background:rgba(91,140,255,.15);border-color:var(--acc);color:var(--acc)}
 .chip.bad{background:rgba(255,92,108,.15);border-color:var(--bad);color:var(--bad)}
 .tabs{display:flex;gap:8px;flex-wrap:wrap;padding:12px 0}
 .tabs button{background:transparent;border:1px solid transparent;color:var(--muted)}
@@ -57,10 +56,8 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--acc)}
 .dot{width:10px;height:10px;border-radius:50%;background:#44506b;display:inline-block}
 .dot.ok{background:var(--ok)}
 .dot.bad{background:var(--bad)}
-.dot.pending{background:var(--acc)}
 .dot.syncing{background:var(--warn);animation:pulse 1s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
-.syncwrap{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);cursor:pointer}
 #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#22304d;border:1px solid var(--line);padding:10px 18px;border-radius:10px;opacity:0;pointer-events:none;transition:.25s;z-index:999;max-width:90vw;text-align:center}
 #toast.show{opacity:1}
 .stat{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px}
@@ -83,7 +80,7 @@ hr{border:none;border-top:1px solid var(--line);margin:14px 0}
 .entry-body{padding:12px;display:none}
 .entry-card.open .entry-body{display:block}
 .entry-row{display:flex;gap:8px;align-items:flex-start;margin-bottom:7px}
-.entry-label{flex:0 0 100px;font-size:11px;color:var(--muted);padding-top:7px;text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+.entry-label{flex:0 0 110px;font-size:11px;color:var(--muted);padding-top:7px;text-transform:uppercase;letter-spacing:.06em;font-weight:600}
 .btn-group{display:flex;flex-wrap:wrap;gap:4px;flex:1}
 .btn-opt{padding:6px 10px;border-radius:8px;border:1px solid var(--line);background:#131c2e;color:var(--muted);font-size:12px;white-space:nowrap;transition:.12s;user-select:none;cursor:default}
 .btn-opt[data-clickable="1"]{cursor:pointer}
@@ -105,6 +102,11 @@ hr{border:none;border-top:1px solid var(--line);margin:14px 0}
 }
 .big-edit{padding:12px 18px;font-size:14px;font-weight:600;border-radius:11px;background:var(--acc);border-color:var(--acc);color:#fff}
 .quickbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;background:#131c2e;border:1px solid var(--line);padding:10px 12px;border-radius:12px}
+.clean-block{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:#131c2e;margin-bottom:10px}
+.clean-block .row{display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap}
+.clean-block .entry-label{flex:0 0 110px}
+.duty-select{flex:1;min-width:180px;padding:7px 9px;font-size:13px}
+.duty-missing{border-color:var(--warn)!important;box-shadow:0 0 0 1px var(--warn)}
 </style>
 </head>
 <body>
@@ -113,16 +115,19 @@ hr{border:none;border-top:1px solid var(--line);margin:14px 0}
 
 <script>
 /* =========================================================
-   FLOOR MANAGEMENT SYSTEM — v8 (auto two-way sync)
+   FLOOR MANAGEMENT SYSTEM — v8
+   Features:
+     • Food note asks "what did they NOT eat?" when Not eaten
+     • Cleaning has explicit Duty person for washroom / room / floor
+     • Floor Captain fills floor cleaning (duty person required)
+     • Fixed login reset bug
    ========================================================= */
 const GAS_URL='https://script.google.com/macros/s/AKfycbxDrzuq8tLkwojEkE5eg7djiaHjW0lG27VxlPuANP3qjPPHE75ErywgfWpOFGqQ5gnr/exec';
 const LS='fms_v1';
 const LS_OPEN='fms_openCards';
-const LS_QUEUE='fms_dirty';
 const VERSION='v8';
-const PULL_MS=20000;
 const ROOMS=['301','302','303'];
-const CLASSES=['6','7','8','9','10','11','12'];
+const CLASSES=['9','10','11','12'];
 const PRAYERS=[['fajr','Fajr'],['dhuhr','Dhuhr'],['asr','Asr'],['maghrib','Maghrib'],['isha','Isha']];
 
 const STUDY_TIMES=[
@@ -139,6 +144,7 @@ const MEALS=[
   {k:'lunch',    l:'Lunch'},
   {k:'dinner',   l:'Dinner'}
 ];
+
 const SALAH_STATUS=[
   {v:'',l:'Not marked',short:'—',tone:'muted'},
   {v:'rakat1',l:'Attended from Rakat 1',short:'R1',tone:'ok'},
@@ -171,6 +177,13 @@ const FOOD_OPTS=[
   {v:'eaten',l:'Eaten',short:'🍽 Eaten',tone:'ok'},
   {v:'not_eaten',l:'Not eaten',short:'🚫 Not eaten',tone:'bad'}
 ];
+/* Cleaning status — Done / Not done */
+const CLEAN_STATUS=[
+  {v:'',l:'Not confirmed',short:'— Not confirmed',tone:'muted'},
+  {v:'done',l:'Done',short:'✓ Done',tone:'ok'},
+  {v:'not_done',l:'Not done',short:'✗ Not done',tone:'bad'}
+];
+
 const EQUIP=[['harpic','Harpic'],['handwash','Handwash'],['toothpaste','Toothpaste'],['odonil','Odonil']];
 const FLOOR_GOODS=[['harpic','Harpic'],['handwash','Handwash'],['toothpaste','Toothpaste'],['odonil','Odonil'],
   ['tissue','Tissue roll'],['phenyl','Phenyl'],['broom','Broom'],['soap','Hand soap']];
@@ -225,32 +238,67 @@ function defaultState(){
     const half=Math.ceil(counts[r]/2);
     for(let i=1;i<=counts[r];i++){
       const id=r+'-'+String(i).padStart(2,'0');
-      students.push({id,name:'Student '+id,class:i<=half?'9':'10'});
+      const cls = i<=half ? '9' : '10';
+      students.push({id,name:'Student '+id,class:cls});
     }
     rooms[r]={students,rotation:students.map(s=>s.id)};
   }
   return {rooms,days:{},users:defaultUsers(),
     settings:{sheetUrl:GAS_URL,autoSync:true,rotationStart:mondayOf(new Date())},
-    meta:{version:VERSION,lastSync:null,lastConfigSync:null,lastPull:null,cfgTs:0}};
+    meta:{version:VERSION,lastSync:null,lastConfigSync:null}};
+}
+function migrateCleaning(c){
+  if(!c) c={};
+  /* old flat format → nested */
+  if(typeof c.washroom !== 'object' || c.washroom===null || typeof c.washroom === 'boolean'){
+    c.washroom = { status: c.washroomCleaned ? 'done' : '', dutyBy: c.washroomBy || '' };
+  }
+  if(typeof c.room !== 'object' || c.room===null || typeof c.room === 'boolean'){
+    c.room = { status: c.roomCleaned ? 'done' : '', dutyBy: c.roomBy || '' };
+  }
+  if(!c.washroom) c.washroom = { status:'', dutyBy:'' };
+  if(!c.room)     c.room     = { status:'', dutyBy:'' };
+  if(typeof c.harpic!=='boolean') c.harpic=false;
+  if(typeof c.handwash!=='boolean') c.handwash=false;
+  if(typeof c.toothpaste!=='boolean') c.toothpaste=false;
+  if(typeof c.odonil!=='boolean') c.odonil=false;
+  /* remove legacy fields */
+  delete c.washroomCleaned; delete c.washroomBy;
+  delete c.roomCleaned; delete c.roomBy;
+  return c;
+}
+function migrateFloorCleaning(f){
+  if(!f) f={};
+  if(typeof f.floorCleaning !== 'object' || f.floorCleaning===null){
+    f.floorCleaning = { status:'', dutyBy:'' };
+  }
+  if(!f.floorCleaning) f.floorCleaning = { status:'', dutyBy:'' };
+  return f;
 }
 function migrateConfig(){
-  if(!S.meta)S.meta={};
-  S.meta.version=VERSION;
-  if(!S.meta.cfgTs)S.meta.cfgTs=0;
+  if(!S.meta) S.meta={};
+  if(S.meta.version !== VERSION) S.meta.version = VERSION;
   for(const r in S.rooms){
-    (S.rooms[r].students||[]).forEach(s=>{if(!s.class)s.class='9';});
-    if(!S.rooms[r].rotation)S.rooms[r].rotation=(S.rooms[r].students||[]).map(s=>s.id);
+    (S.rooms[r].students||[]).forEach(s=>{ if(!s.class) s.class='9'; });
+    if(!S.rooms[r].rotation) S.rooms[r].rotation=(S.rooms[r].students||[]).map(s=>s.id);
+  }
+  for(const dt in S.days){
+    const day=S.days[dt];
+    if(day&&day.rooms){
+      for(const r in day.rooms){ if(day.rooms[r].cleaning) migrateCleaning(day.rooms[r].cleaning); }
+    }
+    if(day&&day.floor) migrateFloorCleaning(day.floor);
   }
   const d=defaultUsers();
-  S.users=S.users||d;
-  S.users.admin=Object.assign({},d.admin,S.users.admin||{});
-  S.users.fc=Object.assign({},d.fc,S.users.fc||{});
-  S.users.fcom=Object.assign({},d.fcom,S.users.fcom||{});
-  S.users.rc=Object.assign({},d.rc,S.users.rc||{});
-  S.settings=S.settings||{};
-  S.settings.sheetUrl=GAS_URL;
-  S.settings.autoSync=S.settings.autoSync!==false;
-  S.settings.rotationStart=S.settings.rotationStart||mondayOf(new Date());
+  S.users = S.users || d;
+  S.users.admin = Object.assign({}, d.admin, S.users.admin||{});
+  S.users.fc    = Object.assign({}, d.fc,    S.users.fc||{});
+  S.users.fcom  = Object.assign({}, d.fcom,  S.users.fcom||{});
+  S.users.rc    = Object.assign({}, d.rc,    S.users.rc||{});
+  S.settings = S.settings || {};
+  S.settings.sheetUrl = GAS_URL;
+  S.settings.autoSync = S.settings.autoSync!==false;
+  S.settings.rotationStart = S.settings.rotationStart || mondayOf(new Date());
 }
 function load(){
   try{const raw=localStorage.getItem(LS);
@@ -272,30 +320,30 @@ function rotationCaptain(room,date){
   const start=S.settings.rotationStart||mondayOf(new Date());
   const wk=Math.floor(diffDays(start,date)/7);
   const n=st.rotation.length;
-  return st.rotation[((wk%n)+n)%n];
+  const idx=((wk%n)+n)%n;
+  return st.rotation[idx];
 }
 function newRoomDay(date,room){
   const prev=lastRoomDayBefore(date,room);
-  const cleaning={washroomCleaned:false,washroomBy:'',roomCleaned:false,roomBy:'',harpic:false,handwash:false,toothpaste:false,odonil:false};
+  const cleaning={
+    washroom:{ status:'', dutyBy:'' },
+    room:    { status:'', dutyBy:'' },
+    harpic:false,handwash:false,toothpaste:false,odonil:false
+  };
+  /* consumables carry over; duty persons carry over too (same duty roster often) */
   if(prev&&prev.cleaning){
-    for(const k of ['harpic','handwash','toothpaste','odonil'])cleaning[k]=!!prev.cleaning[k];
-    cleaning.washroomBy=prev.cleaning.washroomBy||'';
-    cleaning.roomBy=prev.cleaning.roomBy||'';
+    for(const k of ['harpic','handwash','toothpaste','odonil']) cleaning[k]=!!prev.cleaning[k];
+    const pc=migrateCleaning(prev.cleaning);
+    cleaning.washroom.dutyBy = pc.washroom.dutyBy || '';
+    cleaning.room.dutyBy     = pc.room.dutyBy || '';
   }
   return {
     captainId:rotationCaptain(room,date),acting:false,
-    salah:{},study:{},food:{},foodNote:{},
-    activity:{},notes:{},marks:{},cleaning,
+    salah:{}, study:{}, food:{}, foodNote:{},
+    activity:{}, notes:{}, marks:{}, cleaning,
     status:{rcSubmitted:false,rcAt:null,fcConfirmed:false,fcAt:null,fcNote:'',fcomVerified:false,fcomAt:null,fcomNote:''},
-    audit:[],_ts:0
+    audit:[]
   };
-}
-function newFloorDay(date){
-  const prevDates=Object.keys(S.days).filter(d=>d<date&&S.days[d]&&S.days[d].floor).sort();
-  const prev=prevDates.length?S.days[prevDates[prevDates.length-1]].floor:null;
-  const goods={};
-  FLOOR_GOODS.forEach(([k])=>goods[k]=prev&&prev.goods?!!prev.goods[k]:false);
-  return {goods,goodsBy:'',goodsNote:'',fcConfirmed:false,fcAt:null,fcBy:'',fcomVerified:false,fcomAt:null,fcomNote:'',adminNote:'',_ts:0};
 }
 function getDay(date){
   if(!S.days[date])S.days[date]={rooms:{},floor:null};
@@ -304,26 +352,46 @@ function getDay(date){
   if(!d.floor)d.floor=newFloorDay(date);
   return d;
 }
+function newFloorDay(date){
+  const prevDates=Object.keys(S.days).filter(d=>d<date&&S.days[d]&&S.days[d].floor).sort();
+  const prev=prevDates.length?S.days[prevDates[prevDates.length-1]].floor:null;
+  const goods={};
+  FLOOR_GOODS.forEach(([k])=>goods[k]=prev&&prev.goods?!!prev.goods[k]:false);
+  const floorCleaning={ status:'', dutyBy:'' };
+  if(prev&&prev.floorCleaning){ floorCleaning.dutyBy=prev.floorCleaning.dutyBy||''; }
+  return {goods,goodsBy:'',goodsNote:'',
+          floorCleaning,
+          fcConfirmed:false,fcAt:null,fcBy:'',
+          fcomVerified:false,fcomAt:null,fcomNote:'',adminNote:''};
+}
 function getRoomDay(date,room){
   const day=getDay(date);
   if(!day.rooms[room])day.rooms[room]=newRoomDay(date,room);
   const rd=day.rooms[room];
-  if(!rd.study)rd.study={};
-  if(!rd.food)rd.food={};
-  if(!rd.foodNote)rd.foodNote={};
-  if(!rd.salah)rd.salah={};
-  if(!rd.activity)rd.activity={};
-  if(!rd.notes)rd.notes={};
-  if(!rd.marks)rd.marks={};
-  if(!rd.audit)rd.audit=[];
+  if(!rd.study) rd.study={};
+  if(!rd.food) rd.food={};
+  if(!rd.foodNote) rd.foodNote={};
+  migrateCleaning(rd.cleaning);
+  /* food migrations */
   for(const sid in rd.food){
-    if(typeof rd.food[sid]==='string'){const o=rd.food[sid];rd.food[sid]={breakfast:o||'eaten',lunch:o||'eaten',dinner:o||'eaten'};}
+    if(typeof rd.food[sid]==='string'){
+      const old=rd.food[sid];
+      rd.food[sid]={breakfast:old||'eaten',lunch:old||'eaten',dinner:old||'eaten'};
+    }
   }
   for(const sid in rd.foodNote){
-    if(typeof rd.foodNote[sid]==='string'){rd.foodNote[sid]={breakfast:rd.foodNote[sid],lunch:'',dinner:''};}
+    if(typeof rd.foodNote[sid]==='string'){
+      const old=rd.foodNote[sid];
+      rd.foodNote[sid]={breakfast:old,lunch:'',dinner:''};
+    }
   }
+  /* study migration v4 single-string → object */
   for(const sid in rd.study){
-    if(typeof rd.study[sid]==='string'){const o=rd.study[sid];rd.study[sid]={};if(o)rd.study[sid].quran=o;}
+    if(typeof rd.study[sid]==='string'){
+      const old=rd.study[sid];
+      rd.study[sid]={};
+      if(old) rd.study[sid].quran=old;
+    }
   }
   return rd;
 }
@@ -352,17 +420,19 @@ function canEditRoom(room){
   const age=ageOf(currentDate);
   if(age<0)return false;
   if(session.role==='admin')return true;
-  if(session.role==='rc')return session.room===room&&age<=1;
-  if(session.role==='fcom')return age<=2;
+  if(session.role==='rc')   return session.room===room && age<=1;
+  if(session.role==='fcom') return age<=2;
   return false;
 }
 function canEditMarks(room){
   if(session.role==='admin')return true;
-  if(session.role==='rc')return session.room===room&&ageOf(currentDate)<=1;
-  if(session.role==='fcom')return ageOf(currentDate)<=2;
+  if(session.role==='rc')   return session.room===room && ageOf(currentDate)<=1;
+  if(session.role==='fcom') return ageOf(currentDate)<=2;
   return false;
 }
+function canEditFloorGoods(){return session.role==='fc'||session.role==='admin';}
 function canAddBonus(){return session.role==='admin';}
+
 function audit(room,msg){
   const rd=getRoomDay(currentDate,room);
   rd.audit.push({t:nowStamp(),by:session?session.role:'system',msg});
@@ -370,243 +440,102 @@ function audit(room,msg){
 }
 
 /* =========================================================
-   SYNC — auto push (debounced, queued, offline-safe)
-         + auto pull (interval, focus, reconnect) with
-           per-room timestamp merge
+   SYNC
    ========================================================= */
-/* dirty set: dates whose local data hasn't been pushed yet (persisted) */
-let dirty=new Set();
-try{dirty=new Set(JSON.parse(localStorage.getItem(LS_QUEUE)||'[]'));}catch(e){}
-function saveDirty(){try{localStorage.setItem(LS_QUEUE,JSON.stringify([...dirty]));}catch(e){}}
-
-let _pushTimer=null,_pushBusy=false,_cfgTimer=null,_cfgBusy=false,_cfgDirty=false,_pullBusy=false,_pullTimer=null;
-let syncState='';
-function setSync(st){
-  syncState=st;
-  const d=document.getElementById('syncDot');
-  if(d)d.className='dot '+st;
-  const l=document.getElementById('syncLbl');
-  if(l)l.textContent=({ok:'Synced',syncing:'Syncing…',pending:'Unsaved',bad:'Offline',' ':''}[st]||'');
-}
-function syncLabel(){return ({ok:'Synced',syncing:'Syncing…',pending:'Unsaved',bad:'Offline'}[syncState]||'');}
-function stampDay(date,room){
-  const day=S.days[date];if(!day)return;
-  const t=Date.now();
-  if(room&&day.rooms&&day.rooms[room])day.rooms[room]._ts=t;
-  if(!room&&day.floor)day.floor._ts=t;
-}
-function markDirty(date){dirty.add(date);saveDirty();}
-
+let _syncTimer=null,_syncInFlight=false,_syncAgain=false;
+let _configTimer=null,_configInFlight=false,_configAgain=false;
+function setSyncDot(state){const d=document.getElementById('syncDot');if(!d)return;d.className='dot '+(state||'');}
+function cancelSyncTimers(){clearTimeout(_syncTimer);clearTimeout(_configTimer);}
 function scheduleAutoSync(){
   if(!S.settings.autoSync)return;
-  markDirty(currentDate);
-  clearTimeout(_pushTimer);setSync('pending');
-  _pushTimer=setTimeout(pushDirty,900);
+  clearTimeout(_syncTimer);setSyncDot('syncing');
+  _syncTimer=setTimeout(pushDay,1000);
 }
-function dayPayload(date){
-  const day=S.days[date];if(!day)return null;
-  const rooms={};
-  ROOMS.forEach(r=>{if(day.rooms&&day.rooms[r])rooms[r]=day.rooms[r];});
-  if(!Object.keys(rooms).length&&!day.floor)return null;
-  return {rooms,floor:day.floor||null};
-}
-function post(payload){
-  return fetch(GAS_URL,{method:'POST',mode:'no-cors',keepalive:true,headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)});
-}
-async function pushDirty(){
-  if(_pushBusy)return;
-  if(!navigator.onLine){setSync('bad');return;}
-  const dates=[...dirty].sort();
-  if(!dates.length){setSync('ok');return;}
-  _pushBusy=true;setSync('syncing');
-  const by=session?session.role+(session.room?' '+session.room:''):'anon';
-  try{
-    for(const date of dates){
-      const p=dayPayload(date);
-      if(!p){dirty.delete(date);continue;}
-      await post({action:'saveDay',date,by,rooms:p.rooms,floor:p.floor});
-      dirty.delete(date);
-    }
-    saveDirty();
-    S.meta.lastSync=nowStamp();saveLocal();
-    _pushBusy=false;
-    /* edits made during the push? go again */
-    if(dirty.size){pushDirty();return;}
-    setSync('ok');
-  }catch(err){
-    _pushBusy=false;saveDirty();setSync('bad');
-    clearTimeout(_pushTimer);_pushTimer=setTimeout(pushDirty,8000);
-  }
-}
-/* last-gasp flush when tab is hidden / closed */
-function flushBeacon(){
-  if(!S||!S.settings.autoSync)return;
-  const by=session?session.role:'anon';
-  for(const date of dirty){
-    const p=dayPayload(date);if(!p)continue;
-    const body=JSON.stringify({action:'saveDay',date,by,rooms:p.rooms,floor:p.floor});
-    try{
-      if(!(navigator.sendBeacon&&navigator.sendBeacon(GAS_URL,new Blob([body],{type:'text/plain;charset=utf-8'}))))
-        fetch(GAS_URL,{method:'POST',mode:'no-cors',keepalive:true,headers:{'Content-Type':'text/plain;charset=utf-8'},body});
-    }catch(e){}
-  }
-  if(_cfgDirty){
-    try{
-      const body=JSON.stringify({action:'saveConfig',by:session?session.role:'anon',config:{rooms:S.rooms,users:S.users,settings:{rotationStart:S.settings.rotationStart}}});
-      navigator.sendBeacon&&navigator.sendBeacon(GAS_URL,new Blob([body],{type:'text/plain;charset=utf-8'}));
-    }catch(e){}
-  }
+function pushDay(){
+  if(_syncInFlight){_syncAgain=true;return;}
+  const day=S.days[currentDate];if(!day)return;
+  const payload={action:'saveDay',date:currentDate,
+    by:session?session.role+(session.room?' '+session.room:''):'anon',
+    rooms:{},floor:day.floor||null};
+  ROOMS.forEach(r=>{if(day.rooms&&day.rooms[r])payload.rooms[r]=day.rooms[r];});
+  if(!Object.keys(payload.rooms).length&&!payload.floor)return;
+  _syncInFlight=true;setSyncDot('syncing');
+  fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)})
+    .then(()=>{_syncInFlight=false;setSyncDot('ok');S.meta.lastSync=nowStamp();saveLocal();if(_syncAgain){_syncAgain=false;pushDay();}})
+    .catch(err=>{_syncInFlight=false;setSyncDot('bad');console.warn('Sync failed',err);});
 }
 function pushRange(from,to){
   const dates=[];let d=from,g=0;
   while(d<=to&&g++<400){dates.push(d);d=addDays(d,1);}
   if(!dates.length)return;
-  setSync('syncing');
-  const multi={};
-  dates.forEach(dt=>{const day=S.days[dt];if(!day)return;multi[dt]={rooms:day.rooms||{},floor:day.floor||null};});
-  post({action:'saveDay',date:dates[dates.length-1],rangeStart:dates[0],rangeEnd:dates[dates.length-1],
-    by:session?session.role:'anon',rooms:{},floor:null,multi})
-    .then(()=>{setSync('ok');S.meta.lastSync=nowStamp();saveLocal();toast('Range pushed','ok');})
-    .catch(()=>{setSync('bad');toast('Range push failed','bad');});
+  setSyncDot('syncing');
+  const payload={action:'saveDay',date:dates[dates.length-1],rangeStart:dates[0],rangeEnd:dates[dates.length-1],
+    by:session?session.role:'anon',rooms:{},floor:null,multi:{}};
+  dates.forEach(dt=>{const day=S.days[dt];if(!day)return;payload.multi[dt]={rooms:day.rooms||{},floor:day.floor||null};});
+  fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)})
+    .then(()=>{setSyncDot('ok');S.meta.lastSync=nowStamp();saveLocal();toast('Range pushed','ok');})
+    .catch(()=>{setSyncDot('bad');toast('Range push failed','bad');});
 }
-
-/* ----- config (roster / passcodes / rotation) ----- */
-function saveConfig(){
-  S.meta.cfgTs=Date.now();
-  saveLocal();
+function scheduleConfigSync(){
   if(!S.settings.autoSync)return;
-  _cfgDirty=true;
-  clearTimeout(_cfgTimer);setSync('pending');
-  _cfgTimer=setTimeout(pushConfig,800);
+  clearTimeout(_configTimer);setSyncDot('syncing');
+  _configTimer=setTimeout(pushConfig,800);
 }
-async function pushConfig(){
-  if(_cfgBusy)return;
-  if(!navigator.onLine){setSync('bad');return;}
-  _cfgBusy=true;_cfgDirty=false;setSync('syncing');
-  try{
-    await post({action:'saveConfig',by:session?session.role:'anon',
-      config:{rooms:S.rooms,users:S.users,settings:{rotationStart:S.settings.rotationStart},ts:S.meta.cfgTs}});
-    S.meta.lastConfigSync=nowStamp();saveLocal();
-    _cfgBusy=false;
-    if(_cfgDirty){pushConfig();return;}
-    if(!dirty.size)setSync('ok');
-  }catch(e){
-    _cfgBusy=false;_cfgDirty=true;setSync('bad');
-    clearTimeout(_cfgTimer);_cfgTimer=setTimeout(pushConfig,8000);
-  }
+function pushConfig(){
+  if(_configInFlight){_configAgain=true;return;}
+  const payload={action:'saveConfig',by:session?session.role:'anon',
+    config:{rooms:S.rooms,users:S.users,settings:{rotationStart:S.settings.rotationStart}}};
+  _configInFlight=true;setSyncDot('syncing');
+  fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)})
+    .then(()=>{_configInFlight=false;setSyncDot('ok');S.meta.lastConfigSync=nowStamp();saveLocal();if(_configAgain){_configAgain=false;pushConfig();}})
+    .catch(err=>{_configInFlight=false;setSyncDot('bad');console.warn('Config sync failed',err);});
 }
-function save(){
-  stampDay(currentDate,null);
-  /* stamp every room of the current day that this session may edit */
-  const day=S.days[currentDate];
-  if(day&&day.rooms){
-    const rs=session&&session.role==='rc'?[session.room]:ROOMS;
-    rs.forEach(r=>{if(day.rooms[r])day.rooms[r]._ts=Date.now();});
-  }
-  saveLocal();scheduleAutoSync();
-}
-function cancelSyncTimers(){clearTimeout(_pushTimer);clearTimeout(_cfgTimer);}
-
-/* ----- pull & merge ----- */
-function mergeDay(date,srv){
-  if(!S.days[date])S.days[date]={rooms:{},floor:null};
-  const loc=S.days[date];
-  if(!loc.rooms)loc.rooms={};
-  let changed=false;
-  if(srv.rooms){
-    for(const r in srv.rooms){
-      const s=srv.rooms[r],l=loc.rooms[r];
-      /* local pending edits always win; otherwise newest _ts wins */
-      if(dirty.has(date)&&l)continue;
-      if(!l||(s._ts||0)>(l._ts||0)||(!l._ts&&!s._ts)){
-        if(!l||JSON.stringify(l)!==JSON.stringify(s)){loc.rooms[r]=s;changed=true;}
-      }
-    }
-  }
-  if(srv.floor){
-    const l=loc.floor;
-    if(!(dirty.has(date)&&l)){
-      if(!l||(srv.floor._ts||0)>(l._ts||0)||(!l._ts&&!srv.floor._ts)){
-        if(!l||JSON.stringify(l)!==JSON.stringify(srv.floor)){loc.floor=srv.floor;changed=true;}
-      }
-    }
-  }
-  return changed;
-}
-function userIsTyping(){
-  const a=document.activeElement;
-  return a&&(a.tagName==='INPUT'||a.tagName==='TEXTAREA'||a.tagName==='SELECT')&&a.id!=='lgPin';
-}
-async function pullNow(opts){
-  opts=opts||{};
-  if(_pullBusy||!GAS_URL||!navigator.onLine)return;
-  _pullBusy=true;
-  if(!opts.silent&&!dirty.size)setSync('syncing');
-  try{
-    const res=await fetch(GAS_URL+'?action=load&days='+(opts.days||30)+'&_='+Date.now());
-    const data=await res.json();
-    if(data&&data.ok){
-      let changed=false;
-      /* config: adopt server copy unless we have unsent local config edits */
-      if(data.config&&!_cfgDirty&&!_cfgBusy){
-        const srvTs=Number(data.config.ts)||0;
-        if(srvTs>=(S.meta.cfgTs||0)){
-          const before=JSON.stringify([S.rooms,S.users,S.settings.rotationStart]);
-          if(data.config.rooms&&typeof data.config.rooms==='object'){
-            for(const r in data.config.rooms){
-              S.rooms[r]=data.config.rooms[r];
-              if(!S.rooms[r].rotation)S.rooms[r].rotation=(S.rooms[r].students||[]).map(s=>s.id);
-            }
-          }
-          if(data.config.users&&typeof data.config.users==='object'){
-            const d=defaultUsers();
-            S.users=Object.assign({},d,data.config.users);
-            S.users.admin=Object.assign({},d.admin,data.config.users.admin||{});
-            S.users.fc=Object.assign({},d.fc,data.config.users.fc||{});
-            S.users.fcom=Object.assign({},d.fcom,data.config.users.fcom||{});
-            S.users.rc=Object.assign({},d.rc,data.config.users.rc||{});
-          }
-          if(data.config.settings&&data.config.settings.rotationStart)S.settings.rotationStart=data.config.settings.rotationStart;
-          if(srvTs)S.meta.cfgTs=srvTs;
-          migrateConfig();
-          if(before!==JSON.stringify([S.rooms,S.users,S.settings.rotationStart]))changed=true;
-        }
-      }
-      if(data.days){
-        for(const date in data.days){if(mergeDay(date,data.days[date]))changed=true;}
-      }
-      S.meta.lastPull=nowStamp();
-      saveLocal();
-      if(!dirty.size&&!_pushBusy)setSync('ok');
-      /* re-render only if data changed and the user isn't mid-edit */
-      if(changed&&session&&!userIsTyping())render();
-      else if(!session)render();
-    }else if(!dirty.size)setSync('');
-  }catch(err){
-    console.warn('Pull failed',err);
-    if(!dirty.size)setSync('bad');
-  }
-  _pullBusy=false;
-}
-function startPolling(){
-  clearInterval(_pullTimer);
-  _pullTimer=setInterval(()=>{if(!document.hidden&&S.settings.autoSync){if(dirty.size)pushDirty();pullNow({silent:true});}},PULL_MS);
-}
-window.addEventListener('online',()=>{setSync('pending');pushDirty();if(_cfgDirty)pushConfig();pullNow({silent:true});});
-window.addEventListener('offline',()=>setSync('bad'));
-document.addEventListener('visibilitychange',()=>{
-  if(document.hidden){flushBeacon();}
-  else{pushDirty();pullNow({silent:true});}
-});
-window.addEventListener('pagehide',flushBeacon);
-window.addEventListener('focus',()=>{if(S&&S.settings.autoSync)pullNow({silent:true});});
+function saveConfig(){saveLocal();scheduleConfigSync();}
+function save(){saveLocal();scheduleAutoSync();}
 
 async function initialLoad(){
-  render();
-  await pullNow();
-  if(dirty.size)pushDirty();
-  startPolling();
-  render();
+  if(!GAS_URL){render();return;}
+  setSyncDot('syncing');
+  try{
+    const res=await fetch(GAS_URL+'?action=load&days=30');
+    const data=await res.json();
+    if(data&&data.ok){
+      if(data.config){
+        if(data.config.rooms && typeof data.config.rooms==='object'){
+          for(const r in data.config.rooms){
+            S.rooms[r]=data.config.rooms[r];
+            if(!S.rooms[r].rotation) S.rooms[r].rotation=(S.rooms[r].students||[]).map(s=>s.id);
+          }
+        }
+        if(data.config.users && typeof data.config.users==='object'){
+          const d=defaultUsers();
+          S.users=Object.assign({},d,data.config.users);
+          S.users.admin=Object.assign({},d.admin,data.config.users.admin||{});
+          S.users.fc   =Object.assign({},d.fc,   data.config.users.fc||{});
+          S.users.fcom =Object.assign({},d.fcom, data.config.users.fcom||{});
+          S.users.rc   =Object.assign({},d.rc,   data.config.users.rc||{});
+        }
+        if(data.config.settings && data.config.settings.rotationStart){
+          S.settings.rotationStart=data.config.settings.rotationStart;
+        }
+      }
+      migrateConfig();
+      if(data.days){
+        for(const date in data.days){
+          const srv=data.days[date];
+          if(!S.days[date])S.days[date]={rooms:{},floor:null};
+          const loc=S.days[date];
+          if(!loc.rooms)loc.rooms={};
+          if(srv.rooms)Object.assign(loc.rooms,srv.rooms);
+          if(srv.floor)loc.floor=srv.floor;
+        }
+      }
+      saveLocal();setSyncDot('ok');
+    } else {setSyncDot('');}
+  }catch(err){console.warn('Initial load failed',err);setSyncDot('bad');}
+  /* IMPORTANT: only re-render if user is already logged in.
+     Re-rendering the login screen resets the form while typing. */
+  if(session) render();
 }
 
 /* =========================================================
@@ -616,26 +545,25 @@ function render(){
   const app=$('#app');
   if(!session){app.innerHTML=loginHTML();return;}
   app.innerHTML=headerHTML()+navHTML()+`<div class="wrap" style="padding-bottom:40px">${viewHTML()}</div>`;
-  setSync(syncState);
 }
 function setView(v){view=v;render();}
-function setDate(d){if(!d)return;currentDate=d;render();pullNow({silent:true,days:30});}
+function setDate(d){currentDate=d;render();}
 function goToday(){currentDate=todayStr();render();}
 function setActiveRoom(r){activeRoom=r;render();}
-function logout(){if(dirty.size)pushDirty();session=null;render();}
+function logout(){session=null;render();}
 
 function loginHTML(){
+  let last='rc';
+  try{last=localStorage.getItem('fms_lastRole')||'rc';}catch(e){}
+  const roleName={rc:'Room Captain',fc:'Floor Captain',fcom:'Floor Commander',admin:'Floor Incharge (Admin)'};
   return `<div class="loginwrap"><div class="card login">
     <h1 style="margin:0 0 4px;font-size:20px">🏠 Floor Management</h1>
     <div class="muted small" style="margin-bottom:16px">Rooms 301 · 302 · 303</div>
     <label>Sign in as</label>
     <select id="lgRole" onchange="lgRoleChange()">
-      <option value="rc">Room Captain</option>
-      <option value="fc">Floor Captain</option>
-      <option value="fcom">Floor Commander</option>
-      <option value="admin">Floor Incharge (Admin)</option>
+      ${['rc','fc','fcom','admin'].map(r=>`<option value="${r}" ${r===last?'selected':''}>${roleName[r]}</option>`).join('')}
     </select>
-    <div id="lgRoomWrap">
+    <div id="lgRoomWrap" style="display:${last==='rc'?'':'none'}">
       <label>Room</label>
       <select id="lgRoom"><option>301</option><option>302</option><option>303</option></select>
     </div>
@@ -646,36 +574,38 @@ function loginHTML(){
     <div class="muted small" style="margin-top:14px">Default passcode: <b class="mono">1122</b></div>
   </div></div>`;
 }
-function lgRoleChange(){$('#lgRoomWrap').style.display=$('#lgRole').value==='rc'?'':'none';}
+function lgRoleChange(){
+  const v=$('#lgRole').value;
+  $('#lgRoomWrap').style.display = v==='rc' ? '' : 'none';
+  try{localStorage.setItem('fms_lastRole', v);}catch(e){}
+}
 function doLogin(){
   const role=$('#lgRole').value;
   const pin=$('#lgPin').value.trim();
   let ok=false,room=null;
   if(role==='rc'){room=$('#lgRoom').value;ok=(pin===S.users.rc[room]);}
-  else if(role==='fc')ok=(pin===S.users.fc.pin);
+  else if(role==='fc')  ok=(pin===S.users.fc.pin);
   else if(role==='fcom')ok=(pin===S.users.fcom.pin);
-  else ok=(pin===S.users.admin.pin);
+  else                  ok=(pin===S.users.admin.pin);
   if(!ok){$('#lgErr').textContent='Incorrect passcode.';return;}
   session={role,room};
-  view=role==='rc'?'entry':'overview';
+  view = role==='rc' ? 'entry' : 'overview';
   if(role==='rc')activeRoom=room;
   render();
-  pullNow({silent:true});
 }
 function headerHTML(){
   const roleName={rc:'Room Captain · '+session.room,fc:'Floor Captain',fcom:'Floor Commander',admin:'Floor Incharge'}[session.role];
-  const cls=session.role==='admin'?'bad':session.role==='fcom'?'warn':session.role==='fc'?'ok':'';
+  const cls = session.role==='admin'?'bad':session.role==='fcom'?'warn':session.role==='fc'?'ok':'';
   return `<div class="topbar"><div class="wrap">
     <div class="brand">🏠 Floor Management <span class="muted small">· 301–303</span></div>
     <div class="spacer"></div>
     <span class="chip ${cls}">${roleName}</span>
     <input type="date" value="${currentDate}" onchange="setDate(this.value)">
     <button class="ghost" onclick="goToday()">Today</button>
-    <span class="syncwrap" title="Tap to sync now" onclick="syncNow()"><span class="dot" id="syncDot"></span><span id="syncLbl"></span></span>
+    <span class="dot" id="syncDot" title="Auto-sync status"></span>
     <button class="ghost" onclick="logout()">Logout</button>
   </div></div>`;
 }
-function syncNow(){pushDirty();if(_cfgDirty)pushConfig();pullNow();toast('Syncing…');}
 function navHTML(){
   const tabs=TABS[session.role]||[];
   return `<div class="wrap"><div class="tabs">${tabs.map(([k,l])=>`<button class="${view===k?'active':''}" onclick="setView('${k}')">${l}</button>`).join('')}</div></div>`;
@@ -701,7 +631,7 @@ function statusChip(rd){
 }
 function classPill(cls){
   if(!cls)return '';
-  const n=Number(cls);const c=n<=8?'info':n<=10?'ok':'warn';
+  const c=cls==='9'?'ok':cls==='10'?'warn':'';
   return `<span class="chip ${c}" style="font-size:10px">Class ${esc(cls)}</span>`;
 }
 
@@ -719,7 +649,10 @@ function overviewView(){
     const marked=st.students.filter(s=>{const sl=rd.salah[s.id]||{};return PRAYERS.every(p=>sl[p[0]]);}).length;
     const studyMarked=st.students.filter(s=>rd.study[s.id]&&Object.keys(rd.study[s.id]).length).length;
     const foodMarked=st.students.filter(s=>rd.food[s.id]&&Object.keys(rd.food[s.id]).length).length;
-    const equipCount=EQUIP.filter(([k])=>rd.cleaning[k]).length;
+    const clean=rd.cleaning;
+    const wash=clean.washroom&&clean.washroom.status==='done';
+    const rm=clean.room&&clean.room.status==='done';
+    const equipCount=EQUIP.filter(([k])=>clean[k]).length;
     h+=`<div class="card">
       <div class="row"><h3 style="margin:0">Room ${room}</h3><div class="spacer"></div>${statusChip(rd)}</div>
       <div class="muted small" style="margin-top:6px">Captain: <b>${cap?esc(cap.name):'—'}</b> ${cap?classPill(cap.class):''} ${rd.acting?'<span class="chip warn">Acting</span>':''}</div>
@@ -728,6 +661,8 @@ function overviewView(){
         <div><b>${marked}/${total}</b>salah</div>
         <div><b>${studyMarked}/${total}</b>study</div>
         <div><b>${foodMarked}/${total}</b>food</div>
+        <div><b>${wash?'✔':'—'}</b>washroom</div>
+        <div><b>${rm?'✔':'—'}</b>room</div>
         <div><b>${equipCount}/4</b>equip</div>
       </div>
       <div class="row" style="margin-top:14px">
@@ -737,11 +672,13 @@ function overviewView(){
   }
   h+=`</div>`;
   const allSub=ROOMS.every(r=>{const rd=rdSafe(currentDate,r);return rd&&rd.status.rcSubmitted;});
+  const floorClean=fd.floorCleaning||{status:''};
   h+=`<div class="card"><h3>Floor sign-off</h3>
     <div class="row">
       <span class="chip ${allSub?'ok':'bad'}">${allSub?'All rooms submitted':'Rooms pending'}</span>
       <span class="chip ${fd.fcConfirmed?'ok':''}">FC confirmed ${fd.fcConfirmed?'· '+esc(fd.fcAt||''):'—'}</span>
       <span class="chip ${fd.fcomVerified?'ok':''}">FCom verified ${fd.fcomVerified?'· '+esc(fd.fcomAt||''):'—'}</span>
+      <span class="chip ${floorClean.status==='done'?'ok':floorClean.status==='not_done'?'bad':''}">Floor cleaning: ${floorClean.status==='done'?'✔ Done':floorClean.status==='not_done'?'✗ Not done':'—'}</span>
     </div>
   </div>`;
   return h;
@@ -785,39 +722,16 @@ function roomEntryHTML(room){
   </div>`;
 
   if(!canEdit){
-    if(session.role==='fc')h+=`<div class="warnnote">Read-only for the Floor Captain. You may record a differing opinion below.</div>`;
-    else if(session.role==='fcom')h+=`<div class="warnnote">Read-only — Floor Commander may edit only within 2 days of the date.</div>`;
+    if(session.role==='fc') h+=`<div class="warnnote">Read-only for the Floor Captain. You may record a differing opinion below.</div>`;
+    else if(session.role==='fcom') h+=`<div class="warnnote">Read-only — Floor Commander may edit only within 2 days of the date.</div>`;
     else h+=`<div class="warnnote">Read-only — editing window closed for this date.</div>`;
   }
 
-  st.students.forEach((s,i)=>{h+=studentCardHTML(room,s,i,canEdit);});
+  /* student cards */
+  st.students.forEach((s,i)=>{ h+=studentCardHTML(room,s,i,canEdit); });
 
-  const c=rd.cleaning;
-  const byOpts=[{v:'',l:'— nobody —'}].concat(st.students.map(s=>({v:s.id,l:s.name})));
-  h+=`<div class="grid2">
-    <div class="card"><h3>Washroom &amp; Room cleaning</h3>
-      <label class="chk"><input type="checkbox" ${c.washroomCleaned?'checked':''} ${canEdit?'':'disabled'} onchange="setClean('${room}','washroomCleaned',this.checked)"> Washroom cleaned</label>
-      <div class="row small muted">Cleaned by:
-        <select ${canEdit?'':'disabled'} onchange="setClean('${room}','washroomBy',this.value)" style="width:auto">
-          ${byOpts.map(o=>`<option value="${o.v}" ${o.v===c.washroomBy?'selected':''}>${esc(o.l)}</option>`).join('')}
-        </select>
-      </div>
-      <hr>
-      <label class="chk"><input type="checkbox" ${c.roomCleaned?'checked':''} ${canEdit?'':'disabled'} onchange="setClean('${room}','roomCleaned',this.checked)"> Room cleaned</label>
-      <div class="row small muted">Cleaned by:
-        <select ${canEdit?'':'disabled'} onchange="setClean('${room}','roomBy',this.value)" style="width:auto">
-          ${byOpts.map(o=>`<option value="${o.v}" ${o.v===c.roomBy?'selected':''}>${esc(o.l)}</option>`).join('')}
-        </select>
-      </div>
-    </div>
-    <div class="card"><h3>Washroom equipment</h3>
-      <div class="btn-group">${EQUIP.map(([k,l])=>{
-        const on=c[k];
-        return `<div class="btn-opt ${on?'active':''}" data-clickable="${canEdit?'1':''}" data-tone="${on?'ok':''}" onclick="${canEdit?`toggleEquip('${room}','${k}')`:''}">${l}</div>`;
-      }).join('')}</div>
-      <div class="muted small" style="margin-top:10px">Tap to toggle. Defaults carry over from yesterday.</div>
-    </div>
-  </div>`;
+  /* cleaning — always visible to RC / admin / fcom */
+  h+=cleaningSectionHTML(room,canEdit);
 
   h+=marksCard(room);
 
@@ -848,6 +762,71 @@ function roomEntryHTML(room){
   return h;
 }
 
+/* ---------- cleaning section (per room) ---------- */
+function cleaningSectionHTML(room,canEdit){
+  const rd=getRoomDay(currentDate,room);
+  const st=S.rooms[room];
+  const c=rd.cleaning;
+  const students=st.students;
+  const dutyOpts=[{v:'',l:'— select duty person —',short:'— select —'}].concat(
+    students.map(s=>({v:s.id,l:s.name+' ('+s.id+')',short:s.name}))
+  );
+  function dutySelect(which,val){
+    return `<select class="duty-select ${!val?'duty-missing':''}" ${canEdit?'':'disabled'} onchange="setCleanDuty('${room}','${which}',this.value)">
+      ${dutyOpts.map(o=>`<option value="${o.v}" ${o.v===val?'selected':''}>${esc(o.l)}</option>`).join('')}
+    </select>`;
+  }
+  let h=`<div class="card">
+    <h3>🧹 Cleaning &amp; Duty</h3>
+    <div class="muted small" style="margin-bottom:10px">
+      Record <b>who was on duty</b> for each task, then mark whether it was done. Duty is required even when the task was completed.
+    </div>
+
+    <div class="clean-block">
+      <div class="row" style="justify-content:space-between;margin-bottom:6px">
+        <b>Washroom cleaning</b>
+        ${!c.washroom.dutyBy && c.washroom.status ? `<span class="chip warn">Duty person missing</span>` : ''}
+      </div>
+      <div class="row">
+        <div class="entry-label">Status</div>
+        <div class="btn-group">${bg(CLEAN_STATUS, c.washroom.status||'', !canEdit, `setCleanStatus('${room}','washroom'`)}</div>
+      </div>
+      <div class="row" style="margin-top:6px">
+        <div class="entry-label">Duty person</div>
+        ${dutySelect('washroom', c.washroom.dutyBy)}
+      </div>
+    </div>
+
+    <div class="clean-block">
+      <div class="row" style="justify-content:space-between;margin-bottom:6px">
+        <b>Room cleaning</b>
+        ${!c.room.dutyBy && c.room.status ? `<span class="chip warn">Duty person missing</span>` : ''}
+      </div>
+      <div class="row">
+        <div class="entry-label">Status</div>
+        <div class="btn-group">${bg(CLEAN_STATUS, c.room.status||'', !canEdit, `setCleanStatus('${room}','room'`)}</div>
+      </div>
+      <div class="row" style="margin-top:6px">
+        <div class="entry-label">Duty person</div>
+        ${dutySelect('room', c.room.dutyBy)}
+      </div>
+    </div>
+
+    <div class="clean-block" style="margin-bottom:0">
+      <b>Washroom equipment</b>
+      <div class="btn-group" style="margin-top:8px">
+        ${EQUIP.map(([k,l])=>{
+          const on=c[k];
+          return `<div class="btn-opt ${on?'active':''}" data-clickable="${canEdit?'1':''}" data-tone="${on?'ok':''}" onclick="${canEdit?`toggleEquip('${room}','${k}')`:''}">${l}</div>`;
+        }).join('')}
+      </div>
+      <div class="muted small" style="margin-top:8px">Defaults carry over from yesterday.</div>
+    </div>
+  </div>`;
+  return h;
+}
+
+/* ---------- single student card ---------- */
 function studentCardHTML(room,s,i,canEdit){
   const rd=getRoomDay(currentDate,room);
   const sl=rd.salah[s.id]||{};
@@ -856,9 +835,11 @@ function studentCardHTML(room,s,i,canEdit){
   const food=rd.food[s.id]||{breakfast:'eaten',lunch:'eaten',dinner:'eaten'};
   const foodNote=rd.foodNote[s.id]||{};
   const isOpen=isCardOpen(room,s.id);
+
   const salahDone=PRAYERS.filter(([k])=>sl[k]).length;
   const studyDone=STUDY_TIMES.filter(t=>study[t.k]).length;
   const mealsEaten=MEALS.filter(m=>(food[m.k]||'eaten')==='eaten').length;
+  const mealsNotEaten=MEALS.filter(m=>(food[m.k]||'eaten')==='not_eaten').length;
 
   let h=`<div class="entry-card ${isOpen?'open':''}">
     <div class="entry-header" onclick="toggleCard('${room}','${s.id}')">
@@ -869,7 +850,7 @@ function studentCardHTML(room,s,i,canEdit){
       <div class="entry-summary">
         <span class="chip ${salahDone===5?'ok':salahDone?'warn':''}">Salah ${salahDone}/5</span>
         <span class="chip ${studyDone===7?'ok':studyDone?'warn':''}">Study ${studyDone}/7</span>
-        <span class="chip ${mealsEaten===3?'ok':mealsEaten===0?'bad':'warn'}">🍽 ${mealsEaten}/3</span>
+        <span class="chip ${mealsEaten===3?'ok':mealsNotEaten?'bad':'warn'}">🍽 ${mealsEaten}/3</span>
         <span class="entry-score">${e.final}</span>
         <span class="caret">▸</span>
       </div>
@@ -878,31 +859,51 @@ function studentCardHTML(room,s,i,canEdit){
 
   h+=`<div class="section-head">Salah</div>`;
   for(const [k,lbl] of PRAYERS){
-    h+=`<div class="entry-row"><div class="entry-label">${lbl}</div>
-      <div class="btn-group">${bg(SALAH_STATUS,sl[k]||'',!canEdit,`setSalah('${room}','${s.id}','${k}'`)}</div></div>`;
+    h+=`<div class="entry-row">
+      <div class="entry-label">${lbl}</div>
+      <div class="btn-group">${bg(SALAH_STATUS, sl[k]||'', !canEdit, `setSalah('${room}','${s.id}','${k}'`)}</div>
+    </div>`;
   }
+
   h+=`<div class="section-head">Study time (7 slots) <span class="muted" style="text-transform:none;font-weight:400;letter-spacing:0">· 📖 Reading · 🛏 Bed · 📚 Room · 🏢 Other floor</span></div>`;
   for(const slot of STUDY_TIMES){
-    h+=`<div class="entry-row"><div class="entry-label">${slot.l}</div>
-      <div class="btn-group">${bg(STUDY_LOC,study[slot.k]||'',!canEdit,`setStudy('${room}','${s.id}','${slot.k}'`)}</div></div>`;
+    h+=`<div class="entry-row">
+      <div class="entry-label">${slot.l}</div>
+      <div class="btn-group">${bg(STUDY_LOC, study[slot.k]||'', !canEdit, `setStudy('${room}','${s.id}','${slot.k}'`)}</div>
+    </div>`;
   }
+
   h+=`<div class="section-head">Food (3 meals)</div>`;
   for(const meal of MEALS){
     const cur=food[meal.k]||'eaten';
     const note=foodNote[meal.k]||'';
-    h+=`<div class="entry-row"><div class="entry-label">${meal.l}</div>
-      <div class="btn-group">${bg(FOOD_OPTS,cur,!canEdit,`setFood('${room}','${s.id}','${meal.k}'`)}</div>
-      <input class="entry-note" value="${esc(note)}" ${canEdit?'':'disabled'} onchange="setFoodNote('${room}','${s.id}','${meal.k}',this.value)" placeholder="${cur==='not_eaten'?'why / what instead?':'what ate?'}"></div>`;
+    const placeholder = cur==='not_eaten'
+      ? 'What did they NOT eat? (e.g. rice, dal, egg)'
+      : 'Optional note';
+    h+=`<div class="entry-row">
+      <div class="entry-label">${meal.l}</div>
+      <div class="btn-group">${bg(FOOD_OPTS, cur, !canEdit, `setFood('${room}','${s.id}','${meal.k}'`)}</div>
+      <input class="entry-note" value="${esc(note)}" ${canEdit?'':'disabled'} onchange="setFoodNote('${room}','${s.id}','${meal.k}',this.value)" placeholder="${esc(placeholder)}">
+    </div>`;
   }
-  h+=`<div class="section-head">Activity / Whereabouts</div>
-    <div class="entry-row"><div class="entry-label">Activity</div>
-    <div class="btn-group">${bg(ACTIVITY,rd.activity[s.id]||'',!canEdit,`setActivity('${room}','${s.id}'`)}</div></div>
-    <div class="entry-row"><div class="entry-label">Note</div>
-    <input class="entry-note" value="${esc(rd.notes[s.id]||'')}" ${canEdit?'':'disabled'} onchange="setNote('${room}','${s.id}',this.value)" placeholder="optional"></div>`;
+
+  h+=`<div class="section-head">Activity / Whereabouts</div>`;
+  h+=`<div class="entry-row">
+    <div class="entry-label">Activity</div>
+    <div class="btn-group">${bg(ACTIVITY, rd.activity[s.id]||'', !canEdit, `setActivity('${room}','${s.id}'`)}</div>
+  </div>`;
+
+  h+=`<div class="entry-row">
+    <div class="entry-label">Note</div>
+    <input class="entry-note" value="${esc(rd.notes[s.id]||'')}" ${canEdit?'':'disabled'} onchange="setNote('${room}','${s.id}',this.value)" placeholder="optional">
+  </div>`;
+
   h+=`</div></div>`;
   return h;
 }
-function bg(options,current,disabled,fnPrefix){
+
+/* Button-group builder. fnPrefix ends with a trailing quote — we append ,'value') */
+function bg(options, current, disabled, fnPrefix){
   return options.map(o=>{
     const active=o.v===current;
     const tone=o.tone||'info';
@@ -910,17 +911,49 @@ function bg(options,current,disabled,fnPrefix){
     return `<div class="btn-opt ${active?'active':''}" data-clickable="${disabled?'':'1'}" data-tone="${active?tone:''}" title="${esc(o.l)}" onclick="${onclick}">${esc(o.short)}</div>`;
   }).join('');
 }
+
 function openCaptainPicker(room){
   const st=S.rooms[room];
-  const current=getRoomDay(currentDate,room).captainId;
-  const v=prompt('Enter student ID for captain on duty today:\n\n'+st.students.map(s=>`${s.id} — ${s.name} (Cl.${s.class})`).join('\n'),current||'');
-  if(v===null)return;
-  const idv=v.trim();
-  if(!st.students.some(s=>s.id===idv))return toast('Unknown student ID','bad');
-  getRoomDay(currentDate,room).captainId=idv;
-  audit(room,'Captain set to '+idv);
-  save();render();toast('Captain updated','ok');
+  const rd=getRoomDay(currentDate,room);
+  const current=rd.captainId||'';
+  const opts=[`<option value="">— nobody / clear —</option>`]
+    .concat(st.students.map(s=>`<option value="${esc(s.id)}" ${s.id===current?'selected':''}>${esc(s.name)} (${s.id}) · Class ${esc(s.class||'—')}</option>`));
+  showModal(`
+    <h3 style="margin-top:0">Change Room ${room} Captain</h3>
+    <div class="muted small" style="margin-bottom:10px">Choose who is on duty as captain for ${esc(prettyDate(currentDate))}.</div>
+    <select id="handover_select" style="width:100%;padding:10px;font-size:15px">${opts.join('')}</select>
+    <label class="chk" style="margin-top:12px"><input type="checkbox" id="handover_acting" ${rd.acting?'checked':''}> Acting captain (regular captain on vacation)</label>
+    <div class="row" style="margin-top:14px;gap:8px">
+      <button class="primary" onclick="applyHandover('${room}')">Save</button>
+      <button class="ghost" onclick="closeModal()">Cancel</button>
+    </div>
+  `);
 }
+function showModal(html){
+  let m=document.getElementById('modal');
+  if(!m){
+    m=document.createElement('div');
+    m.id='modal';
+    m.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px';
+    m.onclick=function(e){ if(e.target===m) closeModal(); };
+    document.body.appendChild(m);
+  }
+  m.innerHTML=`<div class="card" style="max-width:460px;width:100%;margin:0">${html}</div>`;
+  m.style.display='flex';
+}
+function closeModal(){const m=document.getElementById('modal');if(m)m.style.display='none';}
+function applyHandover(room){
+  const sel=document.getElementById('handover_select');
+  const acting=document.getElementById('handover_acting');
+  const newId=sel?sel.value:'';
+  const rd=getRoomDay(currentDate,room);
+  rd.captainId=newId||'';
+  rd.acting=acting?!!acting.checked:false;
+  audit(room,'Handover: captain set to '+(newId||'—')+(rd.acting?' (acting)':''));
+  save();closeModal();render();
+  toast(newId?('Captain set to '+newId):'Captain cleared','ok');
+}
+
 function marksCard(room){
   const rd=getRoomDay(currentDate,room);
   const st=S.rooms[room];
@@ -932,19 +965,25 @@ function marksCard(room){
     const e=equityFor(currentDate,room,s.id);
     const reasons=[e.bonusReason?'+ '+e.bonusReason:'',e.negReason?'− '+e.negReason:''].filter(Boolean).join(' | ');
     h+=`<tr>
-      <td class="mono">${esc(s.id)}</td><td>${classPill(s.class)||'—'}</td><td>${esc(s.name)}</td>
+      <td class="mono">${esc(s.id)}</td>
+      <td>${classPill(s.class)||'—'}</td>
+      <td>${esc(s.name)}</td>
       <td>${e.roles.length?e.roles.join(' + '):'—'}</td>
-      <td class="muted">${e.raw}</td><td>${e.roleEquity}</td>
-      <td style="color:var(--ok)">+${e.bonus}</td><td style="color:var(--bad)">−${e.neg}</td>
+      <td class="muted">${e.raw}</td>
+      <td>${e.roleEquity}</td>
+      <td style="color:var(--ok)">+${e.bonus}</td>
+      <td style="color:var(--bad)">−${e.neg}</td>
       <td><b style="font-size:15px">${e.final}</b></td>
       <td class="small muted" style="white-space:normal;max-width:220px">${esc(reasons)}</td>
       <td>
         ${canM?`<button class="ghost small" onclick="adjMark('${room}','${s.id}','neg')">− neg</button>`:''}
         ${canAddBonus()?`<button class="ghost small" onclick="adjMark('${room}','${s.id}','bonus')">+ bonus</button>`:''}
         ${canAddBonus()?`<button class="ghost small" title="Helped with water, food or errand" onclick="quickBonus('${room}','${s.id}')">+1 help</button>`:''}
-      </td></tr>`;
+      </td>
+    </tr>`;
   }
-  return h+`</tbody></table></div>`;
+  h+=`</tbody></table></div>`;
+  return h;
 }
 
 /* =========================================================
@@ -954,11 +993,22 @@ function setSalah(room,sid,prayer,val){const rd=getRoomDay(currentDate,room);if(
 function setStudy(room,sid,slot,val){const rd=getRoomDay(currentDate,room);if(!rd.study[sid]||typeof rd.study[sid]==='string')rd.study[sid]={};rd.study[sid][slot]=val;save();render();}
 function setFood(room,sid,meal,val){const rd=getRoomDay(currentDate,room);if(!rd.food[sid]||typeof rd.food[sid]==='string')rd.food[sid]={breakfast:'eaten',lunch:'eaten',dinner:'eaten'};rd.food[sid][meal]=val;save();render();}
 function setFoodNote(room,sid,meal,val){const rd=getRoomDay(currentDate,room);if(!rd.foodNote[sid]||typeof rd.foodNote[sid]==='string')rd.foodNote[sid]={breakfast:'',lunch:'',dinner:''};rd.foodNote[sid][meal]=val;save();}
-function setActivity(room,sid,val){getRoomDay(currentDate,room).activity[sid]=val;save();render();}
-function setNote(room,sid,val){getRoomDay(currentDate,room).notes[sid]=val;save();}
-function setClean(room,key,val){getRoomDay(currentDate,room).cleaning[key]=val;save();}
+function setActivity(room,sid,val){const rd=getRoomDay(currentDate,room);rd.activity[sid]=val;save();render();}
+function setNote(room,sid,val){const rd=getRoomDay(currentDate,room);rd.notes[sid]=val;save();}
+function setCleanStatus(room,which,val){
+  const rd=getRoomDay(currentDate,room);
+  migrateCleaning(rd.cleaning);
+  rd.cleaning[which].status=val;
+  save();render();
+}
+function setCleanDuty(room,which,val){
+  const rd=getRoomDay(currentDate,room);
+  migrateCleaning(rd.cleaning);
+  rd.cleaning[which].dutyBy=val;
+  save();render();
+}
 function toggleEquip(room,key){const rd=getRoomDay(currentDate,room);rd.cleaning[key]=!rd.cleaning[key];save();render();}
-function setActing(room,val){getRoomDay(currentDate,room).acting=!!val;save();render();}
+function setActing(room,val){const rd=getRoomDay(currentDate,room);rd.acting=!!val;save();render();}
 function adjMark(room,sid,kind){
   const rd=getRoomDay(currentDate,room);
   if(!rd.marks[sid])rd.marks[sid]={neg:0,negReason:'',bonus:0,bonusReason:''};
@@ -981,24 +1031,34 @@ function quickBonus(room,sid){
 function submitRoom(room){
   if(!canEditRoom(room))return toast('Editing window closed','bad');
   const rd=getRoomDay(currentDate,room);
+  /* soft warnings — do not block, but notify */
+  const warns=[];
+  if(rd.cleaning.washroom.status && !rd.cleaning.washroom.dutyBy) warns.push('washroom duty person');
+  if(rd.cleaning.room.status && !rd.cleaning.room.dutyBy) warns.push('room duty person');
   rd.status.rcSubmitted=true;rd.status.rcAt=nowStamp();
   rd.status.fcConfirmed=false;rd.status.fcomVerified=false;
-  audit(room,'Room Captain submitted');
-  save();render();toast('Submitted to Floor Captain','ok');
+  audit(room,'Room Captain submitted'+(warns.length?' (missing: '+warns.join(', ')+')':''));
+  save();render();
+  toast(warns.length?('Submitted — note: '+warns.join(', ')+' missing'):'Submitted to Floor Captain','ok');
 }
 function saveOpinion(room,which){
   const rd=getRoomDay(currentDate,room);
-  if(which==='fc'){rd.status.fcNote=(document.getElementById('opine_'+room)||{}).value||'';audit(room,'FC opinion recorded');}
-  else{rd.status.fcomNote=(document.getElementById('fcomnote_'+room)||{}).value||'';audit(room,'FCom note recorded');}
-  save();render();toast('Saved','ok');
+  if(which==='fc'){const v=(document.getElementById('opine_'+room)||{}).value||'';rd.status.fcNote=v;audit(room,'FC opinion recorded');save();toast('Opinion saved','ok');}
+  else{const v=(document.getElementById('fcomnote_'+room)||{}).value||'';rd.status.fcomNote=v;audit(room,'FCom note recorded');save();toast('Note saved','ok');}
+  render();
 }
 function fcConfirmRoom(room){const rd=getRoomDay(currentDate,room);if(!rd.status.rcSubmitted)return toast('Not submitted yet','bad');rd.status.fcConfirmed=true;rd.status.fcAt=nowStamp();audit(room,'FC confirmed');save();render();toast('Confirmed','ok');}
 function fcomVerifyRoom(room){const rd=getRoomDay(currentDate,room);if(!rd.status.fcConfirmed)return toast('FC not confirmed yet','bad');rd.status.fcomVerified=true;rd.status.fcomAt=nowStamp();audit(room,'FCom verified');save();render();toast('Verified','ok');}
 function fcConfirmFloor(){const allSub=ROOMS.every(r=>{const rd=rdSafe(currentDate,r);return rd&&rd.status.rcSubmitted;});if(!allSub)return toast('Not all rooms submitted','bad');const fd=getDay(currentDate).floor;fd.fcConfirmed=true;fd.fcAt=nowStamp();fd.fcBy=session.role;save();render();toast('Full day confirmed','ok');}
 function fcomVerifyFloor(){const fd=getDay(currentDate).floor;if(!fd.fcConfirmed)return toast('FC not confirmed yet','bad');fd.fcomVerified=true;fd.fcomAt=nowStamp();fd.fcomNote=(document.getElementById('fcomFloorNote')||{}).value||fd.fcomNote||'';save();render();toast('Full day verified','ok');}
+function setGoods(key,val){const fd=getDay(currentDate).floor;fd.goods[key]=val;save();}
 function setGoodsNote(val){getDay(currentDate).floor.goodsNote=val;save();}
 function saveGoodsBy(val){getDay(currentDate).floor.goodsBy=val;save();}
 function toggleGoods(key){const fd=getDay(currentDate).floor;fd.goods[key]=!fd.goods[key];save();render();}
+
+/* Floor cleaning actions */
+function setFloorCleanStatus(val){const fd=getDay(currentDate).floor;migrateFloorCleaning(fd);fd.floorCleaning.status=val;save();render();}
+function setFloorCleanDuty(val){const fd=getDay(currentDate).floor;migrateFloorCleaning(fd);fd.floorCleaning.dutyBy=val;save();render();}
 
 /* =========================================================
    CONFIRM / VERIFY
@@ -1007,15 +1067,16 @@ function confirmView(){
   const fd=getDay(currentDate).floor;
   const allSub=ROOMS.every(r=>{const rd=rdSafe(currentDate,r);return rd&&rd.status.rcSubmitted;});
   let h=`<h2>Confirmation &amp; Verification · ${prettyDate(currentDate)}</h2>`;
-  h+=`<div class="card scrollx"><h3>Room-level sign-off</h3>
+  h+=`<div class="card"><h3>Room-level sign-off</h3>
     <table class="tbl"><thead><tr><th>Room</th><th>Captain</th><th>Class</th><th>Submitted</th><th>FC confirmed</th><th>FCom verified</th><th>Marks</th><th></th></tr></thead><tbody>`;
   for(const room of ROOMS){
     const rd=getRoomDay(currentDate,room);
     const capObj=S.rooms[room].students.find(x=>x.id===rd.captainId);
     const cap=capObj?capObj.name:(rd.captainId||'—');
+    const capCls=capObj?capObj.class:'';
     const tot=S.rooms[room].students.reduce((a,s)=>a+equityFor(currentDate,room,s.id).final,0);
     h+=`<tr>
-      <td><b>${room}</b></td><td>${esc(cap)}</td><td>${classPill(capObj?capObj.class:'')||'—'}</td>
+      <td><b>${room}</b></td><td>${esc(cap)}</td><td>${classPill(capCls)||'—'}</td>
       <td>${rd.status.rcSubmitted?`<span class="chip ok">${esc(rd.status.rcAt||'')}</span>`:'<span class="chip bad">pending</span>'}</td>
       <td>${rd.status.fcConfirmed?`<span class="chip ok">${esc(rd.status.fcAt||'')}</span>`:'<span class="chip">—</span>'}</td>
       <td>${rd.status.fcomVerified?`<span class="chip ok">${esc(rd.status.fcomAt||'')}</span>`:'<span class="chip">—</span>'}</td>
@@ -1024,7 +1085,8 @@ function confirmView(){
         ${(session.role==='fc'||session.role==='admin')&&!rd.status.fcConfirmed?`<button class="ok" onclick="fcConfirmRoom('${room}')">Confirm</button>`:''}
         ${(session.role==='fcom'||session.role==='admin')&&!rd.status.fcomVerified?`<button class="primary" onclick="fcomVerifyRoom('${room}')">Verify</button>`:''}
         <button class="ghost" onclick="editRoom('${room}')">Open</button>
-      </td></tr>`;
+      </td>
+    </tr>`;
   }
   h+=`</tbody></table></div>`;
   h+=`<div class="card"><h3>Floor-level full-day sign-off</h3>
@@ -1047,32 +1109,63 @@ function confirmView(){
       <div class="warnnote">⚠ <b>Do not verify without cross-checking.</b></div>
       <button id="vfBtn" class="primary" disabled onclick="fcomVerifyFloor()">Verify full day</button>`;
   }
-  return h+`</div>`;
+  h+=`</div>`;
+  return h;
 }
 
 /* =========================================================
-   FLOOR GOODS
+   FLOOR GOODS + FLOOR CLEANING
    ========================================================= */
 function goodsView(){
   const fd=getDay(currentDate).floor;
-  const editable=session.role==='fc'||session.role==='admin';
-  return `<h2>Floor Goods · ${prettyDate(currentDate)}</h2>
-    <div class="card">
-      <h3>Availability of goods on the floor</h3>
-      <div class="btn-group" style="margin-top:10px">
-        ${FLOOR_GOODS.map(([k,l])=>{
-          const on=fd.goods[k];
-          return `<div class="btn-opt ${on?'active':''}" data-clickable="${editable?'1':''}" data-tone="${on?'ok':''}" onclick="${editable?`toggleGoods('${k}')`:''}">${l}</div>`;
-        }).join('')}
+  migrateFloorCleaning(fd);
+  const editable=canEditFloorGoods();
+  const dutyOpts=[{v:'',l:'— select duty person —',short:'— select —'}];
+  for(const r of ROOMS){
+    for(const s of S.rooms[r].students){
+      dutyOpts.push({v:s.id, l:s.name+' · Room '+r+' ('+s.id+')', short:s.name+' ('+r+')'});
+    }
+  }
+  let h=`<h2>Floor Goods &amp; Floor Cleaning · ${prettyDate(currentDate)}</h2>`;
+
+  h+=`<div class="card">
+    <h3>🧹 Floor cleaning</h3>
+    <div class="muted small" style="margin-bottom:10px">Floor Captain confirms floor cleaning; duty person is required.</div>
+    <div class="clean-block">
+      <div class="row" style="justify-content:space-between;margin-bottom:6px">
+        <b>Floor cleaning status</b>
+        ${!fd.floorCleaning.dutyBy && fd.floorCleaning.status ? `<span class="chip warn">Duty person missing</span>` : ''}
       </div>
-      <div class="row" style="margin-top:14px">
-        <span class="small muted">Checked by:</span>
-        <input value="${esc(fd.goodsBy||'')}" ${editable?'':'disabled'} onchange="saveGoodsBy(this.value)" placeholder="Name / role">
+      <div class="row">
+        <div class="entry-label">Status</div>
+        <div class="btn-group">${bg(CLEAN_STATUS, fd.floorCleaning.status||'', !editable, `setFloorCleanStatus('`)}</div>
       </div>
-      <div style="margin-top:12px">
-        <textarea rows="2" style="width:100%" ${editable?'':'disabled'} placeholder="Notes…" onchange="setGoodsNote(this.value)">${esc(fd.goodsNote||'')}</textarea>
+      <div class="row" style="margin-top:6px">
+        <div class="entry-label">Duty person</div>
+        <select class="duty-select ${!fd.floorCleaning.dutyBy?'duty-missing':''}" ${editable?'':'disabled'} onchange="setFloorCleanDuty(this.value)">
+          ${dutyOpts.map(o=>`<option value="${o.v}" ${o.v===fd.floorCleaning.dutyBy?'selected':''}>${esc(o.l)}</option>`).join('')}
+        </select>
       </div>
-    </div>`;
+    </div>
+  </div>`;
+
+  h+=`<div class="card">
+    <h3>📦 Availability of goods on the floor</h3>
+    <div class="btn-group" style="margin-top:10px">
+      ${FLOOR_GOODS.map(([k,l])=>{
+        const on=fd.goods[k];
+        return `<div class="btn-opt ${on?'active':''}" data-clickable="${editable?'1':''}" data-tone="${on?'ok':''}" onclick="${editable?`toggleGoods('${k}')`:''}">${l}</div>`;
+      }).join('')}
+    </div>
+    <div class="row" style="margin-top:14px">
+      <span class="small muted">Checked by:</span>
+      <input value="${esc(fd.goodsBy||'')}" ${editable?'':'disabled'} onchange="saveGoodsBy(this.value)" placeholder="Name / role">
+    </div>
+    <div style="margin-top:12px">
+      <textarea rows="2" style="width:100%" ${editable?'':'disabled'} placeholder="Notes…" onchange="setGoodsNote(this.value)">${esc(fd.goodsNote||'')}</textarea>
+    </div>
+  </div>`;
+  return h;
 }
 
 /* =========================================================
@@ -1084,21 +1177,25 @@ function rosterView(){
   let h=`<h2>Roster <span class="muted small">· names &amp; classes</span></h2>`;
   for(const room of rooms){
     const st=S.rooms[room];
-    const counts={};
-    st.students.forEach(s=>{counts[s.class]=(counts[s.class]||0)+1;});
+    const counts={9:0,10:0,11:0,12:0};
+    st.students.forEach(s=>{if(counts[s.class]!==undefined)counts[s.class]++;});
     h+=`<div class="card"><h3>Room ${room} · ${st.students.length} students · ${st.rotation.length} in rotation</h3>
       <div class="row small muted" style="margin-bottom:8px">
-        ${CLASSES.filter(c=>counts[c]).map(c=>`<span class="chip">Class ${c}: ${counts[c]}</span>`).join('')||'<span class="chip">No students</span>'}
+        <span class="chip">Class 9: ${counts[9]}</span>
+        <span class="chip">Class 10: ${counts[10]}</span>
+        ${counts[11]?`<span class="chip">Class 11: ${counts[11]}</span>`:''}
+        ${counts[12]?`<span class="chip">Class 12: ${counts[12]}</span>`:''}
       </div>
       <div class="scrollx"><table class="tbl">
         <thead><tr><th>#</th><th>ID</th><th>Name</th><th>Class</th><th>In rotation</th><th></th></tr></thead><tbody>
         ${st.students.map((s,i)=>`<tr>
-          <td>${i+1}</td><td class="mono">${esc(s.id)}</td>
+          <td>${i+1}</td>
+          <td class="mono">${esc(s.id)}</td>
           <td><input value="${esc(s.name)}" ${canEdit?'':'disabled'} onchange="renameStudent('${room}','${s.id}',this.value)"></td>
           <td>${canEdit?`<select onchange="setStudentClass('${room}','${s.id}',this.value)">${CLASSES.map(c=>`<option value="${c}" ${s.class===c?'selected':''}>${c}</option>`).join('')}</select>`:classPill(s.class)}</td>
           <td>${st.rotation.includes(s.id)?'✔':'—'}</td>
           <td>
-            <button class="ghost" ${canEdit?'':'disabled'} onclick="toggleRotation('${room}','${s.id}')">${st.rotation.includes(s.id)?'Remove from rotation':'Add to rotation'}</button>
+            <button class="ghost" ${canEdit?'':'disabled'} onclick="toggleRotation('${room}','${s.id}')">${st.rotation.includes(s.id)?'Remove':'Add'}</button>
             <button class="bad" ${canEdit?'':'disabled'} onclick="removeStudent('${room}','${s.id}')">Remove</button>
           </td></tr>`).join('')}
       </tbody></table></div>
@@ -1130,11 +1227,12 @@ function removeStudent(room,id){
   st.rotation=st.rotation.filter(x=>x!==id);
   saveConfig();render();toast('Student removed','ok');
 }
-function renameStudent(room,id,val){const s=S.rooms[room].students.find(x=>x.id===id);if(s){s.name=val;saveConfig();}}
-function setStudentClass(room,id,val){const s=S.rooms[room].students.find(x=>x.id===id);if(s){s.class=val;saveConfig();toast('Class updated','ok');}}
+function renameStudent(room,id,val){const st=S.rooms[room];const s=st.students.find(x=>x.id===id);if(s){s.name=val;saveConfig();}}
+function setStudentClass(room,id,val){const st=S.rooms[room];const s=st.students.find(x=>x.id===id);if(s){s.class=val;saveConfig();toast('Class updated','ok');}}
 function toggleRotation(room,id){
   const st=S.rooms[room];
-  if(st.rotation.includes(id))st.rotation=st.rotation.filter(x=>x!==id);else st.rotation.push(id);
+  if(st.rotation.includes(id))st.rotation=st.rotation.filter(x=>x!==id);
+  else st.rotation.push(id);
   saveConfig();render();
 }
 
@@ -1144,12 +1242,14 @@ function toggleRotation(room,id){
 function reportsView(){
   const roomList=session.role==='rc'?[session.room]:ROOMS;
   let h=`<h2>Marks Report</h2>
-    <div class="card"><div class="row">
-      <span class="small muted">From</span><input type="date" value="${repFrom}" onchange="repFrom=this.value;render()">
-      <span class="small muted">To</span><input type="date" value="${repTo}" onchange="repTo=this.value;render()">
-      <div class="spacer"></div>
-      <button class="ghost" onclick="pushRange(repFrom,repTo)">Push range to Sheet</button>
-    </div></div>`;
+    <div class="card">
+      <div class="row">
+        <span class="small muted">From</span><input type="date" value="${repFrom}" onchange="repFrom=this.value;render()">
+        <span class="small muted">To</span><input type="date" value="${repTo}" onchange="repTo=this.value;render()">
+        <div class="spacer"></div>
+        <button class="ghost" onclick="pushRange(repFrom,repTo)">Push range to Sheet</button>
+      </div>
+    </div>`;
   const dates=[];let d=repFrom,guard=0;
   while(d<=repTo&&guard++<400){dates.push(d);d=addDays(d,1);}
   for(const room of roomList){
@@ -1182,7 +1282,7 @@ function reportsView(){
 function adminView(){
   const allStudents=[];
   for(const r of ROOMS)S.rooms[r].students.forEach(s=>allStudents.push({room:r,id:s.id,name:s.name,cls:s.class}));
-  const optList=[{v:'',l:'— none —'}].concat(allStudents.map(s=>({v:s.id,l:s.name+' ('+s.room+') · Cl.'+(s.cls||'—')})));
+  const optList=[{v:'',l:'— none —',short:'— none —'}].concat(allStudents.map(s=>({v:s.id,l:s.name+' ('+s.room+') · Cl.'+(s.cls||'—'),short:s.name+' ('+s.room+')'})));
   let h=`<h2>Administration</h2>`;
   h+=`<div class="card"><h3>Roles &amp; passcodes
     <span class="muted small">· default 1122 · saves to sheet automatically</span></h3>
@@ -1202,17 +1302,26 @@ function adminView(){
     </div>
     <hr>
     <div class="grid3">
-      ${ROOMS.map(r=>`<div><label class="chk">Room ${r} passcode</label>
-        <input value="${esc(S.users.rc[r])}" onchange="setRcPin('${r}',this.value)"></div>`).join('')}
-      <div><label class="chk">Floor Incharge passcode</label>
-        <input value="${esc(S.users.admin.pin)}" onchange="setStaff('admin','pin',this.value)"></div>
+      ${ROOMS.map(r=>`<div>
+        <label class="chk">Room ${r} passcode</label>
+        <input value="${esc(S.users.rc[r])}" onchange="setRcPin('${r}',this.value)">
+      </div>`).join('')}
+      <div>
+        <label class="chk">Floor Incharge passcode</label>
+        <input value="${esc(S.users.admin.pin)}" onchange="setStaff('admin','pin',this.value)">
+      </div>
     </div>
-    <div class="row" style="margin-top:10px"><button class="ghost" onclick="resetAllPins()">Reset all passcodes to 1122</button></div>
+    <div class="row" style="margin-top:10px">
+      <button class="ghost" onclick="resetAllPins()">Reset all passcodes to 1122</button>
+    </div>
   </div>`;
   h+=`<div class="card"><h3>Weekly captaincy rotation</h3>
-    <div class="row"><span class="small muted">Rotation start (Monday)</span>
-      <input type="date" value="${S.settings.rotationStart}" onchange="S.settings.rotationStart=this.value;saveConfig();render()"></div>
-    <hr><div class="grid3">
+    <div class="row">
+      <span class="small muted">Rotation start (Monday)</span>
+      <input type="date" value="${S.settings.rotationStart}" onchange="S.settings.rotationStart=this.value;saveConfig();render()">
+    </div>
+    <hr>
+    <div class="grid3">
       ${ROOMS.map(r=>{
         const cap=rotationCaptain(r,todayStr());
         const s=S.rooms[r].students.find(x=>x.id===cap);
@@ -1221,16 +1330,17 @@ function adminView(){
     </div>
   </div>`;
   h+=`<div class="card"><h3>Google Sheet sync</h3>
-    <div class="row"><input style="flex:1;min-width:280px" value="${esc(GAS_URL)}" readonly>
-      <button class="ghost" onclick="pingGAS()">Ping</button></div>
-    <label class="chk"><input type="checkbox" ${S.settings.autoSync?'checked':''} onchange="S.settings.autoSync=this.checked;if(!this.checked)cancelSyncTimers();saveConfig()"> Auto-sync (push after every edit · pull every ${PULL_MS/1000}s)</label>
+    <div class="row">
+      <input style="flex:1;min-width:280px" value="${esc(GAS_URL)}" readonly>
+      <button class="ghost" onclick="pingGAS()">Ping</button>
+    </div>
+    <label class="chk"><input type="checkbox" ${S.settings.autoSync?'checked':''} onchange="S.settings.autoSync=this.checked;if(!this.checked){cancelSyncTimers();}saveConfig()"> Auto-push to sheet after every edit</label>
     <div class="row" style="margin-top:10px">
       <button class="primary" onclick="pushRange(addDays(todayStr(),-14),todayStr())">Push last 14 days now</button>
       <button class="ghost" onclick="pushConfig()">Push roster &amp; passcodes now</button>
-      <button class="ghost" onclick="pullNow({days:60});toast('Pulling…')">Pull from sheet now</button>
     </div>
     <div class="muted small" style="margin-top:10px">
-      Last push: ${esc(S.meta.lastSync||'never')} · Last config push: ${esc(S.meta.lastConfigSync||'never')} · Last pull: ${esc(S.meta.lastPull||'never')} · Unsynced dates: ${dirty.size}
+      Last daily sync: ${esc(S.meta.lastSync||'never')} · Last config sync: ${esc(S.meta.lastConfigSync||'never')}
     </div>
   </div>`;
   h+=`<div class="card"><h3>Backup &amp; restore</h3>
@@ -1247,7 +1357,8 @@ function setStaff(which,key,val){S.users[which][key]=val;saveConfig();render();t
 function setRcPin(room,val){S.users.rc[room]=val;saveConfig();toast('Saved','ok');}
 function resetAllPins(){
   if(!confirm('Reset every passcode to 1122?'))return;
-  S.users=defaultUsers();saveConfig();render();toast('All passcodes reset to 1122','ok');
+  S.users=defaultUsers();
+  saveConfig();render();toast('All passcodes reset to 1122','ok');
 }
 function exportJSON(){
   const blob=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
@@ -1262,9 +1373,7 @@ function importJSON(input){
       const data=JSON.parse(fr.result);
       if(!data.rooms)throw 0;
       if(!confirm('Replace all current data with this backup?'))return;
-      S=data;migrateConfig();
-      Object.keys(S.days||{}).forEach(markDirty);
-      saveLocal();saveConfig();pushDirty();render();toast('Backup restored & pushing','ok');
+      S=data;migrateConfig();saveLocal();saveConfig();save();render();toast('Backup restored & pushed','ok');
     }catch(e){toast('Invalid backup file','bad');}
   };
   fr.readAsText(f);
@@ -1272,14 +1381,14 @@ function importJSON(input){
 function wipeAll(){
   if(!confirm('Erase ALL data? This cannot be undone.'))return;
   if(!confirm('Really erase everything?'))return;
-  dirty.clear();saveDirty();
   S=defaultState();saveLocal();saveConfig();render();toast('All data erased','bad');
 }
 function pingGAS(){
-  setSync('syncing');
-  post({action:'ping',by:session?session.role:'anon'})
-    .then(()=>{setSync('ok');toast('Ping sent — check the Sync Log tab','ok');})
-    .catch(()=>{setSync('bad');toast('Ping failed','bad');});
+  setSyncDot('syncing');
+  fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body:JSON.stringify({action:'ping',by:session?session.role:'anon'})})
+    .then(()=>{setSyncDot('ok');toast('Ping sent — check the Sync Log tab','ok');})
+    .catch(()=>{setSyncDot('bad');toast('Ping failed','bad');});
 }
 
 /* =========================================================
