@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Floor Management System · Rooms 301–303</title>
+<title>Floor Management System V5.0</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏠</text></svg>">
 <style>
 :root{--bg:#0e1320;--card:#1b2438;--line:#2b3752;--txt:#e8eefb;--muted:#8b9ab5;--acc:#5b8cff;--ok:#2ecc8f;--warn:#ffb020;--bad:#ff5c6c}
@@ -145,8 +145,10 @@ const LS_OPEN='fms_openCards';
 const LS_QUEUE='fms_dirty';
 const LS_ROLE='fms_lastRole';
 const LS_ROOM='fms_lastRoom';
-const VERSION='v9';
+const VERSION='v11';
+const EXPECT_SERVER_V='v11';   /* must match the V constant in Code.gs — mismatch means an old deploy is still live */
 const PULL_MS=20000;
+let SYNC_TIMEOUT=window.__SYNC_TIMEOUT||20000;
 const ROOMS=['301','302','303'];
 const CLASSES=['6','7','8','9','10','11','12'];
 const PRAYERS=[['fajr','Fajr'],['dhuhr','Dhuhr'],['asr','Asr'],['maghrib','Maghrib'],['isha','Isha']];
@@ -321,14 +323,16 @@ function migrateConfig(){
   if(!S.meta)S.meta={};
   S.meta.version=VERSION;
   if(!S.meta.cfgTs)S.meta.cfgTs=0;
+  if(!S.meta.since)S.meta.since=0;
+  if(!S.days)S.days={};
   for(const r in S.rooms){
     (S.rooms[r].students||[]).forEach(s=>{if(!s.class)s.class='9';if(s.avoid===undefined)s.avoid='';});
     if(!S.rooms[r].rotation)S.rooms[r].rotation=(S.rooms[r].students||[]).map(s=>s.id);
   }
   for(const dt in S.days){
-    const day=S.days[dt];
-    if(day&&day.rooms)for(const r in day.rooms){if(day.rooms[r].cleaning)migrateCleaning(day.rooms[r].cleaning);}
-    if(day&&day.floor)migrateFloorDay(day.floor);
+    const day=S.days[dt];if(!day)continue;
+    if(day.rooms)for(const r in day.rooms)normRoom(day.rooms[r]);
+    if(day.floor)normFloor(day.floor);
   }
   const d=defaultUsers();
   S.users=S.users||d;
@@ -343,11 +347,23 @@ function migrateConfig(){
 }
 function load(){
   try{const raw=localStorage.getItem(LS);
-    if(raw){const p=JSON.parse(raw);if(p&&p.rooms){S=p;migrateConfig();return S;}}
+    if(raw){const p=JSON.parse(raw);if(p&&p.rooms){S=p;migrateConfig();pruneLocal();return S;}}
   }catch(e){}
   S=defaultState();return S;
 }
-function saveLocal(){try{localStorage.setItem(LS,JSON.stringify(S));}catch(e){}}
+/* storage writes are debounced: one write per burst of taps, not one per tap */
+let _lsT=null;
+function saveLocal(){clearTimeout(_lsT);_lsT=setTimeout(flushLocal,350);}
+function flushLocal(){
+  clearTimeout(_lsT);_lsT=null;
+  try{localStorage.setItem(LS,JSON.stringify(S));}
+  catch(e){pruneLocal(true);try{localStorage.setItem(LS,JSON.stringify(S));}catch(e2){}}
+}
+function isDateDirty(dt){for(const k of dirty.keys())if(k.indexOf(dt+'|')===0)return true;return false;}
+function pruneLocal(hard){
+  const cut=addDays(todayStr(),hard?-14:-45);
+  for(const dt of Object.keys(S.days||{})){if(dt<cut&&!isDateDirty(dt))delete S.days[dt];}
+}
 
 /* ---------- day / room data ---------- */
 function lastRoomDayBefore(date,room){
@@ -387,31 +403,30 @@ function newFloorDay(date){
   Object.assign(f,{fcConfirmed:false,fcAt:null,fcBy:'',fcomVerified:false,fcomAt:null,fcomNote:'',adminNote:'',_ts:0});
   return f;
 }
+function normFloor(f){migrateFloorDay(f);if(f._ts===undefined)f._ts=0;return f;}
+function normRoom(rd){
+  ['study','food','foodNote','salah','activity','notes','marks','discipline'].forEach(k=>{if(!rd[k])rd[k]={};});
+  if(!rd.audit)rd.audit=[];
+  if(!rd.status)rd.status={rcSubmitted:false,rcAt:null,fcConfirmed:false,fcAt:null,fcNote:'',fcomVerified:false,fcomAt:null,fcomNote:''};
+  migrateCleaning(rd.cleaning||(rd.cleaning={}));
+  for(const sid in rd.food){if(typeof rd.food[sid]==='string'){const o=rd.food[sid];rd.food[sid]={breakfast:o||'eaten',lunch:o||'eaten',dinner:o||'eaten'};}}
+  for(const sid in rd.foodNote){if(typeof rd.foodNote[sid]==='string'){rd.foodNote[sid]={breakfast:rd.foodNote[sid],lunch:'',dinner:''};}}
+  for(const sid in rd.study){if(typeof rd.study[sid]==='string'){const o=rd.study[sid];rd.study[sid]={};if(o)rd.study[sid].quran=o;}}
+  if(rd._ts===undefined)rd._ts=0;
+  return rd;
+}
 function getDay(date){
   if(!S.days[date])S.days[date]={rooms:{},floor:null};
   const d=S.days[date];
   if(!d.rooms)d.rooms={};
-  if(!d.floor)d.floor=newFloorDay(date);
-  migrateFloorDay(d.floor);
+  if(!d.floor){d.floor=normFloor(newFloorDay(date));unitSig[date+'|floor']=sig(d.floor);}
+  normFloor(d.floor);
   return d;
 }
 function getRoomDay(date,room){
   const day=getDay(date);
-  if(!day.rooms[room])day.rooms[room]=newRoomDay(date,room);
-  const rd=day.rooms[room];
-  ['study','food','foodNote','salah','activity','notes','marks','discipline'].forEach(k=>{if(!rd[k])rd[k]={};});
-  if(!rd.audit)rd.audit=[];
-  migrateCleaning(rd.cleaning||(rd.cleaning={}));
-  for(const sid in rd.food){
-    if(typeof rd.food[sid]==='string'){const o=rd.food[sid];rd.food[sid]={breakfast:o||'eaten',lunch:o||'eaten',dinner:o||'eaten'};}
-  }
-  for(const sid in rd.foodNote){
-    if(typeof rd.foodNote[sid]==='string'){rd.foodNote[sid]={breakfast:rd.foodNote[sid],lunch:'',dinner:''};}
-  }
-  for(const sid in rd.study){
-    if(typeof rd.study[sid]==='string'){const o=rd.study[sid];rd.study[sid]={};if(o)rd.study[sid].quran=o;}
-  }
-  return rd;
+  if(!day.rooms[room]){day.rooms[room]=normRoom(newRoomDay(date,room));unitSig[date+'|'+room]=sig(day.rooms[room]);}
+  return normRoom(day.rooms[room]);
 }
 function rdSafe(date,room){return S.days[date]&&S.days[date].rooms?S.days[date].rooms[room]:null;}
 
@@ -534,223 +549,288 @@ function dutyCounts(){
 }
 
 /* =========================================================
-   SYNC — auto push (debounced, queued, offline-safe)
-         + auto pull (interval / focus / reconnect) with
-           per-room timestamp merge
+   SYNC v10 — small per-room saves, delta pulls, hard timeouts,
+   retry/backoff, merge-on-conflict, confirmed saves.
+   Unit key = "YYYY-MM-DD|301" (a room) or "YYYY-MM-DD|floor"
    ========================================================= */
-let dirty=new Set();
-try{dirty=new Set(JSON.parse(lsGet(LS_QUEUE,'[]')));}catch(e){}
-function saveDirty(){lsSet(LS_QUEUE,JSON.stringify([...dirty]));}
-let _pushTimer=null,_pushBusy=false,_cfgTimer=null,_cfgBusy=false,_cfgDirty=false,_pullBusy=false,_pullTimer=null;
-let syncState='';
+const dirty=new Map();            /* unit key -> version (edits not yet on the server) */
+const unitSig={};                 /* unit key -> signature of last synced state */
+let _v=1,_pulledOnce=false;
+try{JSON.parse(lsGet(LS_QUEUE,'[]')).forEach(k=>{
+  if(k.indexOf('|')>0)dirty.set(k,_v++);
+  else ROOMS.concat(['floor']).forEach(u=>dirty.set(k+'|'+u,_v++));   /* old queue format */
+});}catch(e){}
+function saveDirty(){lsSet(LS_QUEUE,JSON.stringify([...dirty.keys()]));}
+function sig(o){const c=Object.assign({},o);delete c._ts;return JSON.stringify(c);}
+function unitObj(k){const a=k.split('|'),day=S.days[a[0]];if(!day)return null;return a[1]==='floor'?day.floor:(day.rooms&&day.rooms[a[1]]);}
+function bump(k){dirty.set(k,_v++);saveDirty();}
+function markDirty(date){const day=S.days[date];if(!day)return;ROOMS.forEach(r=>{if(day.rooms&&day.rooms[r])bump(date+'|'+r);});if(day.floor)bump(date+'|floor');}
+function baselineAll(){for(const d in S.days){const day=S.days[d];if(!day)continue;ROOMS.forEach(r=>{if(day.rooms&&day.rooms[r])unitSig[d+'|'+r]=sig(day.rooms[r]);});if(day.floor)unitSig[d+'|floor']=sig(day.floor);}}
+function whoAmI(){return session?session.role+(session.room?' '+session.room:''):'anon';}
+
+let syncState='',_pushBusy=false,_pushTimer=null,_retryMs=0,_pushFails=0,_cfgTimer=null,_cfgBusy=false,_cfgDirty=false,_pullQ=null,_pullN=0,_pollT=null,_lastPullOk=0,_serverVOK=null,_savedFlashT=null;
+function flashSaved_(){
+  const l=document.getElementById('syncFlash');if(!l)return;
+  l.textContent='✓ Saved';l.className='chip ok';l.style.opacity='1';
+  clearTimeout(_savedFlashT);_savedFlashT=setTimeout(()=>{l.style.opacity='0';},1800);
+}
 function setSync(st){
   syncState=st;
   const d=document.getElementById('syncDot');if(d)d.className='dot '+st;
-  const l=document.getElementById('syncLbl');if(l)l.textContent=({ok:'Synced',syncing:'Syncing…',pending:'Unsaved',bad:'Offline'}[st]||'');
+  const l=document.getElementById('syncLbl');
+  if(l)l.textContent=({ok:'Synced',syncing:'Syncing…',pending:'Unsaved'+(dirty.size?' ('+dirty.size+')':''),bad:'Offline'}[st]||'');
 }
-function markDirty(date){dirty.add(date);saveDirty();}
+function cancelSyncTimers(){clearTimeout(_pushTimer);clearTimeout(_cfgTimer);}
+
+/* ---- network: hard timeout that ALWAYS fires (a hung request can never freeze sync) ---- */
+async function gas(method,payload,timeout){
+  timeout=timeout||SYNC_TIMEOUT;
+  const ctl=new AbortController();let tm;
+  const guard=new Promise((_,rej)=>{tm=setTimeout(()=>{try{ctl.abort();}catch(e){}rej(Object.assign(new Error('timeout'),{name:'AbortError'}));},timeout);});
+  try{
+    const req=(method==='GET'
+      ?fetch(GAS_URL+'?'+new URLSearchParams(Object.assign({},payload,{_:Date.now()})),{signal:ctl.signal})
+      :fetch(GAS_URL,{method:'POST',signal:ctl.signal,headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)})
+    ).then(r=>r.text());
+    const txt=await Promise.race([req,guard]);
+    try{return JSON.parse(txt);}catch(e){throw new Error('Server did not return JSON — deploy the web app with access "Anyone"');}
+  }finally{clearTimeout(tm);}
+}
+async function postGAS(payload){
+  try{return await gas('POST',payload);}
+  catch(e){
+    if(e&&(e.name==='AbortError'||/JSON/.test(e.message)))throw e;
+    /* browser refused to let us read the reply (CORS/redirect quirk): resend once, fire-and-forget (saves are idempotent) */
+    await fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)});
+    return {ok:true,unconfirmed:true};
+  }
+}
+
+/* ---- change detection: only rooms that really changed are stamped and sent ---- */
+function save(){
+  const date=currentDate,day=S.days[date];
+  if(day){
+    const t=Date.now();
+    ROOMS.concat(['floor']).forEach(u=>{
+      const o=u==='floor'?day.floor:(day.rooms&&day.rooms[u]);if(!o)return;
+      const k=date+'|'+u,g=sig(o);
+      if(g!==unitSig[k]){o._ts=t;unitSig[k]=g;bump(k);}
+    });
+  }
+  saveLocal();scheduleAutoSync();
+}
 function scheduleAutoSync(){
   if(!S.settings.autoSync)return;
-  markDirty(currentDate);
   clearTimeout(_pushTimer);setSync('pending');
   _pushTimer=setTimeout(pushDirty,900);
 }
-function dayPayload(date){
-  const day=S.days[date];if(!day)return null;
-  const rooms={};
-  ROOMS.forEach(r=>{if(day.rooms&&day.rooms[r])rooms[r]=day.rooms[r];});
-  if(!Object.keys(rooms).length&&!day.floor)return null;
-  return {rooms,floor:day.floor||null};
-}
-function post(payload){
-  return fetch(GAS_URL,{method:'POST',mode:'no-cors',keepalive:true,headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)});
-}
+
+/* ---- push ---- */
 async function pushDirty(){
   if(_pushBusy)return;
+  if(!dirty.size){if(!_cfgDirty&&!_cfgBusy)setSync('ok');return;}
   if(!navigator.onLine){setSync('bad');return;}
-  const dates=[...dirty].sort();
-  if(!dates.length){setSync('ok');return;}
   _pushBusy=true;setSync('syncing');
-  const by=session?session.role+(session.room?' '+session.room:''):'anon';
   try{
-    for(const date of dates){
-      const p=dayPayload(date);
-      if(!p){dirty.delete(date);continue;}
-      await post({action:'saveDay',date,by,rooms:p.rooms,floor:p.floor});
-      dirty.delete(date);
+    /* if our picture of the server is stale, pull first and MERGE — never blindly overwrite */
+    if(Date.now()-_lastPullOk>45000){
+      const ds=[...dirty.keys()].map(k=>k.split('|')[0]).sort();
+      const ok=await pullNow({from:ds[0],to:ds[ds.length-1],full:true,silent:true});
+      if(!ok)throw new Error('could not refresh before saving');
+    }
+    while(dirty.size){
+      const sent=[],units=[];
+      [...dirty.keys()].slice(0,10).forEach(k=>{
+        const o=unitObj(k);if(!o){dirty.delete(k);return;}
+        const a=k.split('|');sent.push([k,dirty.get(k)]);units.push({date:a[0],unit:a[1],data:o});
+      });
+      if(!units.length)break;
+      const res=await postGAS({action:'save',by:whoAmI(),units});
+      if(!res||res.ok===false)throw new Error((res&&res.error)||'server error');
+      sent.forEach(([k,v])=>{if(dirty.get(k)===v)dirty.delete(k);});   /* keep it if edited again mid-flight */
+      saveDirty();
     }
     saveDirty();S.meta.lastSync=nowStamp();saveLocal();
-    _pushBusy=false;
+    _retryMs=0;_pushBusy=false;_pushFails=0;
     if(dirty.size){pushDirty();return;}
-    setSync('ok');
+    setSync(_cfgDirty?'pending':'ok');
+    flashSaved_();
   }catch(err){
-    _pushBusy=false;saveDirty();setSync('bad');
-    clearTimeout(_pushTimer);_pushTimer=setTimeout(pushDirty,8000);
+    console.warn('Push failed',err);
+    _pushBusy=false;saveDirty();setSync(navigator.onLine?'pending':'bad');
+    _pushFails=(_pushFails||0)+1;
+    if(_pushFails===1||_pushFails%5===0)toast('⚠ Not saved yet — will keep retrying ('+dirty.size+' pending)','bad');
+    _retryMs=Math.min(30000,(_retryMs||1500)*2);
+    clearTimeout(_pushTimer);_pushTimer=setTimeout(pushDirty,_retryMs);
   }
 }
+function pushRange(from,to){
+  let d=from,g=0;while(d<=to&&g++<400){markDirty(d);d=addDays(d,1);}
+  toast('Pushing '+dirty.size+' record(s)…','ok');pushDirty();
+}
+/* last-gasp save when the tab closes (sendBeacon / keepalive cap is 64 KB, so send per room) */
 function flushBeacon(){
-  if(!S||!S.settings.autoSync)return;
-  const by=session?session.role:'anon';
-  for(const date of dirty){
-    const p=dayPayload(date);if(!p)continue;
-    const body=JSON.stringify({action:'saveDay',date,by,rooms:p.rooms,floor:p.floor});
+  try{flushLocal();}catch(e){}
+  if(!S||!S.settings.autoSync||!dirty.size)return;
+  for(const k of dirty.keys()){
+    const o=unitObj(k);if(!o)continue;const a=k.split('|');
+    const body=JSON.stringify({action:'save',by:whoAmI(),units:[{date:a[0],unit:a[1],data:o}]});
+    if(body.length>60000)continue;      /* too big for a beacon — stays queued for next visit */
     try{
       if(!(navigator.sendBeacon&&navigator.sendBeacon(GAS_URL,new Blob([body],{type:'text/plain;charset=utf-8'}))))
         fetch(GAS_URL,{method:'POST',mode:'no-cors',keepalive:true,headers:{'Content-Type':'text/plain;charset=utf-8'},body});
     }catch(e){}
   }
-  if(_cfgDirty){
-    try{
-      const body=JSON.stringify({action:'saveConfig',by:session?session.role:'anon',config:{rooms:S.rooms,users:S.users,settings:{rotationStart:S.settings.rotationStart},ts:S.meta.cfgTs}});
-      navigator.sendBeacon&&navigator.sendBeacon(GAS_URL,new Blob([body],{type:'text/plain;charset=utf-8'}));
-    }catch(e){}
-  }
 }
-function pushRange(from,to){
-  const dates=[];let d=from,g=0;
-  while(d<=to&&g++<400){dates.push(d);d=addDays(d,1);}
-  if(!dates.length)return;
-  setSync('syncing');
-  const multi={};
-  dates.forEach(dt=>{const day=S.days[dt];if(!day)return;multi[dt]={rooms:day.rooms||{},floor:day.floor||null};});
-  post({action:'saveDay',date:dates[dates.length-1],rangeStart:dates[0],rangeEnd:dates[dates.length-1],
-    by:session?session.role:'anon',rooms:{},floor:null,multi})
-    .then(()=>{setSync('ok');S.meta.lastSync=nowStamp();saveLocal();toast('Range pushed','ok');})
-    .catch(()=>{setSync('bad');toast('Range push failed','bad');});
-}
+
+/* ---- config (roster / passcodes / rotation) ---- */
 function saveConfig(){
   S.meta.cfgTs=Date.now();saveLocal();
   if(!S.settings.autoSync)return;
-  _cfgDirty=true;
-  clearTimeout(_cfgTimer);setSync('pending');
+  _cfgDirty=true;clearTimeout(_cfgTimer);setSync('pending');
   _cfgTimer=setTimeout(pushConfig,800);
+}
+function applyConfig(c){
+  if(c.rooms&&typeof c.rooms==='object')for(const r in c.rooms){S.rooms[r]=c.rooms[r];if(!S.rooms[r].rotation)S.rooms[r].rotation=(S.rooms[r].students||[]).map(s=>s.id);}
+  if(c.users&&typeof c.users==='object'){const d=defaultUsers();S.users=Object.assign({},d,c.users);['admin','fc','fcom','rc'].forEach(k=>{S.users[k]=Object.assign({},d[k],c.users[k]||{});});}
+  if(c.settings&&c.settings.rotationStart)S.settings.rotationStart=c.settings.rotationStart;
+  if(c.ts)S.meta.cfgTs=Number(c.ts);
+  migrateConfig();
 }
 async function pushConfig(){
   if(_cfgBusy)return;
   if(!navigator.onLine){setSync('bad');return;}
   _cfgBusy=true;_cfgDirty=false;setSync('syncing');
   try{
-    await post({action:'saveConfig',by:session?session.role:'anon',
-      config:{rooms:S.rooms,users:S.users,settings:{rotationStart:S.settings.rotationStart},ts:S.meta.cfgTs}});
-    S.meta.lastConfigSync=nowStamp();saveLocal();
-    _cfgBusy=false;
+    const res=await postGAS({action:'saveConfig',by:whoAmI(),config:{rooms:S.rooms,users:S.users,settings:{rotationStart:S.settings.rotationStart},ts:S.meta.cfgTs}});
+    if(!res||res.ok===false)throw new Error((res&&res.error)||'server error');
+    if(res.stale&&res.config){applyConfig(res.config);toast('Roster/passcodes were changed on another device — reloaded','bad');if(session&&!userIsBusy())render();}
+    S.meta.lastConfigSync=nowStamp();saveLocal();_cfgBusy=false;
     if(_cfgDirty){pushConfig();return;}
-    if(!dirty.size)setSync('ok');
+    setSync(dirty.size?'pending':'ok');
   }catch(e){
-    _cfgBusy=false;_cfgDirty=true;setSync('bad');
-    clearTimeout(_cfgTimer);_cfgTimer=setTimeout(pushConfig,8000);
+    console.warn('Config push failed',e);
+    _cfgBusy=false;_cfgDirty=true;setSync('pending');
+    clearTimeout(_cfgTimer);_cfgTimer=setTimeout(pushConfig,10000);
   }
 }
-function save(){
-  const day=S.days[currentDate];
-  if(day){
-    const t=Date.now();
-    if(day.floor)day.floor._ts=t;
-    if(day.rooms){
-      const rs=session&&session.role==='rc'?[session.room]:ROOMS;
-      rs.forEach(r=>{if(day.rooms[r])day.rooms[r]._ts=t;});
-    }
-  }
-  saveLocal();scheduleAutoSync();
-}
-function cancelSyncTimers(){clearTimeout(_pushTimer);clearTimeout(_cfgTimer);}
 
-function mergeDay(date,srv){
+/* ---- merge (server copy in, local edits kept) ---- */
+function normUnit(unit,o){return unit==='floor'?normFloor(o):normRoom(o);}
+function unionMerge(srv,loc,date,unit){
+  const isF=unit==='floor';
+  const out=JSON.parse(JSON.stringify(srv));
+  const def=isF?newFloorDay(date):newRoomDay(date,unit);      /* what an untouched unit looks like */
+  const locNewer=(loc._ts||0)>(srv._ts||0);
+  const MAPS=isF?['goods','checks']:['salah','study','food','foodNote','activity','notes','marks','discipline'];
+  const overlay=(t,s,d)=>{for(const k in s){const v=s[k],dv=d&&d[k];
+    if(v&&typeof v==='object'&&!Array.isArray(v)){if(!t[k]||typeof t[k]!=='object')t[k]={};overlay(t[k],v,dv&&typeof dv==='object'?dv:null);}
+    else if(!d||dv!==v)t[k]=v;}};
+  for(const k in loc){
+    if(k==='_ts'||k==='audit')continue;
+    if(MAPS.includes(k)){out[k]=out[k]||{};overlay(out[k],loc[k]||{},def[k]||{});}
+    else if(locNewer&&JSON.stringify(loc[k])!==JSON.stringify(def[k]))out[k]=JSON.parse(JSON.stringify(loc[k]));
+  }
+  const key=a=>a.t+'|'+a.by+'|'+a.msg,seen=new Set((out.audit||[]).map(key));
+  out.audit=(out.audit||[]).concat((loc.audit||[]).filter(a=>!seen.has(key(a)))).slice(-200);
+  out._ts=Date.now();
+  return out;
+}
+function mergeIn(date,srv){
   if(!S.days[date])S.days[date]={rooms:{},floor:null};
-  const loc=S.days[date];
-  if(!loc.rooms)loc.rooms={};
+  const day=S.days[date];if(!day.rooms)day.rooms={};
   let changed=false;
-  if(srv.rooms){
-    for(const r in srv.rooms){
-      const s=srv.rooms[r],l=loc.rooms[r];
-      if(dirty.has(date)&&l)continue;
-      if(!l||(s._ts||0)>(l._ts||0)||(!l._ts&&!s._ts)){
-        if(!l||JSON.stringify(l)!==JSON.stringify(s)){loc.rooms[r]=s;changed=true;}
-      }
+  const apply=(unit,s)=>{
+    if(!s||typeof s!=='object')return;
+    const k=date+'|'+unit,isF=unit==='floor',l=isF?day.floor:day.rooms[unit];
+    normUnit(unit,s);
+    const put=o=>{if(isF)day.floor=o;else day.rooms[unit]=o;unitSig[k]=sig(o);changed=true;};
+    if(!l){put(s);return;}
+    if(dirty.has(k)){                                   /* we have unsent edits */
+      if((s._ts||0)===(l._ts||0))return;                /* same version — nothing to merge */
+      const m=unionMerge(s,l,date,unit);normUnit(unit,m);put(m);bump(k);return;
     }
-  }
-  if(srv.floor){
-    const l=loc.floor;
-    if(!(dirty.has(date)&&l)){
-      if(!l||(srv.floor._ts||0)>(l._ts||0)||(!l._ts&&!srv.floor._ts)){
-        if(!l||JSON.stringify(l)!==JSON.stringify(srv.floor)){loc.floor=srv.floor;changed=true;}
-      }
-    }
-  }
+    if((s._ts||0)>(l._ts||0)&&sig(s)!==sig(l))put(s);
+  };
+  for(const r in (srv.rooms||{}))apply(r,srv.rooms[r]);
+  if(srv.floor)apply('floor',srv.floor);
   return changed;
 }
 function userIsBusy(){
-  if(document.getElementById('modal')&&document.getElementById('modal').style.display!=='none')return true;
+  const m=document.getElementById('modal');
+  if(m&&m.style.display!=='none')return true;
   const a=document.activeElement;
   return !!a&&(a.tagName==='INPUT'||a.tagName==='TEXTAREA'||a.tagName==='SELECT');
 }
-async function pullNow(opts){
-  opts=opts||{};
-  if(_pullBusy||!GAS_URL||!navigator.onLine)return;
-  _pullBusy=true;
-  if(!opts.silent&&!dirty.size)setSync('syncing');
+
+/* ---- pull (delta: only rows changed since the last pull) ---- */
+function pullNow(o){
+  o=o||{};
+  if(!o.full&&_pullN>0&&_pullQ)return _pullQ;            /* never stack routine polls */
+  _pullN++;
+  const run=()=>_pull(o).finally(()=>{_pullN--;});
+  const p=_pullQ?_pullQ.then(run):run();
+  _pullQ=p;return p;
+}
+async function _pull(o){
+  if(!navigator.onLine||!GAS_URL){_pulledOnce=true;return false;}
+  const today=todayStr(),std=!o.full;
+  const from=o.from||addDays(today,-6),to=o.to||addDays(today,2);
+  if(!o.silent&&!dirty.size)setSync('syncing');
   try{
-    const res=await fetch(GAS_URL+'?action=load&days='+(opts.days||30)+'&_='+Date.now());
-    const data=await res.json();
-    if(data&&data.ok){
-      let changed=false;
-      if(data.config&&!_cfgDirty&&!_cfgBusy){
-        const srvTs=Number(data.config.ts)||0;
-        if(srvTs>=(S.meta.cfgTs||0)){
-          const before=JSON.stringify([S.rooms,S.users,S.settings.rotationStart]);
-          if(data.config.rooms&&typeof data.config.rooms==='object'){
-            for(const r in data.config.rooms){
-              S.rooms[r]=data.config.rooms[r];
-              if(!S.rooms[r].rotation)S.rooms[r].rotation=(S.rooms[r].students||[]).map(s=>s.id);
-            }
-          }
-          if(data.config.users&&typeof data.config.users==='object'){
-            const d=defaultUsers();
-            S.users=Object.assign({},d,data.config.users);
-            S.users.admin=Object.assign({},d.admin,data.config.users.admin||{});
-            S.users.fc=Object.assign({},d.fc,data.config.users.fc||{});
-            S.users.fcom=Object.assign({},d.fcom,data.config.users.fcom||{});
-            S.users.rc=Object.assign({},d.rc,data.config.users.rc||{});
-          }
-          if(data.config.settings&&data.config.settings.rotationStart)S.settings.rotationStart=data.config.settings.rotationStart;
-          if(srvTs)S.meta.cfgTs=srvTs;
-          migrateConfig();
-          if(before!==JSON.stringify([S.rooms,S.users,S.settings.rotationStart]))changed=true;
-        }
-      }
-      if(data.days)for(const date in data.days){if(mergeDay(date,data.days[date]))changed=true;}
-      S.meta.lastPull=nowStamp();
-      migrateConfig();
-      saveLocal();
-      if(!dirty.size&&!_pushBusy)setSync('ok');
-      /* NEVER re-render the login screen (that was the "reset to Room Captain" bug).
-         Only refresh a logged-in view, and never while the user is typing / a modal is open. */
-      if(changed&&session&&!userIsBusy())render();
-    }else if(!dirty.size)setSync('');
+    const data=await gas('GET',{action:'load',from,to,since:std?(S.meta.since||0):0,cfg:S.meta.cfgTs||0});
+    if(!data||data.ok===false)throw new Error((data&&data.error)||'server error');
+    let changed=false;
+    if(data.config&&!_cfgDirty&&!_cfgBusy){
+      const before=JSON.stringify([S.rooms,S.users,S.settings.rotationStart]);
+      applyConfig(data.config);
+      if(before!==JSON.stringify([S.rooms,S.users,S.settings.rotationStart]))changed=true;
+    }
+    if(data.days)for(const date in data.days){if(mergeIn(date,data.days[date]))changed=true;}
+    if(std&&data.now)S.meta.since=Math.max(0,data.now-500);   /* server writes are lock-ordered, so a tiny overlap is enough */
+    S.meta.lastPull=nowStamp();_lastPullOk=Date.now();_pulledOnce=true;
+    saveLocal();
+    if(!dirty.size&&!_pushBusy&&!_cfgDirty&&!_cfgBusy)setSync('ok');
+    /* never redraw the login screen; never redraw while someone is typing */
+    if(changed&&session&&(o.render||!userIsBusy()))render();
+    return true;
   }catch(err){
     console.warn('Pull failed',err);
-    if(!dirty.size)setSync('bad');
+    _pulledOnce=true;
+    if(!dirty.size&&!_pushBusy)setSync('bad');
+    return false;
   }
-  _pullBusy=false;
 }
+function repPull(){render();pullNow({from:repFrom,to:repTo,full:true,silent:true,render:true});}
 function startPolling(){
-  clearInterval(_pullTimer);
-  _pullTimer=setInterval(()=>{if(!document.hidden&&S.settings.autoSync){if(dirty.size)pushDirty();pullNow({silent:true});}},PULL_MS);
+  clearInterval(_pollT);
+  _pollT=setInterval(()=>{
+    if(document.hidden||!S.settings.autoSync)return;
+    if(dirty.size)pushDirty();else pullNow({silent:true});
+  },PULL_MS);
 }
 window.addEventListener('online',()=>{setSync('pending');pushDirty();if(_cfgDirty)pushConfig();pullNow({silent:true});});
 window.addEventListener('offline',()=>setSync('bad'));
-document.addEventListener('visibilitychange',()=>{
-  if(document.hidden)flushBeacon();
-  else{pushDirty();pullNow({silent:true});}
-});
+document.addEventListener('visibilitychange',()=>{if(document.hidden)flushBeacon();else{pushDirty();pullNow({silent:true});}});
 window.addEventListener('pagehide',flushBeacon);
 window.addEventListener('focus',()=>{if(S&&S.settings.autoSync)pullNow({silent:true});});
 
 async function initialLoad(){
-  render();                 /* draw login once */
-  await pullNow();          /* pull silently – never redraws login */
-  if(dirty.size)pushDirty();
+  render();                      /* login appears instantly from local data */
   startPolling();
+  checkServerVersion_();         /* one lightweight ping — tells you if an old deploy is still live */
+  await pullNow();               /* then refresh in the background */
+  if(dirty.size)pushDirty();
+}
+async function checkServerVersion_(){
+  try{
+    const r=await gas('GET',{action:'ping'},8000);
+    _serverVOK = !r || !r.v ? null : (r.v===EXPECT_SERVER_V);
+    if(_serverVOK===false){
+      toast('⚠ Server code is out of date (server '+r.v+', app expects '+EXPECT_SERVER_V+'). Redeploy Code.gs as a NEW VERSION.','bad');
+      console.warn('GAS version mismatch: server='+r.v+' expected='+EXPECT_SERVER_V);
+    }
+  }catch(e){ _serverVOK=null; }
 }
 
 /* =========================================================
@@ -767,7 +847,12 @@ function render(){
   setSync(syncState);
 }
 function setView(v){view=v;render();}
-function setDate(d){if(!d)return;currentDate=d;render();pullNow({silent:true});}
+function setDate(d){
+  if(!d)return;currentDate=d;render();
+  const t=todayStr();
+  if(d<addDays(t,-5)||d>addDays(t,2))pullNow({from:addDays(d,-1),to:addDays(d,1),full:true,silent:true,render:true});
+  else pullNow({silent:true});
+}
 function goToday(){currentDate=todayStr();render();}
 function setActiveRoom(r){activeRoom=r;render();}
 function logout(){if(dirty.size)pushDirty();session=null;$('#app').innerHTML=loginHTML();}
@@ -801,6 +886,7 @@ function lgRoleChange(){
   const p=$('#lgPin');if(p)p.focus();
 }
 function doLogin(){
+  if(!S.meta.cfgTs&&!_pulledOnce&&navigator.onLine){$('#lgErr').textContent='Connecting to server… please try again in a moment.';return;}
   const role=$('#lgRole').value;
   const pin=$('#lgPin').value.trim();
   let ok=false,room=null;
@@ -825,6 +911,7 @@ function headerHTML(){
     <input type="date" value="${currentDate}" onchange="setDate(this.value)">
     <button class="ghost" onclick="goToday()">Today</button>
     <span class="syncwrap" title="Tap to sync now" onclick="syncNow()"><span class="dot" id="syncDot"></span><span id="syncLbl"></span></span>
+    <span class="chip ok" id="syncFlash" style="opacity:0;transition:opacity .6s;font-size:11px">✓ Saved</span>
     <button class="ghost" onclick="logout()">Logout</button>
   </div></div>`;
 }
@@ -1084,6 +1171,7 @@ function studentCardHTML(room,s,i,canEdit){
       </div>
     </div>
     <div class="entry-body">`;
+  if(!isOpen)return h+`</div></div>`;
 
   h+=`<div class="section-head">Salah</div>`;
   for(const [k,lbl] of PRAYERS){
@@ -1470,8 +1558,8 @@ function reportsView(){
   const roomList=session.role==='rc'?[session.room]:ROOMS;
   let h=`<h2>Reports</h2>
     <div class="card"><div class="row">
-      <span class="small muted">From</span><input type="date" value="${repFrom}" onchange="repFrom=this.value;render()">
-      <span class="small muted">To</span><input type="date" value="${repTo}" onchange="repTo=this.value;render()">
+      <span class="small muted">From</span><input type="date" value="${repFrom}" onchange="repFrom=this.value;repPull()">
+      <span class="small muted">To</span><input type="date" value="${repTo}" onchange="repTo=this.value;repPull()">
       <div class="spacer"></div>
       <button class="ghost" onclick="pushRange(repFrom,repTo)">Push range to Sheet</button>
     </div></div>`;
@@ -1577,7 +1665,7 @@ function adminView(){
     <div class="row" style="margin-top:10px">
       <button class="primary" onclick="pushRange(addDays(todayStr(),-14),todayStr())">Push last 14 days now</button>
       <button class="ghost" onclick="pushConfig()">Push roster &amp; passcodes now</button>
-      <button class="ghost" onclick="pullNow({days:60});toast('Pulling…')">Pull from sheet now</button>
+      <button class="ghost" onclick="pullNow({from:addDays(todayStr(),-60),to:addDays(todayStr(),2),full:true,render:true});toast('Pulling…')">Pull from sheet now</button>
     </div>
     <div class="muted small" style="margin-top:10px">
       Last push: ${esc(S.meta.lastSync||'never')} · Last config push: ${esc(S.meta.lastConfigSync||'never')} · Last pull: ${esc(S.meta.lastPull||'never')} · Unsynced dates: ${dirty.size}
@@ -1612,7 +1700,7 @@ function importJSON(input){
       const data=JSON.parse(fr.result);
       if(!data.rooms)throw 0;
       if(!confirm('Replace all current data with this backup?'))return;
-      S=data;migrateConfig();
+      S=data;migrateConfig();baselineAll();
       Object.keys(S.days||{}).forEach(markDirty);
       saveLocal();saveConfig();pushDirty();render();toast('Backup restored & pushing','ok');
     }catch(e){toast('Invalid backup file','bad');}
@@ -1622,20 +1710,22 @@ function importJSON(input){
 function wipeAll(){
   if(!confirm('Erase ALL data? This cannot be undone.'))return;
   if(!confirm('Really erase everything?'))return;
-  dirty.clear();saveDirty();
+  dirty.clear();saveDirty();for(const k in unitSig)delete unitSig[k];
   S=defaultState();saveLocal();saveConfig();render();toast('All data erased','bad');
 }
-function pingGAS(){
-  setSync('syncing');
-  post({action:'ping',by:session?session.role:'anon'})
-    .then(()=>{setSync('ok');toast('Ping sent — check the Sync Log tab','ok');})
-    .catch(()=>{setSync('bad');toast('Ping failed','bad');});
+async function pingGAS(){
+  setSync('syncing');const t0=Date.now();
+  try{
+    const r=await gas('GET',{action:'ping'},12000);
+    setSync(dirty.size?'pending':'ok');
+    toast(r&&r.ok?('Connected · '+(Date.now()-t0)+' ms · server '+(r.v||'?')):'Server answered but not ok',r&&r.ok?'ok':'bad');
+  }catch(e){setSync('bad');toast('Cannot reach server: '+(e.name==='AbortError'?'timed out':e.message),'bad');}
 }
 
 /* =========================================================
    BOOT
    ========================================================= */
-S=load();
+S=load();baselineAll();
 initialLoad();
 </script>
 </body>
