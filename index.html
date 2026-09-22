@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Floor Management System V5.0</title>
+<title>Floor Management System V5</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏠</text></svg>">
 <style>
 :root{--bg:#0e1320;--card:#1b2438;--line:#2b3752;--txt:#e8eefb;--muted:#8b9ab5;--acc:#5b8cff;--ok:#2ecc8f;--warn:#ffb020;--bad:#ff5c6c}
@@ -145,6 +145,7 @@ const LS_OPEN='fms_openCards';
 const LS_QUEUE='fms_dirty';
 const LS_ROLE='fms_lastRole';
 const LS_ROOM='fms_lastRoom';
+const LS_SESSION='fms_session';
 const VERSION='v11';
 const EXPECT_SERVER_V='v11';   /* must match the V constant in Code.gs — mismatch means an old deploy is still live */
 const PULL_MS=20000;
@@ -855,7 +856,12 @@ function setDate(d){
 }
 function goToday(){currentDate=todayStr();render();}
 function setActiveRoom(r){activeRoom=r;render();}
-function logout(){if(dirty.size)pushDirty();session=null;$('#app').innerHTML=loginHTML();}
+function logout(){
+  if(dirty.size)pushDirty();
+  session=null;
+  try{localStorage.removeItem(LS_SESSION);}catch(e){}
+  $('#app').innerHTML=loginHTML();
+}
 
 function loginHTML(){
   const last=lsGet(LS_ROLE,'rc');
@@ -886,7 +892,14 @@ function lgRoleChange(){
   const p=$('#lgPin');if(p)p.focus();
 }
 function doLogin(){
-  if(!S.meta.cfgTs&&!_pulledOnce&&navigator.onLine){$('#lgErr').textContent='Connecting to server… please try again in a moment.';return;}
+  /* Only block if we have NEVER once loaded config (brand-new device, first run) AND are online
+     AND a pull is genuinely still in flight. Otherwise log in with whatever passcodes are cached
+     locally — that is correct almost always, since passcodes rarely change, and it means a slow
+     or stuck server can never trap someone on the login screen. */
+  if(!S.meta.cfgTs&&!_pulledOnce&&navigator.onLine&&_pullN>0){
+    $('#lgErr').textContent='Still connecting… trying default passcode 1122 works if this is first setup.';
+    return;
+  }
   const role=$('#lgRole').value;
   const pin=$('#lgPin').value.trim();
   let ok=false,room=null;
@@ -896,6 +909,7 @@ function doLogin(){
   else ok=(pin===S.users.admin.pin);
   if(!ok){$('#lgErr').textContent='Incorrect passcode.';$('#lgPin').select();return;}
   session={role,room};
+  lsSet(LS_SESSION,JSON.stringify(session));
   view=role==='rc'?'entry':'overview';
   if(role==='rc')activeRoom=room;
   render();
@@ -1726,6 +1740,14 @@ async function pingGAS(){
    BOOT
    ========================================================= */
 S=load();baselineAll();
+try{
+  const saved=JSON.parse(lsGet(LS_SESSION,'null'));
+  if(saved&&saved.role&&(saved.role!=='rc'||ROOMS.includes(saved.room))){
+    session=saved;
+    view=saved.role==='rc'?'entry':'overview';
+    if(saved.role==='rc')activeRoom=saved.room;
+  }
+}catch(e){}
 initialLoad();
 </script>
 </body>
