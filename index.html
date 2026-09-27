@@ -107,11 +107,6 @@ hr{border:none;border-top:1px solid var(--line);margin:14px 0}
 .clean-block .entry-label{flex:0 0 110px}
 .duty-select{flex:1;min-width:180px;padding:7px 9px;font-size:13px}
 .duty-missing{border-color:var(--warn)!important;box-shadow:0 0 0 1px var(--warn)}
-.tone-ok{background:var(--ok);color:#04281a}
-.tone-warn{background:var(--warn);color:#2a1a00}
-.tone-bad{background:var(--bad);color:#fff}
-.tone-info{background:var(--acc);color:#fff}
-.tone-muted{background:#44506b;color:#e8eefb}
 </style>
 </head>
 <body>
@@ -120,19 +115,30 @@ hr{border:none;border-top:1px solid var(--line);margin:14px 0}
 
 <script>
 /* =========================================================
-   FLOOR MANAGEMENT SYSTEM — v10
-   Admin can add / remove items in each list.
+   FLOOR MANAGEMENT SYSTEM — v8
    ========================================================= */
 const GAS_URL='https://script.google.com/macros/s/AKfycbxDrzuq8tLkwojEkE5eg7djiaHjW0lG27VxlPuANP3qjPPHE75ErywgfWpOFGqQ5gnr/exec';
 const LS='fms_v1';
 const LS_OPEN='fms_openCards';
-const VERSION='v10';
+const VERSION='v8';
 const ROOMS=['301','302','303'];
 const CLASSES=['9','10','11','12'];
 const PRAYERS=[['fajr','Fajr'],['dhuhr','Dhuhr'],['asr','Asr'],['maghrib','Maghrib'],['isha','Isha']];
-const TONES=['ok','warn','bad','info','muted'];
 
-/* Fixed sets (not editable) */
+const STUDY_TIMES=[
+  {k:'quran',    l:'Quran'},
+  {k:'pre_bf',   l:'Pre-bf'},
+  {k:'post_bf',  l:'Post-bf'},
+  {k:'midday',   l:'Midday'},
+  {k:'afternoon',l:'Afternoon'},
+  {k:'evening',  l:'Evening'},
+  {k:'night',    l:'Night'}
+];
+const MEALS=[
+  {k:'breakfast',l:'Breakfast'},
+  {k:'lunch',    l:'Lunch'},
+  {k:'dinner',   l:'Dinner'}
+];
 const SALAH_STATUS=[
   {v:'',l:'Not marked',short:'—',tone:'muted'},
   {v:'rakat1',l:'Attended from Rakat 1',short:'R1',tone:'ok'},
@@ -143,6 +149,24 @@ const SALAH_STATUS=[
   {v:'not_completed',l:'Not completed',short:'✗',tone:'bad'},
   {v:'na',l:'N/A (leave / sick)',short:'N/A',tone:'muted'}
 ];
+const STUDY_LOC=[
+  {v:'',l:'Not marked',short:'—',tone:'muted'},
+  {v:'reading_room',l:'Reading room',short:'📖',tone:'ok'},
+  {v:'bed',l:'Bed',short:'🛏',tone:'warn'},
+  {v:'room_study',l:'Room study',short:'📚',tone:'ok'},
+  {v:'other_floor',l:'Other floor',short:'🏢',tone:'info'}
+];
+const ACTIVITY=[
+  {v:'',l:'Not marked',short:'—',tone:'muted'},
+  {v:'self_study',l:'Self study',short:'📖 Study',tone:'ok'},
+  {v:'sleeping',l:'Sleeping',short:'😴 Sleep',tone:'info'},
+  {v:'outside',l:'Outside',short:'🌳 Out',tone:'warn'},
+  {v:'playing',l:'Playing',short:'⚽ Play',tone:'warn'},
+  {v:'sick',l:'Sick',short:'🤒 Sick',tone:'bad'},
+  {v:'competition',l:'Competition',short:'🏆 Comp',tone:'info'},
+  {v:'leave',l:'On leave',short:'🚪 Leave',tone:'muted'},
+  {v:'class',l:'In class / school',short:'🎓 Class',tone:'info'}
+];
 const FOOD_OPTS=[
   {v:'eaten',l:'Eaten',short:'🍽 Eaten',tone:'ok'},
   {v:'not_eaten',l:'Not eaten',short:'🚫 Not eaten',tone:'bad'}
@@ -152,76 +176,15 @@ const CLEAN_STATUS=[
   {v:'done',l:'Done',short:'✓ Done',tone:'ok'},
   {v:'not_done',l:'Not done',short:'✗ Not done',tone:'bad'}
 ];
-
-/* Default list definitions (used on first run / migration) */
-const DEFAULT_LISTS = {
-  studyTimes: [
-    {k:'quran',    l:'Quran'},
-    {k:'pre_bf',   l:'Pre-bf'},
-    {k:'post_bf',  l:'Post-bf'},
-    {k:'midday',   l:'Midday'},
-    {k:'afternoon',l:'Afternoon'},
-    {k:'evening',  l:'Evening'},
-    {k:'night',    l:'Night'}
-  ],
-  studyLocations: [
-    {k:'reading_room', l:'Reading room', short:'📖', tone:'ok'},
-    {k:'bed',          l:'Bed',          short:'🛏', tone:'warn'},
-    {k:'room_study',   l:'Room study',   short:'📚', tone:'ok'},
-    {k:'other_floor',  l:'Other floor',  short:'🏢', tone:'info'}
-  ],
-  meals: [
-    {k:'breakfast', l:'Breakfast'},
-    {k:'lunch',     l:'Lunch'},
-    {k:'dinner',    l:'Dinner'}
-  ],
-  equip: [
-    {k:'harpic',    l:'Harpic'},
-    {k:'handwash',  l:'Handwash'},
-    {k:'toothpaste',l:'Toothpaste'},
-    {k:'odonil',    l:'Odonil'}
-  ],
-  floorGoods: [
-    {k:'harpic',   l:'Harpic'},
-    {k:'handwash', l:'Handwash'},
-    {k:'toothpaste',l:'Toothpaste'},
-    {k:'odonil',   l:'Odonil'},
-    {k:'tissue',   l:'Tissue roll'},
-    {k:'phenyl',   l:'Phenyl'},
-    {k:'broom',    l:'Broom'},
-    {k:'soap',     l:'Hand soap'}
-  ],
-  cleaningTasks: [
-    {k:'washroom', l:'Washroom cleaning'},
-    {k:'room',     l:'Room cleaning'}
-  ],
-  activities: [
-    {k:'self_study', l:'Self study', short:'📖 Study', tone:'ok'},
-    {k:'sleeping',   l:'Sleeping',   short:'😴 Sleep', tone:'info'},
-    {k:'outside',    l:'Outside',    short:'🌳 Out',   tone:'warn'},
-    {k:'playing',    l:'Playing',    short:'⚽ Play',  tone:'warn'},
-    {k:'sick',       l:'Sick',       short:'🤒 Sick',  tone:'bad'},
-    {k:'competition',l:'Competition',short:'🏆 Comp',  tone:'info'},
-    {k:'leave',      l:'On leave',   short:'🚪 Leave', tone:'muted'},
-    {k:'class',      l:'In class / school', short:'🎓 Class', tone:'info'}
-  ]
-};
-
-const LIST_META = [
-  {key:'studyTimes',     label:'Study time slots'},
-  {key:'studyLocations', label:'Study locations (values)'},
-  {key:'meals',          label:'Meals'},
-  {key:'equip',          label:'Washroom equipment'},
-  {key:'floorGoods',     label:'Floor goods'},
-  {key:'cleaningTasks',  label:'Cleaning tasks'},
-  {key:'activities',     label:'Activity / whereabouts options'}
-];
+const EQUIP=[['harpic','Harpic'],['handwash','Handwash'],['toothpaste','Toothpaste'],['odonil','Odonil']];
+const FLOOR_GOODS=[['harpic','Harpic'],['handwash','Handwash'],['toothpaste','Toothpaste'],['odonil','Odonil'],
+  ['tissue','Tissue roll'],['phenyl','Phenyl'],['broom','Broom'],['soap','Hand soap']];
 
 const TABS={
   rc:    [['entry','Daily Entry'],['confirm','Status'],['roster','Roster'],['reports','My Marks']],
-  fc:    [['overview','Overview'],['confirm','Confirm'],['goods','Floor Goods'],['entry','Inspect Rooms'],['archive','Archive']],
-  fcom:  [['overview','Overview'],['confirm','Verify'],['entry','Edit Entries'],['reports','Reports'],['archive','Archive']],
-  admin: [['overview','Overview'],['entry','Daily Entry'],['confirm','Verify'],['goods','Floor Goods'],['reports','Reports'],['archive','Archive'],['admin','Admin'],['lists','Lists']]
+  fc:    [['overview','Overview'],['confirm','Confirm'],['goods','Floor Goods'],['entry','Inspect Rooms']],
+  fcom:  [['overview','Overview'],['confirm','Verify'],['entry','Edit Entries'],['reports','Reports']],
+  admin: [['overview','Overview'],['entry','Daily Entry'],['confirm','Verify'],['goods','Floor Goods'],['reports','Reports'],['admin','Admin']]
 };
 
 /* ---------- utils ---------- */
@@ -236,45 +199,6 @@ function prettyDate(s){return parseDate(s).toLocaleDateString(undefined,{weekday
 function mondayOf(d){const x=new Date(d);const k=(x.getDay()+6)%7;x.setDate(x.getDate()-k);return fmtDate(x);}
 function nowStamp(){return new Date().toLocaleString();}
 function toast(msg,kind){const t=$('#toast');t.textContent=msg;t.style.borderColor=kind==='bad'?'var(--bad)':kind==='ok'?'var(--ok)':'var(--line)';t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2600);}
-function slug(s){return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'').substring(0,28) || ('item_'+Date.now().toString(36));}
-
-/* ---------- list helpers ---------- */
-function getList(name){ return (S.settings.lists && S.settings.lists[name]) || DEFAULT_LISTS[name] || []; }
-function listOpts(name){
-  /* returns [{v,k,short,l,tone}] with a leading "not marked" empty option */
-  const base=[{v:'',l:'Not marked',short:'—',tone:'muted'}];
-  return base.concat(getList(name).map(x=>({v:x.k,l:x.l,short:x.short||x.l,tone:x.tone||'info'})));
-}
-
-function addListItem(name,label,short,tone){
-  if(!label || !label.trim()){ toast('Enter a name','bad'); return false; }
-  const key=slug(label);
-  const list=getList(name).slice();
-  if(list.some(x=>x.k===key)){ toast('That item already exists','bad'); return false; }
-  list.push({k:key, l:label.trim(), short:(short||'').trim()||undefined, tone: (tone && TONES.includes(tone)) ? tone : undefined });
-  S.settings.lists = S.settings.lists || {};
-  S.settings.lists[name]=list.map(x=>{
-    const o={k:x.k,l:x.l};
-    if(x.short) o.short=x.short;
-    if(x.tone) o.tone=x.tone;
-    return o;
-  });
-  saveConfig();
-  return true;
-}
-function removeListItem(name,key){
-  const list=getList(name).filter(x=>x.k!==key);
-  S.settings.lists = S.settings.lists || {};
-  S.settings.lists[name]=list;
-  saveConfig();
-}
-function renameListItem(name,key,newLabel){
-  if(!newLabel || !newLabel.trim()) return;
-  const list=getList(name).map(x=> x.k===key ? Object.assign({},x,{l:newLabel.trim()}) : x);
-  S.settings.lists = S.settings.lists || {};
-  S.settings.lists[name]=list;
-  saveConfig();
-}
 
 /* ---------- collapse state ---------- */
 let openCards={};
@@ -289,7 +213,6 @@ function closeAllCards(room){for(const s of S.rooms[room].students)delete openCa
 /* ---------- state ---------- */
 let S=null,session=null,currentDate=todayStr(),view='overview',activeRoom='301';
 let repFrom=addDays(todayStr(),-6),repTo=todayStr();
-let listAddTarget='studyTimes'; /* currently selected list on the Lists tab */
 
 function defaultUsers(){
   return {
@@ -299,7 +222,6 @@ function defaultUsers(){
     rc:{'301':'1122','302':'1122','303':'1122'}
   };
 }
-function deepCopy(o){return JSON.parse(JSON.stringify(o));}
 function defaultState(){
   const rooms={};
   const counts={'301':6,'302':6,'303':8};
@@ -314,39 +236,48 @@ function defaultState(){
     rooms[r]={students,rotation:students.map(s=>s.id)};
   }
   return {rooms,days:{},users:defaultUsers(),
-    settings:{sheetUrl:GAS_URL,autoSync:true,rotationStart:mondayOf(new Date()),lists:deepCopy(DEFAULT_LISTS)},
-    meta:{version:VERSION,lastSync:null,lastConfigSync:null,pendingPush:[]}};
+    settings:{sheetUrl:GAS_URL,autoSync:true,rotationStart:mondayOf(new Date())},
+    meta:{version:VERSION,lastSync:null,lastConfigSync:null}};
 }
-
-function migrateLists(){
-  S.settings = S.settings || {};
-  if(!S.settings.lists) S.settings.lists = {};
-  for(const k in DEFAULT_LISTS){
-    if(!Array.isArray(S.settings.lists[k]) || !S.settings.lists[k].length){
-      S.settings.lists[k] = deepCopy(DEFAULT_LISTS[k]);
-    }
-  }
-}
-function migrateCleaningForTask(c, taskKeys){
+function migrateCleaning(c){
   if(!c) c={};
-  for(const k of taskKeys){
-    if(typeof c[k] !== 'object' || c[k]===null){
-      c[k] = { status:'', dutyBy: '' };
-    }
+  if(typeof c.washroom !== 'object' || c.washroom===null || typeof c.washroom === 'boolean'){
+    c.washroom = { status: c.washroomCleaned ? 'done' : '', dutyBy: c.washroomBy || '' };
   }
+  if(typeof c.room !== 'object' || c.room===null || typeof c.room === 'boolean'){
+    c.room = { status: c.roomCleaned ? 'done' : '', dutyBy: c.roomBy || '' };
+  }
+  if(!c.washroom) c.washroom = { status:'', dutyBy:'' };
+  if(!c.room)     c.room     = { status:'', dutyBy:'' };
   if(typeof c.harpic!=='boolean') c.harpic=false;
   if(typeof c.handwash!=='boolean') c.handwash=false;
   if(typeof c.toothpaste!=='boolean') c.toothpaste=false;
   if(typeof c.odonil!=='boolean') c.odonil=false;
+  delete c.washroomCleaned; delete c.washroomBy;
+  delete c.roomCleaned; delete c.roomBy;
   return c;
+}
+function migrateFloorCleaning(f){
+  if(!f) f={};
+  if(typeof f.floorCleaning !== 'object' || f.floorCleaning===null){
+    f.floorCleaning = { status:'', dutyBy:'' };
+  }
+  if(!f.floorCleaning) f.floorCleaning = { status:'', dutyBy:'' };
+  return f;
 }
 function migrateConfig(){
   if(!S.meta) S.meta={};
-  if(!S.meta.pendingPush) S.meta.pendingPush=[];
   if(S.meta.version !== VERSION) S.meta.version = VERSION;
   for(const r in S.rooms){
     (S.rooms[r].students||[]).forEach(s=>{ if(!s.class) s.class='9'; });
     if(!S.rooms[r].rotation) S.rooms[r].rotation=(S.rooms[r].students||[]).map(s=>s.id);
+  }
+  for(const dt in S.days){
+    const day=S.days[dt];
+    if(day&&day.rooms){
+      for(const r in day.rooms){ if(day.rooms[r].cleaning) migrateCleaning(day.rooms[r].cleaning); }
+    }
+    if(day&&day.floor) migrateFloorCleaning(day.floor);
   }
   const d=defaultUsers();
   S.users = S.users || d;
@@ -358,33 +289,6 @@ function migrateConfig(){
   S.settings.sheetUrl = GAS_URL;
   S.settings.autoSync = S.settings.autoSync!==false;
   S.settings.rotationStart = S.settings.rotationStart || mondayOf(new Date());
-  migrateLists();
-
-  const taskKeys = getList('cleaningTasks').map(x=>x.k);
-  for(const dt in S.days){
-    const day=S.days[dt];
-    if(day&&day.rooms){
-      for(const r in day.rooms){
-        if(day.rooms[r].cleaning) migrateCleaningForTask(day.rooms[r].cleaning, taskKeys);
-      }
-    }
-    if(day&&day.floor) migrateFloorCleaning(day.floor);
-  }
-}
-function migrateFloorCleaning(f){
-  if(!f) f={};
-  const taskKeys = getList('cleaningTasks').map(x=>x.k);
-  if(typeof f.floorCleaning !== 'object' || f.floorCleaning===null){
-    f.floorCleaning = { status:'', dutyBy:'' };
-  }
-  /* keep old shape for compatibility, plus a per-task map */
-  if(!f.floorCleaning.tasks || typeof f.floorCleaning.tasks!=='object'){
-    f.floorCleaning.tasks = {};
-  }
-  for(const k of taskKeys){
-    if(!f.floorCleaning.tasks[k]) f.floorCleaning.tasks[k] = { status:'', dutyBy:'' };
-  }
-  return f;
 }
 function load(){
   try{const raw=localStorage.getItem(LS);
@@ -411,14 +315,16 @@ function rotationCaptain(room,date){
 }
 function newRoomDay(date,room){
   const prev=lastRoomDayBefore(date,room);
-  const cleaning={};
-  const taskKeys=getList('cleaningTasks').map(x=>x.k);
-  taskKeys.forEach(k=>{ cleaning[k]={status:'',dutyBy:''}; });
-  getList('equip').forEach(e=>{ cleaning[e.k]=false; });
+  const cleaning={
+    washroom:{ status:'', dutyBy:'' },
+    room:    { status:'', dutyBy:'' },
+    harpic:false,handwash:false,toothpaste:false,odonil:false
+  };
   if(prev&&prev.cleaning){
-    const pc=migrateCleaningForTask(prev.cleaning, taskKeys);
-    getList('equip').forEach(e=>{ cleaning[e.k]=!!pc[e.k]; });
-    taskKeys.forEach(k=>{ cleaning[k].dutyBy = pc[k].dutyBy || ''; });
+    for(const k of ['harpic','handwash','toothpaste','odonil']) cleaning[k]=!!prev.cleaning[k];
+    const pc=migrateCleaning(prev.cleaning);
+    cleaning.washroom.dutyBy = pc.washroom.dutyBy || '';
+    cleaning.room.dutyBy     = pc.room.dutyBy || '';
   }
   return {
     captainId:rotationCaptain(room,date),acting:false,
@@ -439,18 +345,11 @@ function newFloorDay(date){
   const prevDates=Object.keys(S.days).filter(d=>d<date&&S.days[d]&&S.days[d].floor).sort();
   const prev=prevDates.length?S.days[prevDates[prevDates.length-1]].floor:null;
   const goods={};
-  getList('floorGoods').forEach(g=>{ goods[g.k]=prev&&prev.goods?!!prev.goods[g.k]:false; });
-  const fc={ status:'', dutyBy:'' , tasks:{}};
-  if(prev&&prev.floorCleaning){
-    fc.dutyBy=prev.floorCleaning.dutyBy||'';
-    getList('cleaningTasks').forEach(t=>{
-      fc.tasks[t.k]={status:'',dutyBy:(prev.floorCleaning.tasks && prev.floorCleaning.tasks[t.k] && prev.floorCleaning.tasks[t.k].dutyBy) || ''};
-    });
-  } else {
-    getList('cleaningTasks').forEach(t=>{ fc.tasks[t.k]={status:'',dutyBy:''}; });
-  }
+  FLOOR_GOODS.forEach(([k])=>goods[k]=prev&&prev.goods?!!prev.goods[k]:false);
+  const floorCleaning={ status:'', dutyBy:'' };
+  if(prev&&prev.floorCleaning){ floorCleaning.dutyBy=prev.floorCleaning.dutyBy||''; }
   return {goods,goodsBy:'',goodsNote:'',
-          floorCleaning:fc,
+          floorCleaning,
           fcConfirmed:false,fcAt:null,fcBy:'',
           fcomVerified:false,fcomAt:null,fcomNote:'',adminNote:''};
 }
@@ -461,28 +360,24 @@ function getRoomDay(date,room){
   if(!rd.study) rd.study={};
   if(!rd.food) rd.food={};
   if(!rd.foodNote) rd.foodNote={};
-  migrateCleaningForTask(rd.cleaning, getList('cleaningTasks').map(x=>x.k));
-  /* food migrations (single-string → per-meal object) */
+  migrateCleaning(rd.cleaning);
   for(const sid in rd.food){
     if(typeof rd.food[sid]==='string'){
       const old=rd.food[sid];
-      const o={}; getList('meals').forEach(m=>{ o[m.k]=old||'eaten'; });
-      rd.food[sid]=o;
+      rd.food[sid]={breakfast:old||'eaten',lunch:old||'eaten',dinner:old||'eaten'};
     }
   }
   for(const sid in rd.foodNote){
     if(typeof rd.foodNote[sid]==='string'){
       const old=rd.foodNote[sid];
-      const o={}; getList('meals').forEach((m,i)=>{ o[m.k]= i===0?(old||''):''; });
-      rd.foodNote[sid]=o;
+      rd.foodNote[sid]={breakfast:old,lunch:'',dinner:''};
     }
   }
-  /* study migration from v4 single-string */
   for(const sid in rd.study){
     if(typeof rd.study[sid]==='string'){
       const old=rd.study[sid];
       rd.study[sid]={};
-      if(old) rd.study[sid][getList('studyTimes')[0].k]=old;
+      if(old) rd.study[sid].quran=old;
     }
   }
   return rd;
@@ -524,7 +419,6 @@ function canEditMarks(room){
 }
 function canEditFloorGoods(){return session.role==='fc'||session.role==='admin';}
 function canAddBonus(){return session.role==='admin';}
-function canEditLists(){return session.role==='admin';}
 
 function audit(room,msg){
   const rd=getRoomDay(currentDate,room);
@@ -539,13 +433,6 @@ let _syncTimer=null,_syncInFlight=false,_syncAgain=false;
 let _configTimer=null,_configInFlight=false,_configAgain=false;
 function setSyncDot(state){const d=document.getElementById('syncDot');if(!d)return;d.className='dot '+(state||'');}
 function cancelSyncTimers(){clearTimeout(_syncTimer);clearTimeout(_configTimer);}
-function updatePendingBadge(){
-  const b=document.getElementById('pendingBadge');
-  if(!b)return;
-  const n=(S.meta&&S.meta.pendingPush)?S.meta.pendingPush.length:0;
-  b.style.display=n?'':'none';
-  b.textContent=n+' unsynced';
-}
 function scheduleAutoSync(){
   if(!S.settings.autoSync)return;
   clearTimeout(_syncTimer);setSyncDot('syncing');
@@ -554,8 +441,6 @@ function scheduleAutoSync(){
 function pushDay(){
   if(_syncInFlight){_syncAgain=true;return;}
   const day=S.days[currentDate];if(!day)return;
-  if(!S.meta.pendingPush) S.meta.pendingPush=[];
-  if(!S.meta.pendingPush.includes(currentDate)) S.meta.pendingPush.push(currentDate);
   const payload={action:'saveDay',date:currentDate,
     by:session?session.role+(session.room?' '+session.room:''):'anon',
     rooms:{},floor:day.floor||null};
@@ -563,16 +448,8 @@ function pushDay(){
   if(!Object.keys(payload.rooms).length&&!payload.floor)return;
   _syncInFlight=true;setSyncDot('syncing');
   fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)})
-    .then(()=>{
-      _syncInFlight=false;setSyncDot('ok');S.meta.lastSync=nowStamp();
-      S.meta.pendingPush=S.meta.pendingPush.filter(d=>d!==currentDate);
-      saveLocal();updatePendingBadge();
-      if(_syncAgain){_syncAgain=false;pushDay();}
-    })
-    .catch(err=>{
-      _syncInFlight=false;setSyncDot('bad');saveLocal();updatePendingBadge();
-      console.warn('Sync failed — will retry',err);
-    });
+    .then(()=>{_syncInFlight=false;setSyncDot('ok');S.meta.lastSync=nowStamp();saveLocal();if(_syncAgain){_syncAgain=false;pushDay();}})
+    .catch(err=>{_syncInFlight=false;setSyncDot('bad');console.warn('Sync failed',err);});
 }
 function pushRange(from,to){
   const dates=[];let d=from,g=0;
@@ -594,11 +471,7 @@ function scheduleConfigSync(){
 function pushConfig(){
   if(_configInFlight){_configAgain=true;return;}
   const payload={action:'saveConfig',by:session?session.role:'anon',
-    config:{
-      rooms:S.rooms,
-      users:S.users,
-      settings:{rotationStart:S.settings.rotationStart, lists:S.settings.lists}
-    }};
+    config:{rooms:S.rooms,users:S.users,settings:{rotationStart:S.settings.rotationStart}}};
   _configInFlight=true;setSyncDot('syncing');
   fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)})
     .then(()=>{_configInFlight=false;setSyncDot('ok');S.meta.lastConfigSync=nowStamp();saveLocal();if(_configAgain){_configAgain=false;pushConfig();}})
@@ -607,34 +480,8 @@ function pushConfig(){
 function saveConfig(){saveLocal();scheduleConfigSync();}
 function save(){saveLocal();scheduleAutoSync();}
 
-async function retryPending(){
-  updatePendingBadge();
-  if(!S.meta||!S.meta.pendingPush||!S.meta.pendingPush.length) return;
-  if(!S.settings.autoSync) return;
-  const list=S.meta.pendingPush.slice();
-  for(const d of list){
-    const day=S.days[d];
-    if(!day) continue;
-    const payload={action:'saveDay',date:d,
-      by:session?session.role:'retry',
-      rooms:{},floor:day.floor||null};
-    ROOMS.forEach(r=>{if(day.rooms&&day.rooms[r])payload.rooms[r]=day.rooms[r];});
-    try{
-      await fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)});
-      S.meta.pendingPush=S.meta.pendingPush.filter(x=>x!==d);
-      saveLocal();
-      setSyncDot('ok');
-    }catch(e){
-      console.warn('Retry failed for',d);
-      setSyncDot('bad');
-      break;
-    }
-  }
-  updatePendingBadge();
-}
-
 async function initialLoad(){
-  if(!GAS_URL){render();return;}
+  if(!GAS_URL) return;
   setSyncDot('syncing');
   try{
     const res=await fetch(GAS_URL+'?action=load&days=30');
@@ -655,16 +502,8 @@ async function initialLoad(){
           S.users.fcom =Object.assign({},d.fcom, data.config.users.fcom||{});
           S.users.rc   =Object.assign({},d.rc,   data.config.users.rc||{});
         }
-        if(data.config.settings){
-          if(data.config.settings.rotationStart) S.settings.rotationStart=data.config.settings.rotationStart;
-          if(data.config.settings.lists){
-            S.settings.lists = S.settings.lists || {};
-            for(const k in DEFAULT_LISTS){
-              if(Array.isArray(data.config.settings.lists[k])){
-                S.settings.lists[k] = data.config.settings.lists[k];
-              }
-            }
-          }
+        if(data.config.settings && data.config.settings.rotationStart){
+          S.settings.rotationStart=data.config.settings.rotationStart;
         }
       }
       migrateConfig();
@@ -681,8 +520,9 @@ async function initialLoad(){
       saveLocal();setSyncDot('ok');
     } else {setSyncDot('');}
   }catch(err){console.warn('Initial load failed',err);setSyncDot('bad');}
+  /* Only re-render if the user has logged in.
+     Never redraw the login screen mid-typing. */
   if(session) render();
-  updatePendingBadge();
 }
 
 /* =========================================================
@@ -692,7 +532,6 @@ function render(){
   const app=$('#app');
   if(!session){app.innerHTML=loginHTML();return;}
   app.innerHTML=headerHTML()+navHTML()+`<div class="wrap" style="padding-bottom:40px">${viewHTML()}</div>`;
-  updatePendingBadge();
 }
 function setView(v){view=v;render();}
 function setDate(d){currentDate=d;render();}
@@ -751,7 +590,6 @@ function headerHTML(){
     <input type="date" value="${currentDate}" onchange="setDate(this.value)">
     <button class="ghost" onclick="goToday()">Today</button>
     <span class="dot" id="syncDot" title="Auto-sync status"></span>
-    <span id="pendingBadge" class="chip warn" style="display:none;font-size:10px" title="Days not yet pushed to the sheet"></span>
     <button class="ghost" onclick="logout()">Logout</button>
   </div></div>`;
 }
@@ -767,9 +605,7 @@ function viewHTML(){
     case 'goods':return goodsView();
     case 'reports':return reportsView();
     case 'roster':return rosterView();
-    case 'archive':return archiveView();
     case 'admin':return adminView();
-    case 'lists':return listsView();
     default:return overviewView();
   }
 }
@@ -801,8 +637,9 @@ function overviewView(){
     const studyMarked=st.students.filter(s=>rd.study[s.id]&&Object.keys(rd.study[s.id]).length).length;
     const foodMarked=st.students.filter(s=>rd.food[s.id]&&Object.keys(rd.food[s.id]).length).length;
     const clean=rd.cleaning;
-    const taskDone=getList('cleaningTasks').filter(t=>clean[t.k]&&clean[t.k].status==='done').length;
-    const equipCount=getList('equip').filter(e=>clean[e.k]).length;
+    const wash=clean.washroom&&clean.washroom.status==='done';
+    const rm=clean.room&&clean.room.status==='done';
+    const equipCount=EQUIP.filter(([k])=>clean[k]).length;
     h+=`<div class="card">
       <div class="row"><h3 style="margin:0">Room ${room}</h3><div class="spacer"></div>${statusChip(rd)}</div>
       <div class="muted small" style="margin-top:6px">Captain: <b>${cap?esc(cap.name):'—'}</b> ${cap?classPill(cap.class):''} ${rd.acting?'<span class="chip warn">Acting</span>':''}</div>
@@ -811,8 +648,9 @@ function overviewView(){
         <div><b>${marked}/${total}</b>salah</div>
         <div><b>${studyMarked}/${total}</b>study</div>
         <div><b>${foodMarked}/${total}</b>food</div>
-        <div><b>${taskDone}/${getList('cleaningTasks').length}</b>cleaning</div>
-        <div><b>${equipCount}/${getList('equip').length}</b>equip</div>
+        <div><b>${wash?'✔':'—'}</b>washroom</div>
+        <div><b>${rm?'✔':'—'}</b>room</div>
+        <div><b>${equipCount}/4</b>equip</div>
       </div>
       <div class="row" style="margin-top:14px">
         <button class="big-edit" onclick="editRoom('${room}')">✏️ Edit Room ${room}</button>
@@ -821,7 +659,7 @@ function overviewView(){
   }
   h+=`</div>`;
   const allSub=ROOMS.every(r=>{const rd=rdSafe(currentDate,r);return rd&&rd.status.rcSubmitted;});
-  const floorClean=fd.floorCleaning||{status:''};
+  const floorClean=(fd.floorCleaning)||{status:''};
   h+=`<div class="card"><h3>Floor sign-off</h3>
     <div class="row">
       <span class="chip ${allSub?'ok':'bad'}">${allSub?'All rooms submitted':'Rooms pending'}</span>
@@ -909,72 +747,83 @@ function roomEntryHTML(room){
   return h;
 }
 
+/* ---------- cleaning section ---------- */
 function cleaningSectionHTML(room,canEdit){
   const rd=getRoomDay(currentDate,room);
   const st=S.rooms[room];
   const c=rd.cleaning;
-  const students=st.students;
   const dutyOpts=[{v:'',l:'— select duty person —',short:'— select —'}].concat(
-    students.map(s=>({v:s.id,l:s.name+' ('+s.id+')',short:s.name}))
+    st.students.map(s=>({v:s.id,l:s.name+' ('+s.id+')',short:s.name}))
   );
-  function dutySelect(taskKey,val){
-    return `<select class="duty-select ${!val?'duty-missing':''}" ${canEdit?'':'disabled'} onchange="setCleanDuty('${room}','${taskKey}',this.value)">
+  function dutySelect(which,val){
+    return `<select class="duty-select ${!val?'duty-missing':''}" ${canEdit?'':'disabled'} onchange="setCleanDuty('${room}','${which}',this.value)">
       ${dutyOpts.map(o=>`<option value="${o.v}" ${o.v===val?'selected':''}>${esc(o.l)}</option>`).join('')}
     </select>`;
   }
-  const tasks=getList('cleaningTasks');
   let h=`<div class="card">
     <h3>🧹 Cleaning &amp; Duty</h3>
     <div class="muted small" style="margin-bottom:10px">
-      Record <b>who was on duty</b> for each task, then mark whether it was done.
-    </div>`;
-  tasks.forEach(t=>{
-    const cur=c[t.k]||{status:'',dutyBy:''};
-    h+=`<div class="clean-block">
+      Record <b>who was on duty</b> for each task, then mark whether it was done. Duty is required even when the task was completed.
+    </div>
+
+    <div class="clean-block">
       <div class="row" style="justify-content:space-between;margin-bottom:6px">
-        <b>${esc(t.l)}</b>
-        ${!cur.dutyBy && cur.status ? `<span class="chip warn">Duty person missing</span>` : ''}
+        <b>Washroom cleaning</b>
+        ${!c.washroom.dutyBy && c.washroom.status ? `<span class="chip warn">Duty person missing</span>` : ''}
       </div>
       <div class="row">
         <div class="entry-label">Status</div>
-        <div class="btn-group">${bg(CLEAN_STATUS, cur.status||'', !canEdit, `setCleanStatus('${room}','${t.k}'`)}</div>
+        <div class="btn-group">${bg(CLEAN_STATUS, c.washroom.status||'', !canEdit, `setCleanStatus('${room}','washroom'`)}</div>
       </div>
       <div class="row" style="margin-top:6px">
         <div class="entry-label">Duty person</div>
-        ${dutySelect(t.k, cur.dutyBy)}
+        ${dutySelect('washroom', c.washroom.dutyBy)}
       </div>
-    </div>`;
-  });
-  const equip=getList('equip');
-  h+=`<div class="clean-block" style="margin-bottom:0">
-    <b>Washroom equipment</b>
-    <div class="btn-group" style="margin-top:8px">
-      ${equip.map(e=>{
-        const on=c[e.k];
-        return `<div class="btn-opt ${on?'active':''}" data-clickable="${canEdit?'1':''}" data-tone="${on?'ok':''}" onclick="${canEdit?`toggleEquip('${room}','${e.k}')`:''}">${esc(e.l)}</div>`;
-      }).join('')}
     </div>
-    <div class="muted small" style="margin-top:8px">Defaults carry over from yesterday.</div>
+
+    <div class="clean-block">
+      <div class="row" style="justify-content:space-between;margin-bottom:6px">
+        <b>Room cleaning</b>
+        ${!c.room.dutyBy && c.room.status ? `<span class="chip warn">Duty person missing</span>` : ''}
+      </div>
+      <div class="row">
+        <div class="entry-label">Status</div>
+        <div class="btn-group">${bg(CLEAN_STATUS, c.room.status||'', !canEdit, `setCleanStatus('${room}','room'`)}</div>
+      </div>
+      <div class="row" style="margin-top:6px">
+        <div class="entry-label">Duty person</div>
+        ${dutySelect('room', c.room.dutyBy)}
+      </div>
+    </div>
+
+    <div class="clean-block" style="margin-bottom:0">
+      <b>Washroom equipment</b>
+      <div class="btn-group" style="margin-top:8px">
+        ${EQUIP.map(([k,l])=>{
+          const on=c[k];
+          return `<div class="btn-opt ${on?'active':''}" data-clickable="${canEdit?'1':''}" data-tone="${on?'ok':''}" onclick="${canEdit?`toggleEquip('${room}','${k}')`:''}">${l}</div>`;
+        }).join('')}
+      </div>
+      <div class="muted small" style="margin-top:8px">Defaults carry over from yesterday.</div>
+    </div>
   </div>`;
-  h+=`</div>`;
   return h;
 }
 
+/* ---------- single student card ---------- */
 function studentCardHTML(room,s,i,canEdit){
   const rd=getRoomDay(currentDate,room);
   const sl=rd.salah[s.id]||{};
   const e=equityFor(currentDate,room,s.id);
   const study=rd.study[s.id]||{};
-  const meals=getList('meals');
-  const food=rd.food[s.id]||(()=>{const o={};meals.forEach(m=>o[m.k]='eaten');return o;})();
+  const food=rd.food[s.id]||{breakfast:'eaten',lunch:'eaten',dinner:'eaten'};
   const foodNote=rd.foodNote[s.id]||{};
   const isOpen=isCardOpen(room,s.id);
 
   const salahDone=PRAYERS.filter(([k])=>sl[k]).length;
-  const studyTimes=getList('studyTimes');
-  const studyDone=studyTimes.filter(t=>study[t.k]).length;
-  const mealsEaten=meals.filter(m=>(food[m.k]||'eaten')==='eaten').length;
-  const mealsNotEaten=meals.filter(m=>(food[m.k]||'eaten')==='not_eaten').length;
+  const studyDone=STUDY_TIMES.filter(t=>study[t.k]).length;
+  const mealsEaten=MEALS.filter(m=>(food[m.k]||'eaten')==='eaten').length;
+  const mealsNotEaten=MEALS.filter(m=>(food[m.k]||'eaten')==='not_eaten').length;
 
   let h=`<div class="entry-card ${isOpen?'open':''}">
     <div class="entry-header" onclick="toggleCard('${room}','${s.id}')">
@@ -984,8 +833,8 @@ function studentCardHTML(room,s,i,canEdit){
       </div>
       <div class="entry-summary">
         <span class="chip ${salahDone===5?'ok':salahDone?'warn':''}">Salah ${salahDone}/5</span>
-        <span class="chip ${studyDone===studyTimes.length?'ok':studyDone?'warn':''}">Study ${studyDone}/${studyTimes.length}</span>
-        <span class="chip ${mealsEaten===meals.length?'ok':mealsNotEaten?'bad':'warn'}">🍽 ${mealsEaten}/${meals.length}</span>
+        <span class="chip ${studyDone===7?'ok':studyDone?'warn':''}">Study ${studyDone}/7</span>
+        <span class="chip ${mealsEaten===3?'ok':mealsNotEaten?'bad':'warn'}">🍽 ${mealsEaten}/3</span>
         <span class="entry-score">${e.final}</span>
         <span class="caret">▸</span>
       </div>
@@ -1000,23 +849,23 @@ function studentCardHTML(room,s,i,canEdit){
     </div>`;
   }
 
-  h+=`<div class="section-head">Study time <span class="muted" style="text-transform:none;font-weight:400;letter-spacing:0">· pick location for each slot</span></div>`;
-  for(const slot of studyTimes){
+  h+=`<div class="section-head">Study time (7 slots) <span class="muted" style="text-transform:none;font-weight:400;letter-spacing:0">· 📖 Reading · 🛏 Bed · 📚 Room · 🏢 Other floor</span></div>`;
+  for(const slot of STUDY_TIMES){
     h+=`<div class="entry-row">
-      <div class="entry-label">${esc(slot.l)}</div>
-      <div class="btn-group">${bg(listOpts('studyLocations'), study[slot.k]||'', !canEdit, `setStudy('${room}','${s.id}','${slot.k}'`)}</div>
+      <div class="entry-label">${slot.l}</div>
+      <div class="btn-group">${bg(STUDY_LOC, study[slot.k]||'', !canEdit, `setStudy('${room}','${s.id}','${slot.k}'`)}</div>
     </div>`;
   }
 
-  h+=`<div class="section-head">Food</div>`;
-  for(const meal of meals){
+  h+=`<div class="section-head">Food (3 meals)</div>`;
+  for(const meal of MEALS){
     const cur=food[meal.k]||'eaten';
     const note=foodNote[meal.k]||'';
     const placeholder = cur==='not_eaten'
       ? 'What did they NOT eat? (e.g. rice, dal, egg)'
       : 'Optional note';
     h+=`<div class="entry-row">
-      <div class="entry-label">${esc(meal.l)}</div>
+      <div class="entry-label">${meal.l}</div>
       <div class="btn-group">${bg(FOOD_OPTS, cur, !canEdit, `setFood('${room}','${s.id}','${meal.k}'`)}</div>
       <input class="entry-note" value="${esc(note)}" ${canEdit?'':'disabled'} onchange="setFoodNote('${room}','${s.id}','${meal.k}',this.value)" placeholder="${esc(placeholder)}">
     </div>`;
@@ -1025,7 +874,7 @@ function studentCardHTML(room,s,i,canEdit){
   h+=`<div class="section-head">Activity / Whereabouts</div>`;
   h+=`<div class="entry-row">
     <div class="entry-label">Activity</div>
-    <div class="btn-group">${bg(listOpts('activities'), rd.activity[s.id]||'', !canEdit, `setActivity('${room}','${s.id}'`)}</div>
+    <div class="btn-group">${bg(ACTIVITY, rd.activity[s.id]||'', !canEdit, `setActivity('${room}','${s.id}'`)}</div>
   </div>`;
 
   h+=`<div class="entry-row">
@@ -1037,6 +886,9 @@ function studentCardHTML(room,s,i,canEdit){
   return h;
 }
 
+/* Button-group builder.
+   fnPrefix ends just before the final value argument, with a trailing quote
+   after the last fixed arg — the value is appended as ,'value') */
 function bg(options, current, disabled, fnPrefix){
   return options.map(o=>{
     const active=o.v===current;
@@ -1125,20 +977,20 @@ function marksCard(room){
    ========================================================= */
 function setSalah(room,sid,prayer,val){const rd=getRoomDay(currentDate,room);if(!rd.salah[sid])rd.salah[sid]={};rd.salah[sid][prayer]=val;save();render();}
 function setStudy(room,sid,slot,val){const rd=getRoomDay(currentDate,room);if(!rd.study[sid]||typeof rd.study[sid]==='string')rd.study[sid]={};rd.study[sid][slot]=val;save();render();}
-function setFood(room,sid,meal,val){const rd=getRoomDay(currentDate,room);if(!rd.food[sid]||typeof rd.food[sid]==='string'){const o={};getList('meals').forEach(m=>o[m.k]='eaten');rd.food[sid]=o;}rd.food[sid][meal]=val;save();render();}
-function setFoodNote(room,sid,meal,val){const rd=getRoomDay(currentDate,room);if(!rd.foodNote[sid]||typeof rd.foodNote[sid]==='string'){const o={};getList('meals').forEach(m=>o[m.k]='');rd.foodNote[sid]=o;}rd.foodNote[sid][meal]=val;save();}
+function setFood(room,sid,meal,val){const rd=getRoomDay(currentDate,room);if(!rd.food[sid]||typeof rd.food[sid]==='string')rd.food[sid]={breakfast:'eaten',lunch:'eaten',dinner:'eaten'};rd.food[sid][meal]=val;save();render();}
+function setFoodNote(room,sid,meal,val){const rd=getRoomDay(currentDate,room);if(!rd.foodNote[sid]||typeof rd.foodNote[sid]==='string')rd.foodNote[sid]={breakfast:'',lunch:'',dinner:''};rd.foodNote[sid][meal]=val;save();}
 function setActivity(room,sid,val){const rd=getRoomDay(currentDate,room);rd.activity[sid]=val;save();render();}
 function setNote(room,sid,val){const rd=getRoomDay(currentDate,room);rd.notes[sid]=val;save();}
-function setCleanStatus(room,task,val){
+function setCleanStatus(room,which,val){
   const rd=getRoomDay(currentDate,room);
-  if(!rd.cleaning[task]) rd.cleaning[task]={status:'',dutyBy:''};
-  rd.cleaning[task].status=val;
+  migrateCleaning(rd.cleaning);
+  rd.cleaning[which].status=val;
   save();render();
 }
-function setCleanDuty(room,task,val){
+function setCleanDuty(room,which,val){
   const rd=getRoomDay(currentDate,room);
-  if(!rd.cleaning[task]) rd.cleaning[task]={status:'',dutyBy:''};
-  rd.cleaning[task].dutyBy=val;
+  migrateCleaning(rd.cleaning);
+  rd.cleaning[which].dutyBy=val;
   save();render();
 }
 function toggleEquip(room,key){const rd=getRoomDay(currentDate,room);rd.cleaning[key]=!rd.cleaning[key];save();render();}
@@ -1166,10 +1018,8 @@ function submitRoom(room){
   if(!canEditRoom(room))return toast('Editing window closed','bad');
   const rd=getRoomDay(currentDate,room);
   const warns=[];
-  getList('cleaningTasks').forEach(t=>{
-    const c=rd.cleaning[t.k]||{};
-    if(c.status && !c.dutyBy) warns.push(t.l+' duty person');
-  });
+  if(rd.cleaning.washroom.status && !rd.cleaning.washroom.dutyBy) warns.push('washroom duty person');
+  if(rd.cleaning.room.status && !rd.cleaning.room.dutyBy) warns.push('room duty person');
   rd.status.rcSubmitted=true;rd.status.rcAt=nowStamp();
   rd.status.fcConfirmed=false;rd.status.fcomVerified=false;
   audit(room,'Room Captain submitted'+(warns.length?' (missing: '+warns.join(', ')+')':''));
@@ -1190,7 +1040,7 @@ function setGoods(key,val){const fd=getDay(currentDate).floor;fd.goods[key]=val;
 function setGoodsNote(val){getDay(currentDate).floor.goodsNote=val;save();}
 function saveGoodsBy(val){getDay(currentDate).floor.goodsBy=val;save();}
 function toggleGoods(key){const fd=getDay(currentDate).floor;fd.goods[key]=!fd.goods[key];save();render();}
-function setFloorCleanStatus(val){const fd=getDay(currentDate).floor;migrateFloorCleaning(fd);fd.floorCleaning.status=val;save();render();}
+function setFloorCleanStatus(_,val){const fd=getDay(currentDate).floor;migrateFloorCleaning(fd);fd.floorCleaning.status=val;save();render();}
 function setFloorCleanDuty(val){const fd=getDay(currentDate).floor;migrateFloorCleaning(fd);fd.floorCleaning.dutyBy=val;save();render();}
 
 /* =========================================================
@@ -1263,15 +1113,15 @@ function goodsView(){
 
   h+=`<div class="card">
     <h3>🧹 Floor cleaning</h3>
-    <div class="muted small" style="margin-bottom:10px">Floor Captain confirms floor cleaning tasks; duty person is required for each.</div>
+    <div class="muted small" style="margin-bottom:10px">Floor Captain confirms floor cleaning; duty person is required.</div>
     <div class="clean-block">
       <div class="row" style="justify-content:space-between;margin-bottom:6px">
-        <b>Overall floor cleaning</b>
+        <b>Floor cleaning status</b>
         ${!fd.floorCleaning.dutyBy && fd.floorCleaning.status ? `<span class="chip warn">Duty person missing</span>` : ''}
       </div>
       <div class="row">
         <div class="entry-label">Status</div>
-        <div class="btn-group">${bg(CLEAN_STATUS, fd.floorCleaning.status||'', !editable, `setFloorCleanStatus('`)}</div>
+        <div class="btn-group">${bg(CLEAN_STATUS, fd.floorCleaning.status||'', !editable, `setFloorCleanStatus('FLOOR'`)}</div>
       </div>
       <div class="row" style="margin-top:6px">
         <div class="entry-label">Duty person</div>
@@ -1285,9 +1135,9 @@ function goodsView(){
   h+=`<div class="card">
     <h3>📦 Availability of goods on the floor</h3>
     <div class="btn-group" style="margin-top:10px">
-      ${getList('floorGoods').map(g=>{
-        const on=fd.goods[g.k];
-        return `<div class="btn-opt ${on?'active':''}" data-clickable="${editable?'1':''}" data-tone="${on?'ok':''}" onclick="${editable?`toggleGoods('${g.k}')`:''}">${esc(g.l)}</div>`;
+      ${FLOOR_GOODS.map(([k,l])=>{
+        const on=fd.goods[k];
+        return `<div class="btn-opt ${on?'active':''}" data-clickable="${editable?'1':''}" data-tone="${on?'ok':''}" onclick="${editable?`toggleGoods('${k}')`:''}">${l}</div>`;
       }).join('')}
     </div>
     <div class="row" style="margin-top:14px">
@@ -1297,113 +1147,6 @@ function goodsView(){
     <div style="margin-top:12px">
       <textarea rows="2" style="width:100%" ${editable?'':'disabled'} placeholder="Notes…" onchange="setGoodsNote(this.value)">${esc(fd.goodsNote||'')}</textarea>
     </div>
-  </div>`;
-  return h;
-}
-
-/* =========================================================
-   MONTHLY ARCHIVE
-   ========================================================= */
-let archiveMonth=(()=>{ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); })();
-let archiveLoadedMonths={};
-
-async function loadArchiveMonth(month){
-  if(archiveLoadedMonths[month]) return;
-  setSyncDot('syncing');
-  try{
-    const res=await fetch(GAS_URL+'?action=load&month='+month);
-    const data=await res.json();
-    if(data&&data.ok&&data.days){
-      for(const date in data.days){
-        const srv=data.days[date];
-        if(!S.days[date]) S.days[date]={rooms:{},floor:null};
-        const loc=S.days[date];
-        if(!loc.rooms) loc.rooms={};
-        if(srv.rooms) Object.assign(loc.rooms,srv.rooms);
-        if(srv.floor) loc.floor=srv.floor;
-      }
-      archiveLoadedMonths[month]=true;
-      saveLocal();
-      setSyncDot('ok');
-    } else { setSyncDot(''); }
-  }catch(err){ console.warn('Archive load failed',err); setSyncDot('bad'); }
-}
-async function setArchiveMonth(month){ archiveMonth=month; render(); await loadArchiveMonth(month); render(); }
-async function archiveView(){
-  if(!archiveLoadedMonths[archiveMonth]) loadArchiveMonth(archiveMonth).then(()=>render());
-  const now=new Date();
-  const monthOpts=[];
-  for(let i=0;i<12;i++){
-    const d=new Date(now.getFullYear(), now.getMonth()-i, 1);
-    const key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
-    const label=d.toLocaleDateString(undefined,{month:'long',year:'numeric'});
-    monthOpts.push({key,label});
-  }
-  const dates=Object.keys(S.days).filter(d=>d.substring(0,7)===archiveMonth).sort();
-  const loading=!archiveLoadedMonths[archiveMonth];
-  let h=`<h2>Monthly Archive
-    <select style="width:auto;margin-left:10px" onchange="setArchiveMonth(this.value)">
-      ${monthOpts.map(m=>`<option value="${m.key}" ${m.key===archiveMonth?'selected':''}>${esc(m.label)}</option>`).join('')}
-    </select>
-    ${loading?`<span class="chip warn" style="margin-left:8px">Loading…</span>`:`<span class="chip ok" style="margin-left:8px">${dates.length} days on record</span>`}
-  </h2>`;
-  if(loading && !dates.length){ h+=`<div class="card"><i>Fetching ${esc(archiveMonth)} from the sheet…</i></div>`; return h; }
-  if(!dates.length){ h+=`<div class="card"><i>No data for ${esc(archiveMonth)}.</i></div>`; return h; }
-
-  const roomList=session.role==='rc'?[session.room]:ROOMS;
-  const meals=getList('meals');
-  for(const room of roomList){
-    const st=S.rooms[room];
-    h+=`<div class="card scrollx"><h3>Room ${room} · ${esc(archiveMonth)}</h3>
-      <table class="tbl">
-        <thead><tr>
-          <th>ID</th><th>Class</th><th>Name</th>
-          <th>Days</th><th>Capt. days</th>
-          <th>Total marks</th><th>Avg/day</th>
-          <th>Meals missed</th><th>Duty days</th>
-        </tr></thead><tbody>`;
-    for(const s of st.students){
-      let days=0,cap=0,total=0,mealsMissed=0,dutyDays=0;
-      for(const dt of dates){
-        const rd=rdSafe(dt,room);
-        if(!rd) continue;
-        const has=(rd.salah&&Object.keys(rd.salah[s.id]||{}).length)||rd.activity[s.id]||(rd.study&&rd.study[s.id]);
-        const m=(rd.marks&&rd.marks[s.id])||null;
-        if(!has&&!m) continue;
-        const e=equityFor(dt,room,s.id);
-        days++; if(e.roles.includes('RC')) cap++;
-        total+=e.final;
-        const food=rd.food&&rd.food[s.id];
-        if(food&&typeof food==='object'){
-          meals.forEach(mm=>{ if(food[mm.k]==='not_eaten') mealsMissed++; });
-        }
-        const c=rd.cleaning||{};
-        getList('cleaningTasks').forEach(t=>{ if(c[t.k] && c[t.k].dutyBy===s.id) dutyDays++; });
-      }
-      h+=`<tr>
-        <td class="mono">${esc(s.id)}</td>
-        <td>${classPill(s.class)||'—'}</td>
-        <td>${esc(s.name)}</td>
-        <td>${days}</td>
-        <td>${cap}</td>
-        <td><b>${total}</b></td>
-        <td>${days?(total/days).toFixed(2):'—'}</td>
-        <td>${mealsMissed?`<span style="color:var(--bad)">${mealsMissed}</span>`:'0'}</td>
-        <td>${dutyDays}</td>
-      </tr>`;
-    }
-    h+=`</tbody></table></div>`;
-  }
-  h+=`<div class="card"><h3>Days on record (${dates.length})</h3>
-    <div class="btn-group">
-      ${dates.map(d=>{
-        const day=S.days[d];
-        const sub=ROOMS.filter(r=>day.rooms && day.rooms[r] && day.rooms[r].status && day.rooms[r].status.rcSubmitted).length;
-        const cls = sub===3 ? 'ok' : sub ? 'warn' : 'bad';
-        return `<div class="btn-opt" data-clickable="1" onclick="setDate('${d}');setView('entry')" title="${esc(prettyDate(d))} — ${sub}/3 rooms submitted" style="border-color:var(--${cls})">${d.substring(8,10)} ${parseDate(d).toLocaleDateString(undefined,{month:'short'})}</div>`;
-      }).join('')}
-    </div>
-    <div class="muted small" style="margin-top:8px">Tap a day to open it. Green = all rooms submitted · Yellow = partial · Red = none.</div>
   </div>`;
   return h;
 }
@@ -1517,74 +1260,6 @@ function reportsView(){
 }
 
 /* =========================================================
-   LISTS (Admin only) — add/remove items in each block
-   ========================================================= */
-function listsView(){
-  if(!canEditLists()){
-    return `<h2>Lists</h2><div class="card"><i>Only the Floor Incharge can edit lists.</i></div>`;
-  }
-  let h=`<h2>Manage lists <span class="muted small">· add / remove items in each block</span></h2>`;
-  h+=`<div class="card">
-    <div class="muted small">Changes save to the sheet automatically and appear in the daily entry, floor goods, and archive views for everyone.</div>
-    <div class="row" style="margin-top:10px">
-      <label class="small muted">Select a list</label>
-      <select onchange="listAddTarget=this.value;render()">
-        ${LIST_META.map(m=>`<option value="${m.key}" ${listAddTarget===m.key?'selected':''}>${esc(m.label)}</option>`).join('')}
-      </select>
-    </div>
-    <div class="row" style="margin-top:10px">
-      <input id="newListLabel" placeholder="New item name" style="width:240px">
-      <input id="newListShort" placeholder="Short label (optional)" style="width:180px">
-      <select id="newListTone">
-        <option value="">tone: auto</option>
-        ${TONES.map(t=>`<option value="${t}">tone: ${t}</option>`).join('')}
-      </select>
-      <button class="primary" onclick="uiAddListItem()">+ Add item</button>
-    </div>
-  </div>`;
-
-  for(const m of LIST_META){
-    const list=getList(m.key);
-    h+=`<div class="card">
-      <h3>${esc(m.label)} <span class="muted small">· ${list.length} item(s)</span>
-        ${m.key===listAddTarget?`<span class="chip ok" style="margin-left:6px">selected for add</span>`:''}
-      </h3>
-      <div class="scrollx"><table class="tbl">
-        <thead><tr><th>Key</th><th>Label</th><th>Short</th><th>Tone</th><th></th></tr></thead><tbody>
-        ${list.length?list.map(x=>`<tr>
-          <td class="mono">${esc(x.k)}</td>
-          <td><input value="${esc(x.l)}" onchange="renameListItem('${m.key}','${x.k}',this.value)" style="width:220px"></td>
-          <td class="small muted">${esc(x.short||'—')}</td>
-          <td class="small muted">${esc(x.tone||'—')}</td>
-          <td>
-            <button class="ghost" onclick="listAddTarget='${m.key}';render()">Set as target</button>
-            <button class="bad" onclick="uiRemoveListItem('${m.key}','${x.k}')">Remove</button>
-          </td>
-        </tr>`).join(''):`<tr><td colspan="5" class="muted small">No items.</td></tr>`}
-      </tbody></table></div>
-    </div>`;
-  }
-  h+=`<div class="card warnnote">
-    <b>Note about the sheet:</b> custom items are stored in the JSON state and are always kept. In the <b>Daily Records</b> sheet you'll only see the standard columns plus an <b>Extra fields</b> column that carries custom items as JSON.
-  </div>`;
-  return h;
-}
-function uiAddListItem(){
-  const label=(document.getElementById('newListLabel')||{}).value||'';
-  const short=(document.getElementById('newListShort')||{}).value||'';
-  const tone=(document.getElementById('newListTone')||{}).value||'';
-  if(addListItem(listAddTarget, label, short, tone)){
-    toast('Added to '+listAddTarget,'ok');
-    render();
-  }
-}
-function uiRemoveListItem(listKey,itemKey){
-  if(!confirm('Remove "'+itemKey+'" from '+listKey+'? Existing saved data is kept, but this item will disappear from the entry form.'))return;
-  removeListItem(listKey,itemKey);
-  render();toast('Removed','ok');
-}
-
-/* =========================================================
    ADMIN
    ========================================================= */
 function adminView(){
@@ -1621,7 +1296,6 @@ function adminView(){
     </div>
     <div class="row" style="margin-top:10px">
       <button class="ghost" onclick="resetAllPins()">Reset all passcodes to 1122</button>
-      <button class="ghost" onclick="setView('lists')">Manage lists →</button>
     </div>
   </div>`;
   h+=`<div class="card"><h3>Weekly captaincy rotation</h3>
@@ -1646,12 +1320,10 @@ function adminView(){
     <label class="chk"><input type="checkbox" ${S.settings.autoSync?'checked':''} onchange="S.settings.autoSync=this.checked;if(!this.checked){cancelSyncTimers();}saveConfig()"> Auto-push to sheet after every edit</label>
     <div class="row" style="margin-top:10px">
       <button class="primary" onclick="pushRange(addDays(todayStr(),-14),todayStr())">Push last 14 days now</button>
-      <button class="ghost" onclick="pushConfig()">Push roster, lists &amp; passcodes now</button>
-      <button class="ghost" onclick="retryPending()">Retry unsynced now</button>
+      <button class="ghost" onclick="pushConfig()">Push roster &amp; passcodes now</button>
     </div>
     <div class="muted small" style="margin-top:10px">
       Last daily sync: ${esc(S.meta.lastSync||'never')} · Last config sync: ${esc(S.meta.lastConfigSync||'never')}
-      ${(S.meta.pendingPush&&S.meta.pendingPush.length)?` · <span style="color:var(--warn)">${S.meta.pendingPush.length} day(s) pending</span>`:''}
     </div>
   </div>`;
   h+=`<div class="card"><h3>Backup &amp; restore</h3>
@@ -1706,9 +1378,8 @@ function pingGAS(){
    BOOT
    ========================================================= */
 S=load();
-initialLoad();
-setTimeout(retryPending, 3000);
-setInterval(retryPending, 60000);
+render();          /* draw login screen immediately */
+initialLoad();     /* fetch from GAS in background; won't touch the login screen */
 </script>
 </body>
 </html>
